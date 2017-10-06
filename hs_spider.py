@@ -10,12 +10,19 @@ import json
 import os
 import requests
 from bs4 import BeautifulSoup
+import time
 
 catalog_url = r'https://www.365area.com/hscate'
 
 home_data = r'E:\work_all\topease\hs_spider_data'
+chapter_href_html_dir = os.path.join(home_data, r'chapter_href_html_dir')
 catalog_data = os.path.join(home_data,r'catalog_page_data.html')
 catalog_json = os.path.join(home_data,r'spider_hs_code.json')
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
+    'Connection': 'keep-alive'
+}
 
 
 def get_hs_code_catalog():
@@ -23,7 +30,7 @@ def get_hs_code_catalog():
     获取hs编码总目录，并输出为文件
     :return:
     '''
-    result = requests.get(catalog_url)
+    result = requests.get(catalog_url, headers=headers)
     with open(catalog_data, 'w', encoding='utf-8') as fp:
         fp.write(result.text)
 
@@ -63,7 +70,7 @@ def parse_catalog():
         if len(catalog_small_chapter_items) > 0:
             for index in range(len(catalog_small_chapter_items)):
                 catalog_small_chapter_item_text = catalog_small_chapter_items[index].text.strip()
-                catalog_small_chapter_item_href = str(catalog_small_chapter_items[index].get('href')).replace(r'//','')
+                catalog_small_chapter_item_href = str(catalog_small_chapter_items[index].get('href')).replace(r'//','http://')
 
                 spider_hs_code_json[catalog_chapter_index]['chapter_two_list'].append({})
                 spider_hs_code_json[catalog_chapter_index]['chapter_two_list'][index]['chapter_two_name'] = catalog_small_chapter_item_text
@@ -75,9 +82,46 @@ def parse_catalog():
         fp.write(json.dumps(spider_hs_code_json))
 
 
+def download_chapter_two_href_html():
+    '''
+    下载子目录链接的网页
+    :return:
+    '''
+    with open(catalog_json, 'r', encoding='utf8') as fp:
+        spider_hs_code_json = json.loads(fp.read())
 
+    all_chapter_two_href_list = []
+
+    for chapter_one_item in spider_hs_code_json:
+        chapter_one_item_two_list = chapter_one_item['chapter_two_list']
+        for chapter_two_item in chapter_one_item_two_list:
+            all_chapter_two_href_list.append(chapter_two_item['chapter_two_href'])
+
+    # print(all_chapter_two_href_list)
+
+    re = 0
+    for href in all_chapter_two_href_list:
+        result = requests.get(href, headers=headers)
+        # print(result.text)
+        new_href = str(href).replace(r'http://','').replace(r'/','_')
+        path_dir = os.path.join(chapter_href_html_dir, new_href)
+
+        if not os.path.exists(path_dir):
+            os.mkdir(path_dir)
+
+        file_path = os.path.join(path_dir, new_href + '.html')
+        with open(file_path, 'w', encoding='utf8') as fp:
+            fp.write(result.text)
+
+        print(file_path)
+        time.sleep(2)
+
+        re += 1
+        if re == 5:
+            break
 
 
 if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
+    download_chapter_two_href_html()

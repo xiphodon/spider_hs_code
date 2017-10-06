@@ -44,7 +44,17 @@ def parse_catalog():
         for catalog_chapter_item in catalog_chapter_items:
             catalog_chapter_list.append(catalog_chapter_item.text.strip())
 
-    print(catalog_chapter_list)
+    # print(catalog_chapter_list)
+
+    for catalog_chapter_index in range(len(catalog_chapter_list)):
+        print("====== ", catalog_chapter_list[catalog_chapter_index], " ======")
+        catalog_chapter_index_str = str(catalog_chapter_index + 1)
+        catalog_small_chapter_items = soup.select('div#c' + catalog_chapter_index_str + 'list' + ' > ' + 'div.catechapter > a')
+        if len(catalog_small_chapter_items) > 0:
+            for catalog_small_chapter_item in catalog_small_chapter_items:
+                catalog_small_chapter_item_text = catalog_small_chapter_item.text.strip()
+                catalog_small_chapter_item_href = str(catalog_small_chapter_item.get('href')).replace(r'//','')
+                print(catalog_small_chapter_item_text,catalog_small_chapter_item_href)
 
 
 

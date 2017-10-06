@@ -101,24 +101,53 @@ def download_chapter_two_href_html():
 
     re = 0
     for href in all_chapter_two_href_list:
-        result = requests.get(href, headers=headers)
-        # print(result.text)
+
         new_href = str(href).replace(r'http://','').replace(r'/','_')
         path_dir = os.path.join(chapter_href_html_dir, new_href)
 
         if not os.path.exists(path_dir):
             os.mkdir(path_dir)
 
-        file_path = os.path.join(path_dir, new_href + '.html')
-        with open(file_path, 'w', encoding='utf8') as fp:
-            fp.write(result.text)
+        result = requests.get(href, headers=headers)
 
-        print(file_path)
-        time.sleep(2)
+        soup = BeautifulSoup(result.text, 'lxml')
+        page_select = soup.select('span.pagenext > a')
 
-        re += 1
-        if re == 5:
-            break
+        if len(page_select) > 0:
+            for page_number_item in page_select[::-1]:
+                text_temp = page_number_item.text
+                try:
+                    text_temp_int = int(text_temp)
+                except ValueError as e:
+                    continue
+                else:
+                    page_number = text_temp_int
+                    break
+        else:
+            page_number = 1
+
+
+
+        for this_page in range(1, page_number+1):
+            if this_page != 1:
+                new_href_temp = new_href + '_' + str(this_page)
+                result = requests.get(href + r'/' + str(this_page), headers=headers)
+            else:
+                new_href_temp = new_href
+
+            time.sleep(1.5)
+
+            file_path = os.path.join(path_dir, new_href_temp + '.html')
+            with open(file_path, 'w', encoding='utf8') as fp:
+                fp.write(result.text)
+
+            print(new_href_temp)
+
+        time.sleep(1.5)
+
+        # re += 1
+        # if re == 5:
+        #     break
 
 
 if __name__ == "__main__":

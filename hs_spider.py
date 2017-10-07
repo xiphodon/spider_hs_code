@@ -114,7 +114,6 @@ def download_chapter_two_href_html():
 
     # print(all_chapter_two_href_list)
 
-    re = 0
     for href in all_chapter_two_href_list:
 
         new_href = str(href).replace(r'http://','').replace(r'/','_')
@@ -160,9 +159,6 @@ def download_chapter_two_href_html():
 
         time.sleep(1.5)
 
-        # re += 1
-        # if re == 5:
-        #     break
 
 
 def parse_all_chapter_two_html():
@@ -170,8 +166,6 @@ def parse_all_chapter_two_html():
     解析所有的二级目录网页
     :return:
     '''
-    spider_hs_code_json = get_spider_hs_code_json()
-
     all_chapter_hs_code_list = []
 
     # 章节文件夹列表遍历
@@ -241,6 +235,24 @@ def parse_all_chapter_two_html():
 
 
 
+def get_all_chapter_hs_code_list_json():
+    '''
+    获取二级目录详情的json文件
+    :return:
+    '''
+    with open(catalog_json_2, 'r', encoding='utf8') as fp:
+        chapter_hs_code_list_stream = fp.read()
+    return json.loads(chapter_hs_code_list_stream)
+
+
+
+def download_all_hs_code_item_html():
+    '''
+    下载所有的hs详细内容的html网页
+    :return:
+    '''
+    all_chapter_hs_code_json = get_all_chapter_hs_code_list_json()
+
 
 
 
@@ -249,4 +261,5 @@ if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
     # download_chapter_two_href_html()
-    parse_all_chapter_two_html()
+    # parse_all_chapter_two_html()
+    download_all_hs_code_item_html()

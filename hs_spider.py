@@ -17,7 +17,12 @@ catalog_url = r'https://www.365area.com/hscate'
 home_data = r'E:\work_all\topease\hs_spider_data'
 chapter_href_html_dir = os.path.join(home_data, r'chapter_href_html_dir')
 catalog_data = os.path.join(home_data,r'catalog_page_data.html')
+# 一类名称和二类名称及链接json
 catalog_json = os.path.join(home_data,r'spider_hs_code.json')
+# 包含二类下所有hs编码的json
+catalog_json_2 = os.path.join(home_data,r'spider_hs_code_2.json')
+# 包含二类下所有hs编码详情的json
+catalog_json_3 = os.path.join(home_data,r'spider_hs_code_3.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -82,13 +87,23 @@ def parse_catalog():
         fp.write(json.dumps(spider_hs_code_json))
 
 
+def get_spider_hs_code_json():
+    '''
+    获取持久化的json文件
+    :return:
+    '''
+    with open(catalog_json, 'r', encoding='utf8') as fp:
+        spider_hs_code_json = json.loads(fp.read())
+    return spider_hs_code_json
+
+
+
 def download_chapter_two_href_html():
     '''
     下载子目录链接的网页
     :return:
     '''
-    with open(catalog_json, 'r', encoding='utf8') as fp:
-        spider_hs_code_json = json.loads(fp.read())
+    spider_hs_code_json = get_spider_hs_code_json()
 
     all_chapter_two_href_list = []
 
@@ -150,7 +165,88 @@ def download_chapter_two_href_html():
         #     break
 
 
+def parse_all_chapter_two_html():
+    '''
+    解析所有的二级目录网页
+    :return:
+    '''
+    spider_hs_code_json = get_spider_hs_code_json()
+
+    all_chapter_hs_code_list = []
+
+    # 章节文件夹列表遍历
+    for item_dir in os.listdir(chapter_href_html_dir):
+        # 各章节文件夹中的文件列表遍历
+        item_dir_path = os.path.join(chapter_href_html_dir, item_dir)
+        # 当前章节所有字段json
+        this_chapter_hs_code_list = []
+
+        for item_html in os.listdir(item_dir_path):
+            item_html_path = os.path.join(item_dir_path, item_html)
+            with open(item_html_path, 'r', encoding='utf8') as fp:
+                item_html_text = fp.read()
+            soup = BeautifulSoup(str(item_html_text), 'lxml')
+            hs_td_select = soup.select('div.hssearchcon > table > tr > td')
+            hs_td_ab_select = soup.select('td.tdtoth')
+
+            for hs_td_ab_select_item in hs_td_ab_select:
+                if hs_td_ab_select_item in hs_td_select:
+                    hs_td_select.remove(hs_td_ab_select_item)
+
+            if len(hs_td_select) % 4 != 0:
+                print('parse td len error')
+                return
+
+            for hs_td_select_index in range(int(len(hs_td_select)/4)):
+                hs_code_all = hs_td_select[hs_td_select_index * 4 + 0].text.strip()
+                type_name = ''.join(hs_td_select[hs_td_select_index * 4 + 1].text.strip().split('\n')).replace(' ','')
+                example_times = hs_td_select[hs_td_select_index * 4 + 2].text.strip()
+                details = hs_td_select[hs_td_select_index * 4 + 3].select('a')[0].get('href').replace('//','').strip()
+
+                hs_code_all_list = hs_code_all.split('\n')
+
+                hs_code = hs_code_all_list[0].replace(' ','')
+                hs_code_invalid = ''
+                hs_code_recommend = ''
+
+                if len(hs_code_all_list) == 3:
+                    hs_code = hs_code_all_list[0].replace(' ','')
+                    hs_code_invalid = hs_code_all_list[1].replace('(','').replace(')','').replace(' ','').replace('\xa0','')
+                    hs_code_recommend = hs_code_all_list[2]
+                elif len(hs_code_all_list) > 3 or len(hs_code_all_list) == 2:
+                    print('len(hs_code_all_list) error')
+
+                # print(hs_code, hs_code_invalid, hs_code_recommend, type_name, example_times, details)
+
+                hs_code_item_dict = {
+                    'hs_code':hs_code,
+                    'hs_code_invalid':hs_code_invalid,
+                    'hs_code_recommend':hs_code_recommend,
+                    'type_name':type_name,
+                    'example_times':example_times,
+                    'details':details
+                }
+
+                this_chapter_hs_code_list.append(hs_code_item_dict)
+
+            # print(item_html)
+            # print(this_chapter_hs_code_list)
+            # break
+
+        all_chapter_hs_code_list.append(this_chapter_hs_code_list)
+        # break
+
+    with open(catalog_json_2, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(all_chapter_hs_code_list))
+
+
+
+
+
+
+
 if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
-    download_chapter_two_href_html()
+    # download_chapter_two_href_html()
+    parse_all_chapter_two_html()

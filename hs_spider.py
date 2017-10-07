@@ -15,7 +15,11 @@ import time
 catalog_url = r'https://www.365area.com/hscate'
 
 home_data = r'E:\work_all\topease\hs_spider_data'
+# 二类目录网页文件夹
 chapter_href_html_dir = os.path.join(home_data, r'chapter_href_html_dir')
+# 所有hs编码详情网页文件夹
+all_hs_code_item_html_dir = os.path.join(home_data, r'all_hs_code_item_html_dir')
+# 一类目录网页
 catalog_data = os.path.join(home_data,r'catalog_page_data.html')
 # 一类名称和二类名称及链接json
 catalog_json = os.path.join(home_data,r'spider_hs_code.json')
@@ -253,6 +257,31 @@ def download_all_hs_code_item_html():
     '''
     all_chapter_hs_code_json = get_all_chapter_hs_code_list_json()
 
+    all_chapter_hs_code_href_list = []
+
+
+    for item_list in all_chapter_hs_code_json:
+        for item in item_list:
+            detail_href = 'http://' + item['details']
+            all_chapter_hs_code_href_list.append(detail_href)
+
+    # count = 0
+    for href in all_chapter_hs_code_href_list:
+        file_name = str(href).replace(r'http://', '').replace(r'/', '_') + '.html'
+        file_path = os.path.join(all_hs_code_item_html_dir, file_name)
+
+        if os.path.exists(file_path):
+            continue
+
+        result = requests.get(href, headers=headers)
+        with open(file_path, 'w', encoding='utf8') as fp:
+            fp.write(result.text)
+
+        time.sleep(0.1)
+        # count += 1
+        # if count == 5:
+        #     break
+        print(href)
 
 
 

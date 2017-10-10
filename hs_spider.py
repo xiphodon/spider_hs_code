@@ -289,12 +289,14 @@ def parse_all_hs_code_desc_html():
     :return:
     '''
 
+    all_hs_code_desc_html_json = []
+
     count = 0
 
     for file_path in os.listdir(all_hs_code_item_html_dir):
         # if file_path != 'www.365area.com_hscode_detail_0106199090.html':
-        # if file_path != 'www.365area.com_hscode_detail_0401200000.html':
-        #     continue
+        if file_path != 'www.365area.com_hscode_detail_2104100000.html':
+            continue
         with open(os.path.join(all_hs_code_item_html_dir, file_path), 'r', encoding='utf8') as fp:
             soup = BeautifulSoup(fp, 'html.parser')
             # print(soup)
@@ -406,25 +408,105 @@ def parse_all_hs_code_desc_html():
                 personal_mail_key_list = []
                 personal_mail_value_list = []
 
-                if(len(personal_mail_select)) == 2:
+                if (len(personal_mail_select)) == 2:
                     personal_mail_key_list.extend([i.text.strip() for i in personal_mail_select[0].select('td')])
                     personal_mail_value_list.extend([i.text.strip() for i in personal_mail_select[1].select('td')])
-
                 # print(personal_mail_key_list)
                 # print(personal_mail_value_list)
 
 
-                # count += 1
-                # if count == 500:
-                #     break
+                # 申报实例
+                sbsl_select = soup.select('div#sbsl > table > tr')
+                # print(sbsl_select)
+                # 申报实例-hs编码
+                sbsl_hs_code_key_value_list = []
+                # 申报实例-商品名称
+                sbsl_hs_product_name_value_list = []
+                # 申报实例-商品规格
+                sbsl_hs_product_type_value_list = []
+
+                for item_select in sbsl_select:
+                    sbsl_hs_code_key_value_list.append(item_select.select('td')[0].text.strip())
+                    sbsl_hs_product_name_value_list.append(item_select.select('td')[1].text.strip())
+                    sbsl_hs_product_type_value_list.append(item_select.select('td')[2].text.strip())
+
+                    # print(sbsl_hs_code_key_value_list)
+                    # print(sbsl_hs_product_name_value_list)
+                    # print(sbsl_hs_product_type_value_list)
+
+                    # count += 1
+                    # if count == 500:
+                    #     break
             except:
                 traceback.print_exc()
                 print(file_path)
                 break
             else:
                 # 存储为json文件
-                pass
-        # break
+                temp_item_dict = {
+                    key1: value1,
+                    key2: value2,
+                    key3: value3,
+                    key4: value4,
+                    key5: value5,
+                    key6: value6,
+                    key7: value7,
+                    key8: value8,
+                    key9: value9,
+                    key10: value10,
+                    key11: value11,
+                    key12: value12,
+                    key13: value13,
+                    key14: value14,
+                    key15: value15,
+                    key16: value16
+                }
+
+                # 海关监管条件
+
+                haiguan_jianguan_tiaojian_str = '海关监管条件'
+
+                temp_item_dict[haiguan_jianguan_tiaojian_str] = {
+                    'name': key17,
+                    'value': []
+                }
+
+                haiguan_jianguan_tiaojian_value_list = temp_item_dict[haiguan_jianguan_tiaojian_str]['value']
+
+                for haiguan_code, haiguan_name in zip(jg_haiguan_code_key_value_list[1:],
+                                                      jg_haiguan_name_key_value_list[1:]):
+                    haiguan_jianguan_tiaojian_value_list.append({
+                        jg_haiguan_code_key_value_list[0]: haiguan_code,
+                        jg_haiguan_name_key_value_list[0]: haiguan_name
+                    })
+
+                # HS法定检验检疫
+
+                hs_fading_jianyan_jianyi_str = 'HS法定检验检疫'
+
+                temp_item_dict[hs_fading_jianyan_jianyi_str] = {
+                    'name': key18,
+                    'value': []
+                }
+
+                hs_fading_jianyan_jianyi_value_list = temp_item_dict[hs_fading_jianyan_jianyi_str]['value']
+
+                for jianyan_code, jianyan_name in zip(jg_jianyan_code_key_value_list[1:],
+                                                      jg_jianyan_name_key_value_list[1:]):
+                    hs_fading_jianyan_jianyi_value_list.append({
+                        jg_jianyan_code_key_value_list[0]: jianyan_code,
+                        jg_jianyan_name_key_value_list[0]: jianyan_name
+                    })
+
+
+
+
+                temp_item_dict['行邮详情'] = {}
+                temp_item_dict['申报实例'] = []
+
+                print(json.dumps(temp_item_dict))
+
+        break
 
 
 if __name__ == "__main__":

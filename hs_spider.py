@@ -11,6 +11,8 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import time
+import traceback
+import cgi
 
 catalog_url = r'https://www.365area.com/hscate'
 
@@ -56,7 +58,7 @@ def parse_catalog():
     with open(catalog_data, 'r', encoding='utf-8') as fp:
         catalog_content = fp.read()
 
-    soup = BeautifulSoup(str(catalog_content), 'lxml')
+    soup = BeautifulSoup(str(catalog_content), 'html.parser')
     catalog_chapter_items = soup.select('div.catehs > a')
     # print(catalog_chapter_items)
     if len(catalog_chapter_items) > 0:
@@ -182,7 +184,7 @@ def parse_all_chapter_two_html():
             item_html_path = os.path.join(item_dir_path, item_html)
             with open(item_html_path, 'r', encoding='utf8') as fp:
                 item_html_text = fp.read()
-            soup = BeautifulSoup(str(item_html_text), 'lxml')
+            soup = BeautifulSoup(str(item_html_text), 'html.parser')
             hs_td_select = soup.select('div.hssearchcon > table > tr > td')
             hs_td_ab_select = soup.select('td.tdtoth')
 
@@ -291,96 +293,138 @@ def parse_all_hs_code_desc_html():
 
     for file_path in os.listdir(all_hs_code_item_html_dir):
         # if file_path != 'www.365area.com_hscode_detail_0106199090.html':
-        if file_path != 'www.365area.com_hscode_detail_3101001990.html':
-            continue
+        # if file_path != 'www.365area.com_hscode_detail_0401200000.html':
+        #     continue
         with open(os.path.join(all_hs_code_item_html_dir, file_path), 'r', encoding='utf8') as fp:
-            soup = BeautifulSoup(fp, 'lxml')
+            soup = BeautifulSoup(fp, 'html.parser')
             # print(soup)
 
-            chapter_and_class_select = soup.select('div.clashow > a')
+            # chapter_and_class_select = soup.select('div.clashow > a')
             # print(chapter_and_class_select)
-            class_name = chapter_and_class_select[0].text
-            chapter_name = chapter_and_class_select[1].text
+            # class_name = chapter_and_class_select[0].text
+            # chapter_name = chapter_and_class_select[1].text
 
-            hs_code_desc_select = soup.select('div.scx_item > div.row_0')
+            try:
 
-            key1 = hs_code_desc_select[0].select('div.odd')[0].text.replace('\n', '').strip()
-            key2 = hs_code_desc_select[1].select('div.odd')[0].text.replace('\n', '').strip()
-            key3 = hs_code_desc_select[2].select('div.odd')[0].text.replace('\n', '').strip()
-            key4 = hs_code_desc_select[3].select('div.odd')[0].text.replace('\n', '').strip()
-            key5 = hs_code_desc_select[3].select('div.odd')[1].text.replace('\n', '').strip()
-            key6 = hs_code_desc_select[4].select('div.odd')[0].text.replace('\n', '').strip()
-            key7 = hs_code_desc_select[4].select('div.odd')[1].text.replace('\n', '').strip()
-            key8 = hs_code_desc_select[4].select('div.odd')[2].text.replace('\n', '').strip()
-            key9 = hs_code_desc_select[5].select('div.odd')[0].text.replace('\n', '').strip()
-            key10 = hs_code_desc_select[5].select('div.odd')[1].text.replace('\n', '').strip()
-            key11 = hs_code_desc_select[5].select('div.odd')[2].text.replace('\n', '').strip()
-            key12 = hs_code_desc_select[6].select('div.odd')[0].text.replace('\n', '').strip()
-            key13 = hs_code_desc_select[6].select('div.odd')[1].text.replace('\n', '').strip()
-            key14 = hs_code_desc_select[7].select('div.odd')[0].text.replace('\n', '').strip()
-            key15 = hs_code_desc_select[8].select('div.odd')[0].text.replace('\n', '').strip()
-            key16 = hs_code_desc_select[9].select('div.odd')[0].text.replace('\n', '').strip()
+                hs_code_desc_select = soup.select('div.scx_item > div.row_0')
+                # print(hs_code_desc_select[1])
 
-            value1 = hs_code_desc_select[0].select('div.even > b')[0].text.replace('\n', '').strip()
-            value2 = hs_code_desc_select[1].select('div.even')[0].text.replace('\n', '').strip()
-            value3 = hs_code_desc_select[2].select('div.even')[0].text.replace('\n', '').strip()
-            value4 = hs_code_desc_select[3].select('div.even1')[0].text.replace('\n', '').strip()
-            value5 = hs_code_desc_select[3].select('div.even1')[1].text.replace('\n', '').strip()
-            value6 = hs_code_desc_select[4].select('div.even1')[0].text.replace('\n', '').strip()
-            value7 = hs_code_desc_select[4].select('div.even1')[1].text.replace('\n', '').strip()
-            value8 = hs_code_desc_select[4].select('div.even1')[2].text.replace('\n', '').strip()
-            value9 = hs_code_desc_select[5].select('div.even1')[0].text.replace('\n', '').strip()
-            value10 = hs_code_desc_select[5].select('div.even1')[1].text.replace('\n', '').strip()
-            value11 = hs_code_desc_select[5].select('div.even1')[2].text.replace('\n', '').strip()
-            value12 = hs_code_desc_select[6].select('div.even1')[0].text.replace('\n', '').strip()
-            value13 = hs_code_desc_select[6].select('div.even1')[1].text.replace('\n', '').strip()
-            value14 = hs_code_desc_select[7].select('div.even')[0].text.replace('\n', '').strip()
-            value15 = hs_code_desc_select[8].select('div.even')[0].text.replace('\n', '').strip()
-            value16 = hs_code_desc_select[9].select('div.even')[0].text.replace('\n', '').strip()
+                key1 = hs_code_desc_select[0].select('div.odd')[0].text.replace('\n', '').strip()
+                key2 = hs_code_desc_select[1].select('div.odd')[0].text.replace('\n', '').strip()
+                key3 = hs_code_desc_select[2].select('div.odd')[0].text.replace('\n', '').strip()
+                key4 = hs_code_desc_select[3].select('div.odd')[0].text.replace('\n', '').strip()
+                key5 = hs_code_desc_select[3].select('div.odd')[1].text.replace('\n', '').strip()
+                key6 = hs_code_desc_select[4].select('div.odd')[0].text.replace('\n', '').strip()
+                key7 = hs_code_desc_select[4].select('div.odd')[1].text.replace('\n', '').strip()
+                key8 = hs_code_desc_select[4].select('div.odd')[2].text.replace('\n', '').strip()
+                key9 = hs_code_desc_select[5].select('div.odd')[0].text.replace('\n', '').strip()
+                key10 = hs_code_desc_select[5].select('div.odd')[1].text.replace('\n', '').strip()
+                key11 = hs_code_desc_select[5].select('div.odd')[2].text.replace('\n', '').strip()
+                key12 = hs_code_desc_select[6].select('div.odd')[0].text.replace('\n', '').strip()
+                key13 = hs_code_desc_select[6].select('div.odd')[1].text.replace('\n', '').strip()
+                key14 = hs_code_desc_select[7].select('div.odd')[0].text.replace('\n', '').strip()
+                key15 = hs_code_desc_select[8].select('div.odd')[0].text.replace('\n', '').strip()
+                key16 = hs_code_desc_select[9].select('div.odd')[0].text.replace('\n', '').strip()
 
-            print(key1,": ",value1)
-            print(key2,": ",value2)
-            print(key3,": ",value3)
-            print(key4,": ",value4)
-            print(key5,": ",value5)
-            print(key6,": ",value6)
-            print(key7,": ",value7)
-            print(key8,": ",value8)
-            print(key9,": ",value9)
-            print(key10,": ",value10)
-            print(key11,": ",value11)
-            print(key12,": ",value12)
-            print(key13,": ",value13)
-            print(key14,": ",value14)
-            print(key15,": ",value15)
-            print(key16,": ",value16)
+                value1 = hs_code_desc_select[0].select('div.even > b')[0].text.replace('\n', '').strip()
+                value2 = hs_code_desc_select[1].select('div.even')[0].text.replace('\n', '').strip()
+                value3 = hs_code_desc_select[2].select('div.even')[0].text.replace('\n', '').strip()
+                value4 = hs_code_desc_select[3].select('div.even1')[0].text.replace('\n', '').strip()
+                value5 = hs_code_desc_select[3].select('div.even1')[1].text.replace('\n', '').strip()
+                value6 = hs_code_desc_select[4].select('div.even1')[0].text.replace('\n', '').strip()
+                value7 = hs_code_desc_select[4].select('div.even1')[1].text.replace('\n', '').strip()
+                value8 = hs_code_desc_select[4].select('div.even1')[2].text.replace('\n', '').strip()
+                value9 = hs_code_desc_select[5].select('div.even1')[0].text.replace('\n', '').strip()
+                value10 = hs_code_desc_select[5].select('div.even1')[1].text.replace('\n', '').strip()
+                value11 = hs_code_desc_select[5].select('div.even1')[2].text.replace('\n', '').strip()
+                value12 = hs_code_desc_select[6].select('div.even1')[0].text.replace('\n', '').strip()
+                value13 = hs_code_desc_select[6].select('div.even1')[1].text.replace('\n', '').strip()
+                value14 = hs_code_desc_select[7].select('div.even')[0].text.replace('\n', '').strip()
+                value15 = hs_code_desc_select[8].select('div.even')[0].text.replace('\n', '').strip()
+                value16 = hs_code_desc_select[9].select('div.even')[0].text.replace('\n', '').strip()
 
-            print()
+                # print(key1,": ",value1)
+                # print(key2,": ",value2)
+                # print(key3,": ",value3)
+                # print(key4,": ",value4)
+                # print(key5,": ",value5)
+                # print(key6,": ",value6)
+                # print(key7,": ",value7)
+                # print(key8,": ",value8)
+                # print(key9,": ",value9)
+                # print(key10,": ",value10)
+                # print(key11,": ",value11)
+                # print(key12,": ",value12)
+                # print(key13,": ",value13)
+                # print(key14,": ",value14)
+                # print(key15,": ",value15)
+                # print(key16,": ",value16)
+                #
+                # print()
 
-            # 海关监管条件key & HS法定检验检疫key
-            jgtjup_select = soup.select('div#jgtjup > span')
-            key17 = jgtjup_select[0].text.replace('\n', '')
-            key18 = jgtjup_select[1].text.replace('\n', '')
+                # 海关监管条件key & HS法定检验检疫key
+                jgtjup_select = soup.select('div#jgtjup > span')
+                key17 = jgtjup_select[0].text.replace('\n', '')
+                key18 = jgtjup_select[1].text.replace('\n', '')
 
-            print(key17,key18)
+                # print(key17,key18)
+                #
+                # print()
 
-            # 海关监管条件
-            jg_haiguan_select = soup.select('div.jgleft')
-            print(jg_haiguan_select)
-            # jg_haiguan_select[0].select('td')[0].text.strip()
+                # 海关监管条件
+                jg_haiguan_select = soup.select('div.jgleft > table > tr')
+                # jg_haiguan_code_key = jg_haiguan_select[0].select('td')[0].text.strip()
+                # jg_haiguan_name_key = jg_haiguan_select[0].select('td')[1].text.strip()
+
+                jg_haiguan_code_key_value_list = []
+                jg_haiguan_name_key_value_list = []
+                for item_select in jg_haiguan_select:
+                    jg_haiguan_code_key_value_list.append(item_select.select('td')[0].text.strip())
+                    jg_haiguan_name_key_value_list.append(item_select.select('td')[1].text.strip())
+
+                # print(jg_haiguan_code_key_value_list)
+                # print(jg_haiguan_name_key_value_list)
+                #
+                # print()
+
+                # HS法定检验检疫
+                jg_jianyan_select = soup.select('div.jgright > table > tr')
+                # print(jg_jianyan_select)
+                jg_jianyan_code_key_value_list = []
+                jg_jianyan_name_key_value_list = []
+                for item_select in jg_jianyan_select:
+                    jg_jianyan_code_key_value_list.append(item_select.select('td')[0].text.strip())
+                    jg_jianyan_name_key_value_list.append(item_select.select('td')[1].text.strip())
+
+                # print(jg_jianyan_code_key_value_list)
+                # print(jg_jianyan_name_key_value_list)
+
+                # 个人行邮（税号）
+                personal_mail_select = soup.select('div#pr_rate > table > tr')
+                # print(personal_mail_select)
+
+                personal_mail_key_list = []
+                personal_mail_value_list = []
+
+                if(len(personal_mail_select)) == 2:
+                    personal_mail_key_list.extend([i.text.strip() for i in personal_mail_select[0].select('td')])
+                    personal_mail_value_list.extend([i.text.strip() for i in personal_mail_select[1].select('td')])
+
+                # print(personal_mail_key_list)
+                # print(personal_mail_value_list)
 
 
-            # HS法定检验检疫
-            jg_jianyan_select = soup.select('div.jgright')
-            # print(jg_jianyan_select)
-
-
-
-
-            # count += 1
-            # if count == 500:
-            # break
-        break
+                # count += 1
+                # if count == 500:
+                #     break
+            except:
+                traceback.print_exc()
+                print(file_path)
+                break
+            else:
+                # 存储为json文件
+                pass
+        # break
 
 
 if __name__ == "__main__":

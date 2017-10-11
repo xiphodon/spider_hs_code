@@ -301,12 +301,13 @@ def parse_all_hs_code_desc_html():
             soup = BeautifulSoup(fp, 'html.parser')
             # print(soup)
 
-        # chapter_and_class_select = soup.select('div.clashow > a')
-        # print(chapter_and_class_select)
-        # class_name = chapter_and_class_select[0].text
-        # chapter_name = chapter_and_class_select[1].text
 
         try:
+            chapter_and_class_select = soup.select('div.clashow > a')
+            # print(chapter_and_class_select)
+            class_name = chapter_and_class_select[0].text
+            chapter_name = chapter_and_class_select[1].text
+
 
             hs_code_desc_select = soup.select('div.scx_item > div.row_0')
             # print(hs_code_desc_select[1])
@@ -445,6 +446,8 @@ def parse_all_hs_code_desc_html():
         else:
             # 存储为json文件
             temp_item_dict = {
+                '所属分类': class_name,
+                '所属章节': chapter_name,
                 key1: value1,
                 key2: value2,
                 key3: value3,
@@ -567,6 +570,6 @@ if __name__ == "__main__":
     # download_chapter_two_href_html()
     # parse_all_chapter_two_html()
     # download_all_hs_code_item_html()
-    # parse_all_hs_code_desc_html()
-    # split_all_hs_code_desc_json()
+    parse_all_hs_code_desc_html()
+    split_all_hs_code_desc_json(3)
     check_split_json_file()

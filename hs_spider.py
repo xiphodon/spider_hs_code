@@ -30,6 +30,9 @@ catalog_json_2 = os.path.join(home_data, r'spider_hs_code_2.json')
 # 包含二类下所有hs编码详情的json
 catalog_json_3 = os.path.join(home_data, r'spider_hs_code_3.json')
 
+# 简单统计信息
+sample_stat_json_file_path = os.path.join(home_data, r'sample_stat.json')
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
     'Connection': 'keep-alive'
@@ -564,12 +567,64 @@ def check_split_json_file():
 
 
 
+def sample_stat_json():
+    '''
+    简单统计hs_code_json数据
+    :return:
+    '''
+    with open(catalog_json, 'r', encoding='utf8') as fp:
+        data_list_1 = json.loads(fp.read())
+
+    class_num = len(data_list_1)
+    chapter_num = 0
+
+    for item in data_list_1:
+        chapter_num += len(item['chapter_two_list'])
+
+    # print(class_num, chapter_num)
+
+    with open(catalog_json_3, 'r', encoding='utf8') as fp:
+        data_list_3 = json.loads(fp.read())
+
+    hs_code_num = len(data_list_3)
+    all_example_num = 0
+    max_item_example_num = 0
+    no_example_item_num = 0
+
+    for item in data_list_3:
+        _len = len(item['申报实例'])
+        all_example_num += _len
+        # max_item_example_num = max(_len, max_item_example_num)
+        if _len > max_item_example_num:
+            max_item_example_num = _len
+        if _len == 0:
+            no_example_item_num += 1
+
+    # print(hs_code_num, all_example_num, max_item_example_num)
+
+    stat_dict = {
+        '类别总计': class_num,
+        '章节总计': chapter_num,
+        '十位HS编码总计': hs_code_num,
+        'HS编码实例总计': all_example_num,
+        '单条HS编码实例数最小值': 0,
+        '单条HS编码实例数最大值': max_item_example_num,
+        '单条HS编码实例数平均值': round(all_example_num / hs_code_num, 4),
+        '单条HS编码无实例数': no_example_item_num
+    }
+
+    with open(sample_stat_json_file_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(stat_dict))
+
+
+
 if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
     # download_chapter_two_href_html()
     # parse_all_chapter_two_html()
     # download_all_hs_code_item_html()
-    parse_all_hs_code_desc_html()
-    split_all_hs_code_desc_json(3)
-    check_split_json_file()
+    # parse_all_hs_code_desc_html()
+    # split_all_hs_code_desc_json()
+    # check_split_json_file()
+    sample_stat_json()

@@ -22,8 +22,7 @@ home_url = r'https://companylist.org'
 
 countries_html_path = os.path.join(home_data, 'countries.html')
 countries_json_path = os.path.join(home_data, 'countries.json')
-
-
+has_286_pages_countries_json_path = os.path.join(home_data, 'has_286_pages_countries.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -100,7 +99,7 @@ def download_all_countries_data_1w():
         #     continue
         print('=======  ', key)
 
-        countries_dir_path = os.path.join(home_data, key)
+        countries_dir_path = os.path.join(home_countries_list_data, key)
         if not os.path.exists(countries_dir_path):
             os.mkdir(countries_dir_path)
         countries_url = data[key] + '1.html'
@@ -146,9 +145,45 @@ def download_all_countries_data_1w():
 #             continue
 
 
+def get_has_286_pages_countries():
+    '''
+    获取拥有286页的国家
+    :return:
+    '''
+    has_286_pages_countries_list = []
+    countries_dir_list = os.listdir(home_countries_list_data)
+    for country_dir in countries_dir_list:
+        # print(country_dir)
+        country_dir_path = os.path.join(home_countries_list_data, country_dir)
+        if len(os.listdir(country_dir_path)) == 286:
+            # print(country_dir_path)
+            has_286_pages_countries_list.append(country_dir_path)
+
+    with open(has_286_pages_countries_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(has_286_pages_countries_list))
+
+
+def get_has_286_pages_countries_dir_path_json_list():
+    '''
+    获取拥有286页的国家文件夹路径列表
+    :return: list列表
+    '''
+    with open(has_286_pages_countries_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
+def parse_has_286_pages_countries_city():
+    '''
+    解析拥有286页的国家拥有的城市
+    :return:
+    '''
+    print(get_has_286_pages_countries_dir_path_json_list())
 
 
 if __name__ == '__main__':
     # download_countries_html()
     # parse_countries_html_to_json()
-    download_all_countries_data_1w(times=10)
+    # download_all_countries_data_1w(times=10)
+    # get_has_286_pages_countries()
+    parse_has_286_pages_countries_city()

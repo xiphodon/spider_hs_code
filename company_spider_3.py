@@ -23,6 +23,8 @@ home_url = r'https://companylist.org'
 countries_html_path = os.path.join(home_data, 'countries.html')
 countries_json_path = os.path.join(home_data, 'countries.json')
 has_286_pages_countries_json_path = os.path.join(home_data, 'has_286_pages_countries.json')
+countries_city_json_path = os.path.join(home_data, 'countries_city.json')
+
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -178,7 +180,46 @@ def parse_has_286_pages_countries_city():
     解析拥有286页的国家拥有的城市
     :return:
     '''
-    print(get_has_286_pages_countries_dir_path_json_list())
+    countries_dir_path_list = get_has_286_pages_countries_dir_path_json_list()
+    countries_city_json = {}
+
+    for country_dir_path in countries_dir_path_list:
+        country_name = country_dir_path.split('\\')[-1]
+        this_country_s_city = set()
+        print(country_name)
+        for file_name in os.listdir(country_dir_path):
+            file_path = os.path.join(country_dir_path, file_name)
+            # print(file_path)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                context = fp.read()
+            soup = BeautifulSoup(context, 'html.parser')
+            city_select = soup.select('span.result-txt > em > a')
+
+            for item in city_select:
+                city_name = item.text.strip()
+                city_href = item.get('href')
+                this_country_s_city.add((city_name, city_href))
+
+        this_country_s_city_dict = dict(this_country_s_city)
+        countries_city_json[country_name] = this_country_s_city_dict
+        # print(countries_city_json)
+        # break
+
+    with open(countries_city_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(countries_city_json))
+
+
+def get_countries_city_json():
+    '''
+    获取国家城市及其链接列表
+    :return:
+    '''
+    with open(countries_city_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
+
 
 
 if __name__ == '__main__':

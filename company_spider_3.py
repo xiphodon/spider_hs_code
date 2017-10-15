@@ -12,11 +12,13 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import traceback
+import random
 
 url_countries = r'https://companylist.org/countries/'
 
 home_data = r'E:\work_all\topease\hs_spider_data\company_spider'
 home_countries_list_data = r'E:\work_all\topease\hs_spider_data\company_spider\countries_list'
+home_countries_city_list_data = r'E:\work_all\topease\hs_spider_data\company_spider\countries_city_list'
 
 home_url = r'https://companylist.org'
 
@@ -219,6 +221,65 @@ def get_countries_city_json():
     return json.loads(data_stream)
 
 
+@try_catch_func
+def download_has_286_pages_countries_city_company_list():
+    '''
+    下载拥有286页的国家按照城市搜索的所有公司的列表网页
+    :return:
+    '''
+    countries_city_json = get_countries_city_json()
+    # print(countries_city_json)
+    for country_key in countries_city_json:
+
+        countries_dir_path = os.path.join(home_countries_city_list_data, country_key)
+        if not os.path.exists(countries_dir_path):
+            os.mkdir(countries_dir_path)
+
+        for city_key in countries_city_json[country_key]:
+            city_href = home_url + countries_city_json[country_key][city_key] + '1.html'
+
+            print('=======  ', country_key, ' -- ', city_key)
+
+            while True:
+
+                file_path = os.path.join(countries_dir_path, city_href.replace('https://', '').replace(r'/', '_'))
+
+                file_is_exists = False
+                if os.path.exists(file_path):
+                    file_is_exists = True
+                    with open(file_path, 'r', encoding='utf8') as fp:
+                        context = fp.read()
+                else:
+                    print(country_key, ',', city_key, ':', city_href)
+
+                    while_times = 0
+                    while True:
+                        try:
+                            r = requests.get(city_href, headers=headers, timeout=5)
+                        except Exception as e:
+                            if while_times < 100:
+                                while_times += 1
+                                print('**********', '尝试重新链接', while_times, '次:', city_href)
+                                continue
+                            else:
+                                raise e
+                        else:
+                            break
+                    time.sleep(random.randint(10, 20)/10)
+                    context = r.text
+
+                soup = BeautifulSoup(context, 'html.parser')
+                next_select = soup.select('a.paginator-next')
+
+                if not file_is_exists:
+                    with open(file_path, 'w', encoding='utf8') as fp:
+                        fp.write(context)
+
+                if len(next_select) == 0:
+                    break
+                else:
+                    city_href = home_url + next_select[0].get('href')
+
 
 
 
@@ -227,4 +288,5 @@ if __name__ == '__main__':
     # parse_countries_html_to_json()
     # download_all_countries_data_1w(times=10)
     # get_has_286_pages_countries()
-    parse_has_286_pages_countries_city()
+    # parse_has_286_pages_countries_city()
+    download_has_286_pages_countries_city_company_list(10)

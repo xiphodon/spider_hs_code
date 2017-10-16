@@ -16,9 +16,9 @@ import random
 
 url_countries = r'https://companylist.org/countries/'
 
-home_data = r'E:\work_all\topease\hs_spider_data\company_spider'
-home_countries_list_data = r'E:\work_all\topease\hs_spider_data\company_spider\countries_list'
-home_countries_city_list_data = r'E:\work_all\topease\hs_spider_data\company_spider\countries_city_list'
+home_data = r'E:\work_all\topease\company_spider'
+home_countries_list_data = r'E:\work_all\topease\company_spider\countries_list'
+home_countries_city_list_data = r'E:\work_all\topease\company_spider\countries_city_list'
 
 home_url = r'https://companylist.org'
 
@@ -26,6 +26,8 @@ countries_html_path = os.path.join(home_data, 'countries.html')
 countries_json_path = os.path.join(home_data, 'countries.json')
 has_286_pages_countries_json_path = os.path.join(home_data, 'has_286_pages_countries.json')
 countries_city_json_path = os.path.join(home_data, 'countries_city.json')
+all_countries_company_list_json_path = os.path.join(home_data, 'all_countries_company_list.json')
+countries_city_company_list_json_path = os.path.join(home_data, 'countries_city_company_list.json')
 
 
 headers = {
@@ -282,6 +284,207 @@ def download_has_286_pages_countries_city_company_list():
 
 
 
+def parse_all_countries_company_list():
+    '''
+    解析所有的国家的公司列表
+    :return:
+    '''
+    all_countries_company_list_json = {}
+    countries_city_json = get_countries_city_json()
+
+    for item_country in os.listdir(home_countries_list_data):
+
+        # if item_country != 'China':
+        #     continue
+        all_countries_company_list_json[item_country] = []
+
+        item_country_path = os.path.join(home_countries_list_data, item_country)
+        print(item_country)
+
+        for item_file_name in os.listdir(item_country_path):
+
+            item_file_path = os.path.join(item_country_path, item_file_name)
+            # print(item_file_path)
+
+            # 是否为拥有详细城市的国家
+            is_countries_city_company = False
+            if item_country in countries_city_json:
+                is_countries_city_company = True
+
+            with open(item_file_path, 'r', encoding='utf8') as fp:
+                context = fp.read()
+
+            soup = BeautifulSoup(context, 'html.parser')
+            # 所属国家、城市
+            country_and_city_select = soup.select('div.container > h1')
+            # 每个公司条目
+            item_company_text_select = soup.select('div.result > span.result-txt')
+
+            if len(country_and_city_select) > 0:
+                country_and_city_text = country_and_city_select[0].text.strip()
+            else:
+                country_and_city_text = ''
+            # print(country_and_city_text)
+
+            for item_company_text in item_company_text_select:
+                # 公司名称、联系方式、详情链接
+                item_company_name_info_desc_href = item_company_text.select('span.result-name')[0]
+                item_company_name_str = item_company_name_info_desc_href.select('a')[0].text.strip()
+                item_company_desc_href_str = item_company_name_info_desc_href.select('a')[0].get('href')
+                # print(item_company_name_str)
+                # print(item_company_desc_href_str)
+
+                # 所在城市、公司地址
+                city_name_and_company_address = item_company_text.select('em')[0]
+                city_name_select = city_name_and_company_address.select('a')
+                if len(city_name_select) > 0:
+                    city_name = city_name_select[0].text.strip()
+                else:
+                    city_name = ''
+                company_address = city_name_and_company_address.select('span')[0].text.strip()
+                # print(city_name)
+                # print(company_address)
+
+                # 产品类型
+                product_type = item_company_text.select('span.result-cats')
+                if len(product_type) > 0:
+                    product_type_text_list = [i.text.strip() for i in product_type[0].select('a')]
+                else:
+                    product_type_text_list = []
+                # print(product_type_text_list)
+
+                if not is_countries_city_company or (is_countries_city_company and city_name == ''):
+                        temp_company_dict = {
+                            'country': item_country,
+                            'company_page_title': country_and_city_text,
+                            'company_name': item_company_name_str,
+                            'desc_href': home_url + item_company_desc_href_str,
+                            'city_name': city_name,
+                            'company_address': company_address,
+                            'product_type': product_type_text_list
+                        }
+                        all_countries_company_list_json[item_country].append(temp_company_dict)
+
+    # print(all_countries_company_list_json)
+    with open(all_countries_company_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(all_countries_company_list_json))
+
+
+def read_all_countries_company_list_json():
+    '''
+    读取所有国家公司列表json（不包拥有含超过1w家公司且有城市的公司数据）
+    :return:
+    '''
+    with open(all_countries_company_list_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
+
+def parse_countries_city_company_list():
+    '''
+    解析按城市划分的公司列表
+    :return:
+    '''
+    countries_city_company_list_json = {}
+
+    for item_country in os.listdir(home_countries_city_list_data):
+        print(item_country)
+        item_country_dir_path = os.path.join(home_countries_city_list_data, item_country)
+        # print(item_country_dir_path)
+        countries_city_company_list_json[item_country] = []
+
+        for item_file_name in os.listdir(item_country_dir_path):
+            item_file_path = os.path.join(item_country_dir_path, item_file_name)
+
+            with open(item_file_path, 'r', encoding='utf8') as fp:
+                context = fp.read()
+
+            soup = BeautifulSoup(context, 'html.parser')
+            # print(soup)
+
+            # 所属国家、城市
+            country_and_city_select = soup.select('div.container > h1')
+            # 每个公司条目
+            item_company_text_select = soup.select('div.result > span.result-txt')
+
+            if len(country_and_city_select) > 0:
+                country_and_city_text = country_and_city_select[0].text.strip()
+            else:
+                country_and_city_text = ''
+
+            for item_company_text in item_company_text_select:
+                # 公司名称、联系方式、详情链接
+                item_company_name_info_desc_href = item_company_text.select('span.result-name')[0]
+                item_company_name_str = item_company_name_info_desc_href.select('a')[0].text.strip()
+                item_company_desc_href_str = item_company_name_info_desc_href.select('a')[0].get('href')
+                # print(item_company_name_str)
+                # print(item_company_desc_href_str)
+
+                # 所在城市、公司地址
+                city_name_and_company_address = item_company_text.select('em')[0]
+                city_name_select = city_name_and_company_address.select('a')
+                if len(city_name_select) > 0:
+                    city_name = city_name_select[0].text.strip()
+                else:
+                    city_name = ''
+                company_address = city_name_and_company_address.select('span')[0].text.strip()
+                # print(city_name)
+                # print(company_address)
+
+
+                # 产品类型
+                product_type = item_company_text.select('span.result-cats')
+                if len(product_type) > 0:
+                    product_type_text_list = [i.text.strip() for i in product_type[0].select('a')]
+                else:
+                    product_type_text_list = []
+                # print(product_type_text_list)
+
+                temp_company_dict = {
+                    'country': item_country,
+                    'company_page_title': country_and_city_text,
+                    'company_name': item_company_name_str,
+                    'desc_href': home_url + item_company_desc_href_str,
+                    'city_name': city_name,
+                    'company_address': company_address,
+                    'product_type': product_type_text_list
+                }
+                countries_city_company_list_json[item_country].append(temp_company_dict)
+
+
+            # break
+        # break
+    # print(countries_city_company_list_json)
+    with open(countries_city_company_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(countries_city_company_list_json))
+
+
+
+def read_data_test():
+    '''
+    读数据测试
+    :return:
+    '''
+    all_countries_company_list_json = read_countries_city_company_list_json()
+
+    for item_country in all_countries_company_list_json:
+        temp_dict_list = all_countries_company_list_json[item_country]
+        for item in temp_dict_list:
+            print(item['company_page_title'])
+            # break
+        # break
+
+def read_countries_city_company_list_json():
+    '''
+    读取按城市划分的国家的公司列表
+    :return:
+    '''
+    with open(countries_city_company_list_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
 
 if __name__ == '__main__':
     # download_countries_html()
@@ -289,4 +492,7 @@ if __name__ == '__main__':
     # download_all_countries_data_1w(times=10)
     # get_has_286_pages_countries()
     # parse_has_286_pages_countries_city()
-    download_has_286_pages_countries_city_company_list(10)
+    # download_has_286_pages_countries_city_company_list(times=10)
+    # parse_all_countries_company_list()
+    parse_countries_city_company_list()
+    # read_data_test()

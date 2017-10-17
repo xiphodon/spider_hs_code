@@ -19,6 +19,7 @@ url_countries = r'https://companylist.org/countries/'
 home_data = r'E:\work_all\topease\company_spider'
 home_countries_list_data = r'E:\work_all\topease\company_spider\countries_list'
 home_countries_city_list_data = r'E:\work_all\topease\company_spider\countries_city_list'
+home_countries_company_desc_list_data = r'E:\work_all\topease\company_spider\countries_company_desc_list'
 
 home_url = r'https://companylist.org'
 
@@ -28,6 +29,7 @@ has_286_pages_countries_json_path = os.path.join(home_data, 'has_286_pages_count
 countries_city_json_path = os.path.join(home_data, 'countries_city.json')
 all_countries_company_list_json_path = os.path.join(home_data, 'all_countries_company_list.json')
 countries_city_company_list_json_path = os.path.join(home_data, 'countries_city_company_list.json')
+final_company_list_json_path = os.path.join(home_data, 'final_company_list_json.json')
 
 
 headers = {
@@ -432,6 +434,12 @@ def parse_countries_city_company_list():
                 # print(city_name)
                 # print(company_address)
 
+                if country_and_city_text != '':
+                    near_index = country_and_city_text.find('near')
+                    douhao_index = country_and_city_text.rfind(',')
+                    if near_index > 0 and douhao_index > 0:
+                        city_name = country_and_city_text[near_index+4:douhao_index].strip()
+                        # print(city_name)
 
                 # 产品类型
                 product_type = item_company_text.select('span.result-cats')
@@ -461,19 +469,6 @@ def parse_countries_city_company_list():
 
 
 
-def read_data_test():
-    '''
-    读数据测试
-    :return:
-    '''
-    all_countries_company_list_json = read_countries_city_company_list_json()
-
-    for item_country in all_countries_company_list_json:
-        temp_dict_list = all_countries_company_list_json[item_country]
-        for item in temp_dict_list:
-            print(item['company_page_title'])
-            # break
-        # break
 
 def read_countries_city_company_list_json():
     '''
@@ -486,6 +481,67 @@ def read_countries_city_company_list_json():
 
 
 
+
+def sum_countries_company_list_json():
+    '''
+    合并国家公司的列表json文件
+    :return:
+    '''
+    all_countries_company_list_json = read_all_countries_company_list_json()
+    countries_city_company_list_json = read_countries_city_company_list_json()
+
+    final_company_list_json = {}
+
+    for item_1 in all_countries_company_list_json:
+        final_company_list_json[item_1] = all_countries_company_list_json[item_1]
+        for item_2 in countries_city_company_list_json:
+            if item_1 == item_2:
+                final_company_list_json[item_1].extend(countries_city_company_list_json[item_2])
+                break
+
+    with open(final_company_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(final_company_list_json))
+
+
+
+def read_final_company_list_json():
+    '''
+    读取最终的公司列表json文件
+    :return:
+    '''
+    with open(final_company_list_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
+
+def download_all_countries_company_desc():
+    '''
+    下载所有公司的公司详情
+    :return:
+    '''
+
+
+
+def read_data_test():
+    '''
+    读数据测试
+    :return:
+    '''
+    read_json = read_final_company_list_json()
+
+    count = 0
+    for item_country in read_json:
+        temp_dict_list = read_json[item_country]
+        for item_company in temp_dict_list:
+            count += 1
+            print(item_company['desc_href'])
+            # break
+        # break
+
+    print(count)
+
+
 if __name__ == '__main__':
     # download_countries_html()
     # parse_countries_html_to_json()
@@ -494,5 +550,6 @@ if __name__ == '__main__':
     # parse_has_286_pages_countries_city()
     # download_has_286_pages_countries_city_company_list(times=10)
     # parse_all_countries_company_list()
-    parse_countries_city_company_list()
-    # read_data_test()
+    # parse_countries_city_company_list()
+    # sum_countries_company_list_json()
+    read_data_test()

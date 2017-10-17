@@ -30,6 +30,7 @@ countries_city_json_path = os.path.join(home_data, 'countries_city.json')
 all_countries_company_list_json_path = os.path.join(home_data, 'all_countries_company_list.json')
 countries_city_company_list_json_path = os.path.join(home_data, 'countries_city_company_list.json')
 final_company_list_json_path = os.path.join(home_data, 'final_company_list_json.json')
+final_id_company_list_json_path = os.path.join(home_data, 'final_id_company_list_json.json')
 
 
 headers = {
@@ -86,8 +87,9 @@ def try_catch_func(func):
             try:
                 print('第%d次恢复爬取' % i)
                 func()
-            except:
+            except Exception as e:
                 print('第%d次爬取中断' % (i+1))
+                print(e)
                 continue
 
     return try_catch_func_in
@@ -515,11 +517,84 @@ def read_final_company_list_json():
 
 
 
+def add_id_to_final_company_list_json():
+    '''
+    添加id到最终的公司列表json文件
+    :return:
+    '''
+    company_id = 0
+    final_company_list_json = read_final_company_list_json()
+    for item_country in final_company_list_json:
+        print(item_country)
+        for item_company in final_company_list_json[item_country]:
+            company_id += 1
+            item_company['company_id'] = str(company_id)
+
+    with open(final_id_company_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(final_company_list_json))
+
+
+
+def read_final_id_company_list_json():
+    '''
+    读取拥有id的公司列表json文件
+    :return:
+    '''
+    with open(final_id_company_list_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
+@try_catch_func
 def download_all_countries_company_desc():
     '''
     下载所有公司的公司详情
     :return:
     '''
+    read_json = read_final_id_company_list_json()
+
+    for item_country in read_json:
+        print(item_country)
+        item_country_dir = os.path.join(home_countries_company_desc_list_data, item_country)
+        if not os.path.exists(item_country_dir):
+            os.mkdir(item_country_dir)
+
+        temp_dict_list = read_json[item_country]
+        for item_company in temp_dict_list:
+            desc_href = item_company['desc_href']
+            company_id = item_company['company_id']
+
+
+            desc_href_file_name = 'company_id' + '^' + company_id + '.html'
+            desc_href_file_path = os.path.join(item_country_dir, desc_href_file_name)
+
+            if os.path.exists(desc_href_file_path):
+                continue
+
+            print(item_country, desc_href)
+
+            while_times = 0
+            while True:
+                try:
+                    result = requests.get(desc_href, headers=headers, timeout=5)
+                except Exception as e:
+                    if while_times < 100:
+                        while_times += 1
+                        print('**********', '尝试重新链接', while_times, '次:', desc_href)
+                        continue
+                    else:
+                        raise e
+                else:
+                    break
+
+
+            with open(desc_href_file_path, 'w', encoding='utf8') as fp:
+                fp.write(result.text)
+
+            time.sleep(random.randint(5, 10) / 10)
+            # time.sleep(random.randint(10, 20) / 10)
+
+
 
 
 
@@ -528,14 +603,15 @@ def read_data_test():
     读数据测试
     :return:
     '''
-    read_json = read_final_company_list_json()
+    read_json = read_final_id_company_list_json()
 
     count = 0
     for item_country in read_json:
         temp_dict_list = read_json[item_country]
         for item_company in temp_dict_list:
             count += 1
-            print(item_company['desc_href'])
+            if item_company['company_id'] == '193':
+                print(item_company)
             # break
         # break
 
@@ -552,4 +628,6 @@ if __name__ == '__main__':
     # parse_all_countries_company_list()
     # parse_countries_city_company_list()
     # sum_countries_company_list_json()
-    read_data_test()
+    # add_id_to_final_company_list_json()
+    download_all_countries_company_desc(times=10)
+    # read_data_test()

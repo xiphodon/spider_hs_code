@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import time
 import traceback
 import random
+from multiprocessing import Pool
 
 url_countries = r'https://companylist.org/countries/'
 
@@ -545,13 +546,31 @@ def read_final_id_company_list_json():
     return json.loads(data_stream)
 
 
-@try_catch_func
+
+def multiprocessing_download_all_countries_company_desc():
+    '''
+    多进程下载所有公司的公司详情
+    :return:
+    '''
+    desc_href_and_desc_href_file_path_list = download_all_countries_company_desc()
+    print(len(desc_href_and_desc_href_file_path_list))
+
+    pool = Pool(50)
+    pool.map(download_all_countries_company_desc_inner_func_request_and_save_html, desc_href_and_desc_href_file_path_list)
+    pool.close()
+    pool.join()
+
+
+
+
+# @try_catch_func
 def download_all_countries_company_desc():
     '''
     下载所有公司的公司详情
     :return:
     '''
     read_json = read_final_id_company_list_json()
+    desc_href_and_desc_href_file_path_list = []
 
     for item_country in read_json:
         print(item_country)
@@ -564,36 +583,51 @@ def download_all_countries_company_desc():
             desc_href = item_company['desc_href']
             company_id = item_company['company_id']
 
-
             desc_href_file_name = 'company_id' + '^' + company_id + '.html'
             desc_href_file_path = os.path.join(item_country_dir, desc_href_file_name)
 
             if os.path.exists(desc_href_file_path):
                 continue
 
-            print(item_country, desc_href)
+            # print(item_country, desc_href)
 
-            while_times = 0
-            while True:
-                try:
-                    result = requests.get(desc_href, headers=headers, timeout=5)
-                except Exception as e:
-                    if while_times < 100:
-                        while_times += 1
-                        print('**********', '尝试重新链接', while_times, '次:', desc_href)
-                        continue
-                    else:
-                        raise e
-                else:
-                    break
+            desc_href_and_desc_href_file_path_list.append((desc_href, desc_href_file_path))
+
+    return desc_href_and_desc_href_file_path_list
 
 
-            with open(desc_href_file_path, 'w', encoding='utf8') as fp:
-                fp.write(result.text)
 
-            time.sleep(random.randint(5, 10) / 10)
-            # time.sleep(random.randint(10, 20) / 10)
 
+def download_all_countries_company_desc_inner_func_request_and_save_html(desc_href_and_desc_href_file_path):
+    '''
+    下载所有国家公司详情的内部方法，请求及存储html页面
+    :return:
+    '''
+
+    desc_href, desc_href_file_path = desc_href_and_desc_href_file_path
+
+    while_times = 0
+    while True:
+        try:
+            result = requests.get(desc_href, headers=headers, timeout=5)
+        except Exception as e:
+            if while_times < 100:
+                while_times += 1
+                print('**********', '尝试重新链接', while_times, '次:', desc_href)
+                continue
+            else:
+                raise e
+        else:
+            break
+
+    with open(desc_href_file_path, 'w', encoding='utf8') as fp:
+        fp.write(result.text)
+
+    print(desc_href_file_path, ' ===== OK')
+
+    # time.sleep(random.randint(5, 10) / 10)
+    # time.sleep(random.randint(10, 20) / 10)
+    # time.sleep(random.randint(20, 30) / 10)
 
 
 
@@ -629,5 +663,6 @@ if __name__ == '__main__':
     # parse_countries_city_company_list()
     # sum_countries_company_list_json()
     # add_id_to_final_company_list_json()
-    download_all_countries_company_desc(times=10)
+    # download_all_countries_company_desc(times=10)
+    multiprocessing_download_all_countries_company_desc()
     # read_data_test()

@@ -32,6 +32,7 @@ all_countries_company_list_json_path = os.path.join(home_data, 'all_countries_co
 countries_city_company_list_json_path = os.path.join(home_data, 'countries_city_company_list.json')
 final_company_list_json_path = os.path.join(home_data, 'final_company_list_json.json')
 final_id_company_list_json_path = os.path.join(home_data, 'final_id_company_list_json.json')
+all_company_desc_no_web_json_path = os.path.join(home_data, 'all_company_desc_no_web.json')
 
 
 headers = {
@@ -546,7 +547,7 @@ def read_final_id_company_list_json():
     return json.loads(data_stream)
 
 
-
+# @try_catch_func
 def multiprocessing_download_all_countries_company_desc():
     '''
     多进程下载所有公司的公司详情
@@ -554,8 +555,8 @@ def multiprocessing_download_all_countries_company_desc():
     '''
     desc_href_and_desc_href_file_path_list = download_all_countries_company_desc()
     print(len(desc_href_and_desc_href_file_path_list))
-
-    pool = Pool(50)
+    # print(desc_href_and_desc_href_file_path_list)
+    pool = Pool(30)
     pool.map(download_all_countries_company_desc_inner_func_request_and_save_html, desc_href_and_desc_href_file_path_list)
     pool.close()
     pool.join()
@@ -586,7 +587,10 @@ def download_all_countries_company_desc():
             desc_href_file_name = 'company_id' + '^' + company_id + '.html'
             desc_href_file_path = os.path.join(item_country_dir, desc_href_file_name)
 
-            if os.path.exists(desc_href_file_path):
+            # if os.path.exists(desc_href_file_path):
+            #     continue
+            #
+            if os.path.exists(desc_href_file_path) and os.path.getsize(desc_href_file_path) > 20 * 1000:
                 continue
 
             # print(item_country, desc_href)
@@ -631,6 +635,94 @@ def download_all_countries_company_desc_inner_func_request_and_save_html(desc_hr
 
 
 
+def parse_all_countries_company_desc_files_to_json():
+    '''
+    解析所有国家的详情页面 → json文件
+    :return:
+    '''
+    all_company_desc_no_web_json_list = []
+
+    for item_country in os.listdir(home_countries_company_desc_list_data):
+        # if item_country != 'Africa':
+        #     continue
+        item_country_dir_path = os.path.join(home_countries_company_desc_list_data, item_country)
+        for item_file in os.listdir(item_country_dir_path):
+
+            print(item_country, item_file)
+
+            item_file_path = os.path.join(item_country_dir_path, item_file)
+
+            with open(item_file_path, 'r', encoding='utf8') as fp:
+                context = fp.read()
+
+            soup = BeautifulSoup(context, 'html.parser')
+
+            # if soup.find('REFLEX MOULDINGS LTD') == None:
+            #     print(item_file_path.split('^')[-1].split('.')[0])
+            #     continue
+
+            # 公司id（define）
+            company_id_index_start = item_file_path.rfind('^') + 1
+            company_id_index_end = item_file_path.rfind('.html')
+            company_id = item_file_path[company_id_index_start:company_id_index_end]
+
+            # 公司名称
+            company_name_select = soup.select('div#band > div.container > h1')
+            company_name_text = company_name_select[0].text
+
+            # 公司地址等详情
+            company_desc_address_select = soup.select('div.address')[0]
+            # 公司地址等详情-公司电话
+            # company_telephone_select = company_desc_address_select.select('span#phone > a')[0]
+            # company_telephone_onclick_text = str(company_telephone_select.get('onclick'))
+            # company_telephone_index_start = company_telephone_onclick_text.find("'") + 1
+            # company_telephone_index_end = company_telephone_onclick_text.rfind("'")
+            # company_telephone_origin_text = company_telephone_onclick_text[company_telephone_index_start:company_telephone_index_end]
+            # print(company_telephone_onclick_text)
+            # print(company_telephone_origin_text)
+            # print()
+            # 公司地址等详情-公司网站
+            company_web_href_select = company_desc_address_select.select('a#cdetail-web')
+            if len(company_web_href_select) > 0:
+                company_web_href_end = company_web_href_select[0].get('href')
+            else:
+                company_web_href_end = ''
+            # 公司地址等详情-公司所属国家
+            company_country_select = company_desc_address_select.select('span.flag')[0]
+            company_country_text = company_country_select.text
+            # 公司地址等详情-公司地址，公司电话
+            company_address_select = company_desc_address_select.select('meta')
+            for item_meta in company_address_select:
+                if item_meta.get('itemprop') == 'address':
+                    company_address_text = item_meta.get('content').replace(r'<br />',' ')
+                if item_meta.get('itemprop') == 'telephone':
+                    company_telephone_origin_text = item_meta.get('content')
+
+            # 公司描述
+            company_description_select = soup.select('div#company-desc-div')[0]
+            company_description_text = company_description_select.text
+
+            temp_dict = {
+                'company_id': company_id,
+                'company_name_text': company_name_text,
+                'company_web_href_end': company_web_href_end,
+                'company_country_text': company_country_text,
+                'company_address_text': company_address_text,
+                'company_telephone_origin_text': company_telephone_origin_text,
+                'company_description_text': company_description_text
+            }
+
+            all_company_desc_no_web_json_list.append(temp_dict)
+
+            # break
+        # break
+
+    with open(all_company_desc_no_web_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(all_company_desc_no_web_json_list))
+
+
+
+
 
 def read_data_test():
     '''
@@ -664,5 +756,6 @@ if __name__ == '__main__':
     # sum_countries_company_list_json()
     # add_id_to_final_company_list_json()
     # download_all_countries_company_desc(times=10)
-    multiprocessing_download_all_countries_company_desc()
+    # multiprocessing_download_all_countries_company_desc()
+    parse_all_countries_company_desc_files_to_json()
     # read_data_test()

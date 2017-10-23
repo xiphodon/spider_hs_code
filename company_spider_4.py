@@ -28,6 +28,8 @@ headers = {
     'Connection': 'keep-alive'
 }
 
+proxies = { "http": "http://61.135.217.7:80", "https": "http://182.99.195.131:8118", }
+
 
 def download_countries_list():
     '''
@@ -82,6 +84,7 @@ def while_requests_get(page_url):
     while True:
         try:
             result = requests.get(page_url, headers=headers, timeout=5)
+            # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
             if while_times < 100:
                 while_times += 1
@@ -156,16 +159,11 @@ def download_countries_company_list_files():
                     fp.write(inner_context)
 
                 print(country_name, page_size, page_url_path)
-                time.sleep(random.randint(10, 20)/10)
+                # time.sleep(random.randint(10, 50)/10)
 
         # break
 
         # print(country_name, country_url)
-
-
-
-
-
 
 
 

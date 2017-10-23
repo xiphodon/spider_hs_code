@@ -155,11 +155,15 @@ def download_countries_company_list_files():
             else:
                 result = while_requests_get(page_url)
                 inner_context = result.text
-                with open(page_url_path, 'w', encoding='utf8') as fp:
-                    fp.write(inner_context)
 
-                print(country_name, page_size, page_url_path)
-                # time.sleep(random.randint(10, 50)/10)
+                if len(inner_context) < 2 << 10:
+                    print(1/0)
+                else:
+                    with open(page_url_path, 'w', encoding='utf8') as fp:
+                        fp.write(inner_context)
+
+                    print(country_name, page_size, page_url_path)
+                    # time.sleep(random.randint(10, 50)/10)
 
         # break
 

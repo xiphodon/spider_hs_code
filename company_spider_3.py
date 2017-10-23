@@ -33,6 +33,7 @@ countries_city_company_list_json_path = os.path.join(home_data, 'countries_city_
 final_company_list_json_path = os.path.join(home_data, 'final_company_list_json.json')
 final_id_company_list_json_path = os.path.join(home_data, 'final_id_company_list_json.json')
 all_company_desc_no_web_json_path = os.path.join(home_data, 'all_company_desc_no_web.json')
+company_desc_list_json_path = os.path.join(home_data, 'company_desc_list.json')
 
 
 headers = {
@@ -721,6 +722,83 @@ def parse_all_countries_company_desc_files_to_json():
         fp.write(json.dumps(all_company_desc_no_web_json_list))
 
 
+def read_all_company_desc_no_web_json():
+    '''
+    读取所有的公司详情json（no web）
+    :return:
+    '''
+    with open(all_company_desc_no_web_json_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+
+    return json.loads(data)
+
+
+
+def extend_all_company_desc_json():
+    '''
+    补充扩展公司详情json文件
+    :return:
+    '''
+    all_company_desc_no_web_json = read_all_company_desc_no_web_json()
+    final_id_company_list_json = read_final_id_company_list_json()
+
+    company_desc_list_json = []
+
+    for item_country in final_id_company_list_json:
+        item_country_company_list = final_id_company_list_json[item_country]
+        for item_company_2 in item_country_company_list:
+
+            company_id_2 = item_company_2['company_id']
+            company_desc_href_2 = item_company_2['desc_href']
+            city_name_2 = item_company_2['city_name']
+            product_type_2 = item_company_2['product_type']
+
+            print(item_country, company_id_2)
+
+            for item_company_1 in all_company_desc_no_web_json:
+                company_id_1 = item_company_1['company_id']
+                company_name_1 = item_company_1['company_name_text']
+                company_web_href_end_1 = item_company_1['company_web_href_end']
+                country_name_1 = item_company_1['company_country_text']
+                company_address_1 = item_company_1['company_address_text']
+                company_telephone_1 = item_company_1['company_telephone_origin_text']
+                company_description_1 = item_company_1['company_description_text']
+
+
+                if company_id_1 == company_id_2:
+
+                    temp_dict = {
+                        'company_id': company_id_1,
+                        'company_name': company_name_1,
+                        'company_country': country_name_1,
+                        'company_city': city_name_2,
+                        'company_adrress': company_address_1,
+                        'company_telephone': company_telephone_1,
+                        'company_web': company_desc_href_2 + company_web_href_end_1,
+                        'company_product': product_type_2,
+                        'company_description': company_description_1
+                    }
+
+                    company_desc_list_json.append(temp_dict)
+
+                    print(item_country, company_id_2, 'OK\n')
+
+                    break
+
+                else:
+                    continue
+
+    print(len(company_desc_list_json))
+    print(company_desc_list_json[0])
+    print(company_desc_list_json[1])
+    print(company_desc_list_json[2])
+
+    with open(company_desc_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_list_json))
+
+
+
+
 
 
 
@@ -757,5 +835,6 @@ if __name__ == '__main__':
     # add_id_to_final_company_list_json()
     # download_all_countries_company_desc(times=10)
     # multiprocessing_download_all_countries_company_desc()
-    parse_all_countries_company_desc_files_to_json()
+    # parse_all_countries_company_desc_files_to_json()
+    extend_all_company_desc_json()
     # read_data_test()

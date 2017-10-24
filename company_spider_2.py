@@ -6,9 +6,9 @@
 # @File    : company_spider_2.py
 # @Software: PyCharm
 
-import requests
+# import requests
 import json
-import os
+# import os
 from bs4 import BeautifulSoup
 import time
 from selenium import webdriver
@@ -18,12 +18,20 @@ headers = {
     'Connection': 'keep-alive'
 }
 
+
 def download_all_us_company_json():
-    '''
+    """
     下载所有美国公司的json数据
     :return:
-    '''
-    url = r'http://listings.findthecompany.com/ajax_search?_len=100&page=0&app_id=1662&_sortfld=sales_volume_us&_sortdir=DESC&_fil[0][field]=phys_country_code&_fil[0][operator]==&_fil[0][value]=805&_tpl=srp&head[]=company_name&head[]=_GC_address&head[]=total_employees&head[]=employees_here&head[]=sales_volume_us&head[]=year_started&head[]=citystate&head[]=localeze_classification&head[]=id&head[]=_encoded_title'
+    """
+    url = r'http://listings.findthecompany.com/ajax_search?' \
+          r'_len=100&page=0&app_id=1662&_sortfld=sales_volume_us' \
+          r'&_sortdir=DESC&_fil[0][field]=phys_country_code' \
+          r'&_fil[0][operator]==&_fil[0][value]=805&_tpl=srp' \
+          r'&head[]=company_name&head[]=_GC_address' \
+          r'&head[]=total_employees&head[]=employees_here&head[]=sales_volume_us' \
+          r'&head[]=year_started&head[]=citystate&head[]=localeze_classification' \
+          r'&head[]=id&head[]=_encoded_title'
     driver = webdriver.Firefox()
     driver.get(url)
     time.sleep(5)
@@ -41,10 +49,10 @@ def download_all_us_company_json():
 
 
 def parse_test_html_get_json():
-    '''
+    """
     从获取的测试html中获取json字符串
     :return:
-    '''
+    """
     with open(r'C:\Users\topeasecpb\Desktop\test.html', 'r', encoding='utf8') as fp:
         data_stream = fp.read()
 

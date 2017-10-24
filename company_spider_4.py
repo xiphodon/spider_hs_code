@@ -10,10 +10,9 @@ import json
 import os
 import requests
 from bs4 import BeautifulSoup
-import time
-import random
-from multiprocessing import Pool
-
+# import time
+# import random
+# from multiprocessing import Pool
 
 home_url = r'http://www.listcompany.org'
 
@@ -28,26 +27,25 @@ headers = {
     'Connection': 'keep-alive'
 }
 
-proxies = { "http": "http://61.135.217.7:80", "https": "http://182.99.195.131:8118", }
+proxies = {"http": "http://61.135.217.7:80", "https": "http://182.99.195.131:8118", }
 
 
 def download_countries_list():
-    '''
+    """
     下载国家列表页
     :return:
-    '''
+    """
     result = requests.get(home_url + '/', headers=headers, timeout=5)
     # print(result.text)
     with open(company_countries_list_html, 'w', encoding='utf8') as fp:
         fp.write(result.text)
 
 
-
 def parse_countries_list_to_json():
-    '''
+    """
     解析国家列表界面，并持久化为json文件
     :return:
-    '''
+    """
     countries_url_list_json = []
 
     with open(company_countries_list_html, 'r', encoding='utf8') as fp:
@@ -74,12 +72,11 @@ def parse_countries_list_to_json():
         fp.write(json.dumps(countries_url_list_json))
 
 
-
 def while_requests_get(page_url):
-    '''
+    """
     循环请求
     :return:
-    '''
+    """
     while_times = 0
     while True:
         try:
@@ -96,12 +93,11 @@ def while_requests_get(page_url):
             return result
 
 
-
 def download_countries_company_list_files():
-    '''
+    """
     下载各个国家的公司列表页面
     :return:
-    '''
+    """
     with open(countries_url_list_json_path, 'r', encoding='utf8') as fp:
         countries_url_list_json = json.loads(fp.read())
 
@@ -109,7 +105,7 @@ def download_countries_company_list_files():
     for item_country_url_dict in countries_url_list_json:
         country_name = item_country_url_dict['country_name']
         country_url = item_country_url_dict['country_url']
-        country_url_home = str(country_url).replace(r'.html','')
+        country_url_home = str(country_url).replace(r'.html', '')
 
         print(country_name)
 
@@ -118,7 +114,7 @@ def download_countries_company_list_files():
             os.mkdir(country_dir_path)
 
         first_page_url = country_url_home + r'/p1.html'
-        first_page_url_file_name = first_page_url.replace('http://','').replace('/','_')
+        first_page_url_file_name = first_page_url.replace('http://', '').replace('/', '_')
         first_page_url_path = os.path.join(country_dir_path, first_page_url_file_name)
 
         if os.path.exists(first_page_url_path):
@@ -136,14 +132,13 @@ def download_countries_company_list_files():
 
         if len(last_page_select) > 0:
             if last_page_select[-1].text == 'Last':
-                page_size_href = last_page_select[-1].get('href').replace('.html','')
+                page_size_href = last_page_select[-1].get('href').replace('.html', '')
                 page_size_index_start = page_size_href.rfind('p') + 1
                 page_size = int(page_size_href[page_size_index_start:])
             else:
                 continue
         else:
             continue
-
 
         for page_index in range(2, page_size + 1):
             page_url = country_url_home + r'/p' + str(page_index) + r'.html'
@@ -157,7 +152,7 @@ def download_countries_company_list_files():
                 inner_context = result.text
 
                 if len(inner_context) < 2 << 10:
-                    print(1/0)
+                    print(1 / 0)
                 else:
                     with open(page_url_path, 'w', encoding='utf8') as fp:
                         fp.write(inner_context)
@@ -165,10 +160,9 @@ def download_countries_company_list_files():
                     print(country_name, page_size, page_url_path)
                     # time.sleep(random.randint(10, 50)/10)
 
-        # break
+                    # break
 
-        # print(country_name, country_url)
-
+                    # print(country_name, country_url)
 
 
 if __name__ == '__main__':

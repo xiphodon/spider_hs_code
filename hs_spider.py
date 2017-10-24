@@ -12,7 +12,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import traceback
-import cgi
+# import cgi
 
 catalog_url = r'https://www.365area.com/hscate'
 
@@ -40,20 +40,20 @@ headers = {
 
 
 def get_hs_code_catalog():
-    '''
+    """
     获取hs编码总目录，并输出为文件
     :return:
-    '''
+    """
     result = requests.get(catalog_url, headers=headers)
     with open(catalog_data, 'w', encoding='utf-8') as fp:
         fp.write(result.text)
 
 
 def parse_catalog():
-    '''
+    """
     解析目录文件，并输出为json文件
     :return:
-    '''
+    """
     spider_hs_code_json = []
     # 大类目录列表
     catalog_chapter_list = []
@@ -100,20 +100,20 @@ def parse_catalog():
 
 
 def get_spider_hs_code_json():
-    '''
+    """  
     获取持久化的json文件
     :return:
-    '''
+    """
     with open(catalog_json, 'r', encoding='utf8') as fp:
         spider_hs_code_json = json.loads(fp.read())
     return spider_hs_code_json
 
 
 def download_chapter_two_href_html():
-    '''
+    """  
     下载子目录链接的网页
     :return:
-    '''
+    """
     spider_hs_code_json = get_spider_hs_code_json()
 
     all_chapter_two_href_list = []
@@ -138,12 +138,13 @@ def download_chapter_two_href_html():
         soup = BeautifulSoup(result.text, 'lxml')
         page_select = soup.select('span.pagenext > a')
 
+        page_number = -1
         if len(page_select) > 0:
             for page_number_item in page_select[::-1]:
                 text_temp = page_number_item.text
                 try:
                     text_temp_int = int(text_temp)
-                except ValueError as e:
+                except ValueError:
                     continue
                 else:
                     page_number = text_temp_int
@@ -170,10 +171,9 @@ def download_chapter_two_href_html():
 
 
 def parse_all_chapter_two_html():
-    '''
-    解析所有的二级目录网页
+    """  解析所有的二级目录网页
     :return:
-    '''
+    """
     all_chapter_hs_code_list = []
 
     # 章节文件夹列表遍历
@@ -244,20 +244,20 @@ def parse_all_chapter_two_html():
 
 
 def get_all_chapter_hs_code_list_json():
-    '''
+    """  
     获取二级目录详情的json文件
     :return:
-    '''
+    """
     with open(catalog_json_2, 'r', encoding='utf8') as fp:
         chapter_hs_code_list_stream = fp.read()
     return json.loads(chapter_hs_code_list_stream)
 
 
 def download_all_hs_code_item_html():
-    '''
+    """  
     下载所有的hs详细内容的html网页
     :return:
-    '''
+    """
     all_chapter_hs_code_json = get_all_chapter_hs_code_list_json()
 
     all_chapter_hs_code_href_list = []
@@ -287,11 +287,10 @@ def download_all_hs_code_item_html():
 
 
 def parse_all_hs_code_desc_html():
-    '''
+    """
     解析所有的hs编码的详情页
     :return:
-    '''
-
+    """
     all_hs_code_desc_html_json = []
 
     count = 0
@@ -304,13 +303,11 @@ def parse_all_hs_code_desc_html():
             soup = BeautifulSoup(fp, 'html.parser')
             # print(soup)
 
-
         try:
             chapter_and_class_select = soup.select('div.clashow > a')
             # print(chapter_and_class_select)
             class_name = chapter_and_class_select[0].text
             chapter_name = chapter_and_class_select[1].text
-
 
             hs_code_desc_select = soup.select('div.scx_item > div.row_0')
             # print(hs_code_desc_select[1])
@@ -418,7 +415,6 @@ def parse_all_hs_code_desc_html():
             # print(personal_mail_key_list)
             # print(personal_mail_value_list)
 
-
             # 申报实例
             sbsl_select = soup.select('div#sbsl > table > tr')
             # print(sbsl_select)
@@ -442,7 +438,7 @@ def parse_all_hs_code_desc_html():
             # if count == 500:
             #     break
             print(count)
-        except:
+        except ValueError:
             traceback.print_exc()
             print(file_path)
             break
@@ -534,17 +530,17 @@ def parse_all_hs_code_desc_html():
         fp.write(json.dumps(all_hs_code_desc_html_json))
 
 
-def split_all_hs_code_desc_json(num = 5):
-    '''
+def split_all_hs_code_desc_json(num=5):
+    """
     分割原hs_code_desc的json文件为多份
     :return:
-    '''
+    """
     with open(catalog_json_3, 'r', encoding='utf8') as fp:
         data_list = json.loads(fp.read())
 
     item_len = len(data_list) // num + 1
     for i in range(num):
-        with open(catalog_json_3.replace('.json','_' + str(i) + '.json'), 'w', encoding='utf8') as fp:
+        with open(catalog_json_3.replace('.json', '_' + str(i) + '.json'), 'w', encoding='utf8') as fp:
             start_point = i * item_len
             end_point = min((i+1) * item_len, len(data_list))
             item_data_list = data_list[start_point:end_point]
@@ -552,10 +548,10 @@ def split_all_hs_code_desc_json(num = 5):
 
 
 def check_split_json_file():
-    '''
+    """
     分割json文件检查
     :return:
-    '''
+    """
     all_json_files_name = list(filter(lambda x: str(x).startswith('spider_hs_code_3_'), os.listdir(home_data)))
 
     all_len = 0
@@ -566,12 +562,11 @@ def check_split_json_file():
         print(all_len)
 
 
-
 def sample_stat_json():
-    '''
+    """
     简单统计hs_code_json数据
     :return:
-    '''
+    """
     with open(catalog_json, 'r', encoding='utf8') as fp:
         data_list_1 = json.loads(fp.read())
 
@@ -615,7 +610,6 @@ def sample_stat_json():
 
     with open(sample_stat_json_file_path, 'w', encoding='utf8') as fp:
         fp.write(json.dumps(stat_dict))
-
 
 
 if __name__ == "__main__":

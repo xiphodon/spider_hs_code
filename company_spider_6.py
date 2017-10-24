@@ -10,10 +10,9 @@ import json
 import os
 import requests
 from bs4 import BeautifulSoup
-import time
-import random
+# import time
+# import random
 from multiprocessing import Pool
-
 
 home_url = r'http://buyer.waimaoba.com'
 
@@ -34,10 +33,10 @@ headers = {
 
 
 def while_requests_get(page_url):
-    '''
+    """
     循环请求
     :return:
-    '''
+    """
     while_times = 0
     while True:
         try:
@@ -54,24 +53,22 @@ def while_requests_get(page_url):
             return result
 
 
-
 def download_industry_html():
-    '''
+    """
     下载产业名录页
     :return:
-    '''
+    """
     result = while_requests_get(home_url)
     # print(result.encoding)
     with open(industry_list_html, 'w', encoding='utf8') as fp:
-        fp.write(bytes(result.text,'iso-8859-1').decode('utf-8'))
-
+        fp.write(bytes(result.text, 'iso-8859-1').decode('utf-8'))
 
 
 def parse_industry_html_to_json():
-    '''
+    """
     解析产业名录页面
     :return:
-    '''
+    """
     industry_list_json = []
     with open(industry_list_html, 'r', encoding='utf8') as fp:
         context = fp.read()
@@ -79,7 +76,6 @@ def parse_industry_html_to_json():
     soup = BeautifulSoup(context, 'html.parser')
     industry_select = soup.select('div.content > ul.menu')[0].select('li')
     for item_industry in industry_select:
-
         industry_name = item_industry.text.strip()
         industry_href = home_url + item_industry.select('a')[0].get('href')
 
@@ -95,21 +91,20 @@ def parse_industry_html_to_json():
 
 
 def read_industry_list_json():
-    '''
+    """
     读取产业名录json文件
     :return:
-    '''
+    """
     with open(industry_list_json_path, 'r', encoding='utf8') as fp:
         data = fp.read()
     return json.loads(data)
 
 
-
 def get_company_list_files_to_json():
-    '''
+    """
     获取所有的公司列表页面，生成json文件
     :return:
-    '''
+    """
 
     company_list_href_json = []
     industry_list_json = read_industry_list_json()
@@ -123,7 +118,7 @@ def get_company_list_files_to_json():
         if not os.path.exists(industry_name_path):
             os.mkdir(industry_name_path)
 
-        industry_href_name = industry_href.replace('http://','').replace('/','_') + '.html'
+        industry_href_name = industry_href.replace('http://', '').replace('/', '_') + '.html'
         industry_href_path = os.path.join(industry_name_path, industry_href_name)
 
         if os.path.exists(industry_href_path):
@@ -163,29 +158,27 @@ def get_company_list_files_to_json():
         fp.write(json.dumps(company_list_href_json))
 
 
-
 def read_company_list_href_json():
-    '''
+    """
     读取公司列表href的json文件
     :return:
-    '''
+    """
     with open(company_list_href_json_path, 'r', encoding='utf8') as fp:
         data = fp.read()
     return json.loads(data)
 
 
-
 def download_company_list_files(item_dict):
-    '''
+    """
     下载所有的公司列表页
     :return:
-    '''
+    """
     industry_name = item_dict['industry_name']
     industry_href = item_dict['industry_href']
 
     industry_name_path = os.path.join(industry_list_dir_path, industry_name)
 
-    file_name = industry_href.replace('http://','').replace('/','_')
+    file_name = industry_href.replace('http://', '').replace('/', '_')
     file_path = os.path.join(industry_name_path, file_name)
 
     if not os.path.exists(file_path):
@@ -199,10 +192,10 @@ def download_company_list_files(item_dict):
 
 
 def multiprocessing_download_files(download_file_func, read_json_list, pool_num=30):
-    '''
+    """
     多进程下载页面
     :return:
-    '''
+    """
     print(len(read_json_list))
 
     pool = Pool(pool_num)
@@ -211,12 +204,11 @@ def multiprocessing_download_files(download_file_func, read_json_list, pool_num=
     pool.join()
 
 
-
 def parse_company_list_files_to_json():
-    '''
+    """
     解析所有公司列表页，生成json文件
     :return:
-    '''
+    """
     company_desc_url_list_json = []
 
     for industry_dir in os.listdir(industry_list_dir_path):
@@ -258,32 +250,31 @@ def parse_company_list_files_to_json():
 
 
 def read_company_desc_url_list_json():
-    '''
+    """
     读取公司详情链接列表的json文件
     :return:
-    '''
+    """
     with open(company_desc_url_list_json_path, 'r', encoding='utf8') as fp:
         data = fp.read()
     return json.loads(data)
 
 
-
 def download_company_desc_file(company_dict):
-    '''
+    """
     下载当前公司的详情页
     :param company_dict:
     :return:
-    '''
-    company_name = company_dict['company_name']
+    """
+    # company_name = company_dict['company_name']
     company_href = company_dict['company_href']
     company_industry = company_dict['company_industry']
-    company_country = company_dict['company_country']
+    # company_country = company_dict['company_country']
 
     company_industry_dir = os.path.join(company_desc_dir_path, company_industry)
     if not os.path.exists(company_industry_dir):
         os.mkdir(company_industry_dir)
 
-    file_name = company_href.replace('http://','').replace('/','_')
+    file_name = company_href.replace('http://', '').replace('/', '_').replace('?', '_')
     file_path = os.path.join(company_industry_dir, file_name)
 
     if not os.path.exists(file_path):
@@ -294,8 +285,6 @@ def download_company_desc_file(company_dict):
         print(company_industry, company_href, 'OK')
     else:
         print(company_industry, file_name, 'saved')
-
-
 
 
 if __name__ == '__main__':

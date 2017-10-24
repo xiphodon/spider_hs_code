@@ -21,8 +21,10 @@ time.sleep(2)
 # 检查标题是否为‘百度一下，你就知道’
 assert '百度一下，你就知道' in driver.title
 # 找到名字为wd的元素，赋值给elem
-elem = driver.find_element_by_name('wd') # 找到搜索框
-elem.send_keys('selenium' + Keys.RETURN)# 搜索selenium
+# 找到搜索框
+elem = driver.find_element_by_name('wd')
+# 搜索selenium
+elem.send_keys('selenium' + Keys.RETURN)
 
 time.sleep(2)
 
@@ -36,7 +38,6 @@ time.sleep(2)
 #     if pay_window != normal_window:
 #         driver.switch_to.window(pay_window)
 # #####希望可以帮到你。
-
 
 
 with open(r'C:\Users\topeasecpb\Desktop\test.html', 'w', encoding='utf8') as fp:

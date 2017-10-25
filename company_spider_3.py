@@ -829,16 +829,20 @@ def get_company_web_to_json():
         company_web_mask = company_desc_dict['company_web']
         if company_web_mask == '':
             continue
-        # company_web_mask = r'https://companylist.org/Details/11538163/American_Samoa/ASIA_INTERNATIONAL_INVESTMENT_JOINT_STOCK_COMPANY/clickthru/'
-        company_web_mask = r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
+        # company_web_mask =
+        # r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
         try:
             result = while_requests_get(company_web_mask, while_times_define=5)
         except (IOError, requests.packages.urllib3.exceptions.MaxRetryError) as e:
             pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d{2}"
-            re_result = re.match(pattern, str(e))
-            company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
-            company_desc_dict['company_web_enable'] = False
-            print(company_desc_dict['company_country'], company_desc_dict['company_web_origin'], 'False ******************')
+            re_result = re.search(pattern, str(e))
+            if re_result:
+                company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
+                company_desc_dict['company_web_enable'] = False
+            else:
+                company_desc_dict['company_web_origin'] = ''
+                company_desc_dict['company_web_enable'] = False
+            print(company_desc_dict['company_country'], company_desc_dict['company_web_origin'], 'False **********')
         else:
             company_desc_dict['company_web_origin'] = result.url
             company_desc_dict['company_web_enable'] = True

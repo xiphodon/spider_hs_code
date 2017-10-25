@@ -14,6 +14,7 @@ import time
 # import traceback
 import random
 from multiprocessing import Pool
+import re
 
 url_countries = r'https://companylist.org/countries/'
 
@@ -34,6 +35,7 @@ final_company_list_json_path = os.path.join(home_data, 'final_company_list_json.
 final_id_company_list_json_path = os.path.join(home_data, 'final_id_company_list_json.json')
 all_company_desc_no_web_json_path = os.path.join(home_data, 'all_company_desc_no_web.json')
 company_desc_list_json_path = os.path.join(home_data, 'company_desc_list.json')
+company_desc_list_has_web_json_path = os.path.join(home_data, 'company_desc_list_has_web.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -735,14 +737,17 @@ def extend_all_company_desc_json():
 
             for item_company_1 in all_company_desc_no_web_json:
                 company_id_1 = item_company_1['company_id']
-                company_name_1 = item_company_1['company_name_text']
-                company_web_href_end_1 = item_company_1['company_web_href_end']
-                country_name_1 = item_company_1['company_country_text']
-                company_address_1 = item_company_1['company_address_text']
-                company_telephone_1 = item_company_1['company_telephone_origin_text']
-                company_description_1 = item_company_1['company_description_text']
 
                 if company_id_1 == company_id_2:
+
+                    company_name_1 = item_company_1['company_name_text']
+                    company_web_href_end_1 = item_company_1['company_web_href_end']
+                    country_name_1 = item_company_1['company_country_text']
+                    company_address_1 = item_company_1['company_address_text']
+                    company_telephone_1 = item_company_1['company_telephone_origin_text']
+                    company_description_1 = item_company_1['company_description_text']
+
+                    company_web = company_desc_href_2 + company_web_href_end_1 if company_web_href_end_1 != "" else ""
 
                     temp_dict = {
                         'company_id': company_id_1,
@@ -751,7 +756,7 @@ def extend_all_company_desc_json():
                         'company_city': city_name_2,
                         'company_adrress': company_address_1,
                         'company_telephone': company_telephone_1,
-                        'company_web': company_desc_href_2 + company_web_href_end_1,
+                        'company_web': company_web,
                         'company_product': product_type_2,
                         'company_description': company_description_1
                     }
@@ -774,24 +779,87 @@ def extend_all_company_desc_json():
         fp.write(json.dumps(company_desc_list_json))
 
 
+def read_company_desc_list_json():
+    """
+    读取公司详情列表（网址跳转）
+    :return:
+    """
+    with open(company_desc_list_json_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    return json.loads(data)
+
+
+def while_requests_get(page_url, while_times_define=10):
+    """
+    循环请求
+    :return:
+    """
+    while_times = 0
+    while True:
+        try:
+            result = requests.get(page_url, headers=headers, timeout=5)
+            # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
+        except Exception as e:
+            if while_times < while_times_define:
+                while_times += 1
+                print('**********', '尝试重新链接', while_times, '次:', page_url)
+                continue
+            else:
+                raise e
+        else:
+            return result
+
+
+def get_company_web_to_json():
+    """
+    获取公司网址
+    :return:
+    """
+    company_desc_list_json = read_company_desc_list_json()
+    print('read data OK')
+
+    # count = 0
+    # for index, item in enumerate(company_desc_list_json):
+    #     company_web = item['company_web']
+    #     if company_web == '':
+    #         count += 1
+    #         print('\r%d' % count, end='')
+
+    for company_desc_dict in company_desc_list_json:
+        company_web_mask = company_desc_dict['company_web']
+        if company_web_mask == '':
+            continue
+        # company_web_mask = r'https://companylist.org/Details/11538163/American_Samoa/ASIA_INTERNATIONAL_INVESTMENT_JOINT_STOCK_COMPANY/clickthru/'
+        company_web_mask = r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
+        try:
+            result = while_requests_get(company_web_mask, while_times_define=5)
+        except (IOError, requests.packages.urllib3.exceptions.MaxRetryError) as e:
+            pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d{2}"
+            re_result = re.match(pattern, str(e))
+            company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
+            company_desc_dict['company_web_enable'] = False
+            print(company_desc_dict['company_country'], company_desc_dict['company_web_origin'], 'False ******************')
+        else:
+            company_desc_dict['company_web_origin'] = result.url
+            company_desc_dict['company_web_enable'] = True
+            print(company_desc_dict['company_country'], result.url, 'True')
+
+    with open(company_desc_list_has_web_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_list_json))
+
+
 def read_data_test():
     """
     读数据测试
     :return:
     """
-    read_json = read_final_id_company_list_json()
+    with open(company_desc_list_has_web_json_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    read_json = json.loads(data)
 
-    count = 0
-    for item_country in read_json:
-        temp_dict_list = read_json[item_country]
-        for item_company in temp_dict_list:
-            count += 1
-            if item_company['company_id'] == '193':
-                print(item_company)
-                # break
-                # break
-
-    print(count)
+    for i in read_json:
+        print(i)
+        break
 
 
 if __name__ == '__main__':
@@ -808,5 +876,6 @@ if __name__ == '__main__':
     # download_all_countries_company_desc(times=10)
     # multiprocessing_download_all_countries_company_desc()
     # parse_all_countries_company_desc_files_to_json()
-    extend_all_company_desc_json()
+    # extend_all_company_desc_json()
+    get_company_web_to_json()
     # read_data_test()

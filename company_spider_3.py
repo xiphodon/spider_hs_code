@@ -36,6 +36,7 @@ final_id_company_list_json_path = os.path.join(home_data, 'final_id_company_list
 all_company_desc_no_web_json_path = os.path.join(home_data, 'all_company_desc_no_web.json')
 company_desc_list_json_path = os.path.join(home_data, 'company_desc_list.json')
 company_desc_list_has_web_json_path = os.path.join(home_data, 'company_desc_list_has_web.json')
+company_desc_list_has_web_json_error_path = os.path.join(home_data, 'company_desc_list_has_web_error.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -789,7 +790,17 @@ def read_company_desc_list_json():
     return json.loads(data)
 
 
-def while_requests_get(page_url, while_times_define=10):
+def read_company_desc_list_has_web_json_error():
+    """
+    读取公司详情列表（网址跳转）
+    :return:
+    """
+    with open(company_desc_list_has_web_json_error_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    return json.loads(data)
+
+
+def while_requests_get(page_url, while_times_define=10, timeout=5):
     """
     循环请求
     :return:
@@ -797,7 +808,7 @@ def while_requests_get(page_url, while_times_define=10):
     while_times = 0
     while True:
         try:
-            result = requests.get(page_url, headers=headers, timeout=5)
+            result = requests.get(page_url, headers=headers, timeout=timeout)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
             if while_times < while_times_define:
@@ -815,8 +826,12 @@ def get_company_web_to_json():
     获取公司网址
     :return:
     """
-    company_desc_list_json = read_company_desc_list_json()
-    print('read data OK')
+    if os.path.exists(company_desc_list_has_web_json_error_path):
+        company_desc_list_json = read_company_desc_list_has_web_json_error()
+        print('read error data OK')
+    else:
+        company_desc_list_json = read_company_desc_list_json()
+        print('read origin data OK')
 
     # count = 0
     # for index, item in enumerate(company_desc_list_json):
@@ -827,13 +842,14 @@ def get_company_web_to_json():
 
     for company_desc_dict in company_desc_list_json:
         company_web_mask = company_desc_dict['company_web']
-        if company_web_mask == '':
+        if 'company_web_origin' in company_desc_dict or company_web_mask == '':
             continue
         # company_web_mask =
         # r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
         try:
-            result = while_requests_get(company_web_mask, while_times_define=5)
-        except (IOError, requests.packages.urllib3.exceptions.MaxRetryError) as e:
+            result = while_requests_get(company_web_mask, while_times_define=3, timeout=3)
+        except (IOError, requests.packages.urllib3.exceptions.MaxRetryError,
+                requests.packages.urllib3.exceptions.LocationValueError) as e:
             pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d{2}"
             re_result = re.search(pattern, str(e))
             if re_result:
@@ -842,11 +858,14 @@ def get_company_web_to_json():
             else:
                 company_desc_dict['company_web_origin'] = ''
                 company_desc_dict['company_web_enable'] = False
-            print(company_desc_dict['company_country'], company_desc_dict['company_web_origin'], 'False **********')
+            print(company_desc_dict['company_id'], company_desc_dict['company_web_origin'], 'False **********')
+        except Exception:
+            with open(company_desc_list_has_web_json_error_path, 'w', encoding='utf8') as fp:
+                fp.write(json.dumps(company_desc_list_json))
         else:
             company_desc_dict['company_web_origin'] = result.url
             company_desc_dict['company_web_enable'] = True
-            print(company_desc_dict['company_country'], result.url, 'True')
+            print(company_desc_dict['company_id'], result.url, 'True')
 
     with open(company_desc_list_has_web_json_path, 'w', encoding='utf8') as fp:
         fp.write(json.dumps(company_desc_list_json))

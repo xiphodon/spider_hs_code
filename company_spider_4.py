@@ -10,17 +10,19 @@ import json
 import os
 import requests
 from bs4 import BeautifulSoup
-# import time
+import time
 # import random
-# from multiprocessing import Pool
+from multiprocessing import Pool
 
 home_url = r'http://www.listcompany.org'
 
 home_data = r'E:\work_all\topease\company_spider_2'
 countries_list_dir_path = os.path.join(home_data, r'country_list')
+company_desc_list_dir_path = os.path.join(home_data, r'company_desc_list')
 
 company_countries_list_html = os.path.join(home_data, r'company_countries_list.html')
 countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json')
+company_desc_url_list_path = os.path.join(home_data, r'company_desc_url_list.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -165,7 +167,111 @@ def download_countries_company_list_files():
                     # print(country_name, country_url)
 
 
+def parse_countries_company_list_to_json():
+    """
+    解析各个国家的公司列表到json文件
+    :return:
+    """
+    company_id = 0
+    company_desc_url_list = []
+    for country_dir in os.listdir(countries_list_dir_path):
+        country_dir_path = os.path.join(countries_list_dir_path, country_dir)
+        for company_list_file in os.listdir(country_dir_path):
+            company_list_file_path = os.path.join(country_dir_path, company_list_file)
+            # print(country_dir, company_list_file_path)
+
+            with open(company_list_file_path, 'r', encoding='utf8') as fp:
+                context = fp.read()
+
+            soup = BeautifulSoup(context, 'html.parser')
+
+            company_list_select_ul = soup.select('div.body > ul')
+
+            if len(company_list_select_ul) > 0:
+                company_list_select = company_list_select_ul[0].select('li')
+
+                for item_company in company_list_select:
+                    item_company_name_and_href = item_company.select('h4 > a')[0]
+                    company_name = item_company_name_and_href.get('title').strip()
+                    company_href = item_company_name_and_href.get('href').strip()
+
+                    company_id += 1
+
+                    temp_dict = {
+                        'company_id': company_id,
+                        'company_name': company_name,
+                        'company_href': company_href,
+                    }
+
+                    company_desc_url_list.append(temp_dict)
+                    print(country_dir, company_id, company_name, company_href)
+
+    with open(company_desc_url_list_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_url_list))
+
+
+def read_company_desc_url_list():
+    """
+    读取公司列表json
+    :return:
+    """
+    with open(company_desc_url_list_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    return json.loads(data)
+
+
+def download_company_desc_html(item_company_info_dict):
+    """
+    下载公司详情页
+    :param item_company_info_dict:
+    :return:
+    """
+    company_id = item_company_info_dict['company_id']
+    # company_name = item_company_info_dict['company_name']
+    company_href = item_company_info_dict['company_href']
+
+    file_name = str(company_href).replace('http://', '').replace('/', '_').replace('-', '_')\
+        .replace('.html', '') + '^' + str(company_id) + '.html'
+    file_path = os.path.join(company_desc_list_dir_path, file_name)
+
+    if not os.path.exists(file_path):
+        result = while_requests_get(company_href)
+
+        if len(result.text) < 2 << 10:
+            while True:
+                print('##################################################')
+                print('####-------------- change IP -----------------####')
+                print('##################################################')
+                # _r = requests.get(home_url)
+                _r = requests.get('http://www.baidu.com')
+                if _r.status_code == 200:
+                    break
+                time.sleep(3)
+        else:
+            with open(file_path, 'w', encoding='utf8') as fp:
+                fp.write(result.text)
+
+            print(file_path)
+
+
+
+
+def multiprocessing_download_files(download_file_func, read_json_list, pool_num=30):
+    """
+    多进程下载页面
+    :return:
+    """
+    print(len(read_json_list))
+
+    pool = Pool(pool_num)
+    pool.map(download_file_func, read_json_list)
+    pool.close()
+    pool.join()
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
-    download_countries_company_list_files()
+    # download_countries_company_list_files()
+    # parse_countries_company_list_to_json()
+    multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=200)

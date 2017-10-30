@@ -80,6 +80,7 @@ def try_catch_func(func):
     :param func:
     :return:
     """
+
     def try_catch_func_in(times=10):
         """      闭包内部方法
         :return:
@@ -826,31 +827,36 @@ def get_company_web_to_json():
     获取公司网址
     :return:
     """
-    if os.path.exists(company_desc_list_has_web_json_error_path):
-        company_desc_list_json = read_company_desc_list_has_web_json_error()
-        print('read error data OK')
-    else:
-        company_desc_list_json = read_company_desc_list_json()
-        print('read origin data OK')
+    new_company_desc_dict = []
+    # if os.path.exists(company_desc_list_has_web_json_error_path):
+    #     new_company_desc_dict = read_company_desc_list_has_web_json_error()
+    #     print('read error data OK')
 
-    # count = 0
-    # for index, item in enumerate(company_desc_list_json):
-    #     company_web = item['company_web']
-    #     if company_web == '':
-    #         count += 1
-    #         print('\r%d' % count, end='')
+    company_desc_list_json = read_company_desc_list_json()
+    print('read origin data OK')
 
     for company_desc_dict in company_desc_list_json:
+        company_desc_dict = dict(company_desc_dict)
+
+        # if company_desc_dict.get('company_web_origin','') != '':
+        #     new_company_desc_dict.append(company_desc_dict)
+        #     continue
+
         company_web_mask = company_desc_dict['company_web']
-        if 'company_web_origin' in company_desc_dict or company_web_mask == '':
+        if company_web_mask == '':
+            company_desc_dict['company_web_origin'] = ''
+            company_desc_dict['company_web_enable'] = False
+            new_company_desc_dict.append(company_desc_dict)
             continue
+
         # company_web_mask =
         # r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
         try:
             result = while_requests_get(company_web_mask, while_times_define=3, timeout=3)
-        except (IOError, requests.packages.urllib3.exceptions.MaxRetryError,
-                requests.packages.urllib3.exceptions.LocationValueError) as e:
-            pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d{2}"
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout) as e:
+            # raise e
+            pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d+"
             re_result = re.search(pattern, str(e))
             if re_result:
                 company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
@@ -858,17 +864,21 @@ def get_company_web_to_json():
             else:
                 company_desc_dict['company_web_origin'] = ''
                 company_desc_dict['company_web_enable'] = False
+            new_company_desc_dict.append(company_desc_dict)
             print(company_desc_dict['company_id'], company_desc_dict['company_web_origin'], 'False **********')
-        except Exception:
+        except Exception as e:
             with open(company_desc_list_has_web_json_error_path, 'w', encoding='utf8') as fp:
-                fp.write(json.dumps(company_desc_list_json))
+                fp.write(json.dumps(new_company_desc_dict))
+            raise e
+
         else:
             company_desc_dict['company_web_origin'] = result.url
             company_desc_dict['company_web_enable'] = True
+            new_company_desc_dict.append(company_desc_dict)
             print(company_desc_dict['company_id'], result.url, 'True')
 
     with open(company_desc_list_has_web_json_path, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(company_desc_list_json))
+        fp.write(json.dumps(new_company_desc_dict))
 
 
 def read_data_test():

@@ -274,4 +274,4 @@ if __name__ == '__main__':
     # parse_countries_list_to_json()
     # download_countries_company_list_files()
     # parse_countries_company_list_to_json()
-    multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=200)
+    multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)

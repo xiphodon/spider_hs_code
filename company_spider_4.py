@@ -85,9 +85,10 @@ def while_requests_get(page_url):
             result = requests.get(page_url, headers=headers, timeout=5)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
-            if while_times < 100:
+            if while_times < 1000:
                 while_times += 1
                 print('**********', '尝试重新链接', while_times, '次:', page_url)
+                time.sleep(0.1)
                 continue
             else:
                 raise e
@@ -254,8 +255,6 @@ def download_company_desc_html(item_company_info_dict):
             print(file_path)
 
 
-
-
 def multiprocessing_download_files(download_file_func, read_json_list, pool_num=30):
     """
     多进程下载页面
@@ -269,9 +268,22 @@ def multiprocessing_download_files(download_file_func, read_json_list, pool_num=
     pool.join()
 
 
+def while_multiprocessing_download_files():
+    """
+    循环执行多进程爬取
+    防止异常终止
+    :return:
+    """
+    while True:
+        try:
+            multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=100)
+        except Exception as e:
+            print(e)
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
     # download_countries_company_list_files()
     # parse_countries_company_list_to_json()
-    multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)
+    while_multiprocessing_download_files()

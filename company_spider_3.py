@@ -22,6 +22,7 @@ home_data = r'E:\work_all\topease\company_spider'
 home_countries_list_data = r'E:\work_all\topease\company_spider\countries_list'
 home_countries_city_list_data = r'E:\work_all\topease\company_spider\countries_city_list'
 home_countries_company_desc_list_data = r'E:\work_all\topease\company_spider\countries_company_desc_list'
+company_desc_has_web_list_dir_path = os.path.join(home_data, 'company_desc_has_web_list')
 
 home_url = r'https://companylist.org'
 
@@ -881,6 +882,62 @@ def get_company_web_to_json():
         fp.write(json.dumps(new_company_desc_dict))
 
 
+def multiprocessing_get_company_web_to_json():
+    """
+    多进程获取公司网址
+    :return:
+    """
+    company_desc_list = read_company_desc_list_json()
+    print(len(company_desc_list))
+    # print(desc_href_and_desc_href_file_path_list)
+    pool = Pool(30)
+    pool.map(inner_multiprocessing_get_company_web_to_json, company_desc_list)
+    pool.close()
+    pool.join()
+
+
+def inner_multiprocessing_get_company_web_to_json(company_desc_dict):
+    """
+    多进程获取公司网址,内部方法
+    :param company_desc_dict:
+    :return:
+    """
+    company_web_mask = company_desc_dict['company_web']
+    if company_web_mask == '':
+        company_desc_dict['company_web_origin'] = ''
+        company_desc_dict['company_web_enable'] = False
+        return
+
+    # company_web_mask =
+    # r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
+    try:
+        result = while_requests_get(company_web_mask, while_times_define=10, timeout=5)
+    except (requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout) as e:
+        # raise e
+        pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d+"
+        re_result = re.search(pattern, str(e))
+        if re_result:
+            company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
+            company_desc_dict['company_web_enable'] = False
+        else:
+            company_desc_dict['company_web_origin'] = ''
+            company_desc_dict['company_web_enable'] = False
+        print(company_desc_dict['company_id'], company_desc_dict['company_web_origin'], 'False **********')
+    except Exception as e:
+        print("=========================", e)
+
+    else:
+        company_desc_dict['company_web_origin'] = result.url
+        company_desc_dict['company_web_enable'] = True
+        print(company_desc_dict['company_id'], result.url, 'True')
+
+    file_name = company_desc_dict['company_id'] + '.txt'
+    file_path = os.path.join(company_desc_has_web_list_dir_path, file_name)
+    with open(file_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_dict))
+
+
 def read_data_test():
     """
     读数据测试
@@ -910,5 +967,6 @@ if __name__ == '__main__':
     # multiprocessing_download_all_countries_company_desc()
     # parse_all_countries_company_desc_files_to_json()
     # extend_all_company_desc_json()
-    get_company_web_to_json()
+    # get_company_web_to_json()
+    multiprocessing_get_company_web_to_json()
     # read_data_test()

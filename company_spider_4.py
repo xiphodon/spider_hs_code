@@ -19,10 +19,13 @@ home_url = r'http://www.listcompany.org'
 home_data = r'E:\work_all\topease\company_spider_2'
 countries_list_dir_path = os.path.join(home_data, r'country_list')
 company_desc_list_dir_path = os.path.join(home_data, r'company_desc_list')
+company_desc_phone_list_dir_path = os.path.join(home_data, r'company_desc_phone_list')
 
 company_countries_list_html = os.path.join(home_data, r'company_countries_list.html')
 countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json')
-company_desc_url_list_path = os.path.join(home_data, r'company_desc_url_list.json')
+company_desc_url_list_json_path = os.path.join(home_data, r'company_desc_url_list.json')
+company_desc_list_json_1_path = os.path.join(home_data, r'company_desc_list_1.json')
+company_desc_all_keys_json_path = os.path.join(home_data, r'company_desc_all_keys.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -207,7 +210,7 @@ def parse_countries_company_list_to_json():
                     company_desc_url_list.append(temp_dict)
                     print(country_dir, company_id, company_name, company_href)
 
-    with open(company_desc_url_list_path, 'w', encoding='utf8') as fp:
+    with open(company_desc_url_list_json_path, 'w', encoding='utf8') as fp:
         fp.write(json.dumps(company_desc_url_list))
 
 
@@ -216,7 +219,7 @@ def read_company_desc_url_list():
     读取公司列表json
     :return:
     """
-    with open(company_desc_url_list_path, 'r', encoding='utf8') as fp:
+    with open(company_desc_url_list_json_path, 'r', encoding='utf8') as fp:
         data = fp.read()
     return json.loads(data)
 
@@ -281,10 +284,114 @@ def while_multiprocessing_download_files():
             print(e)
 
 
+def parse_company_desc_files_to_json():
+    """
+    解析公司详情页，存为json文件
+    :return:
+    """
+    count = 0
+    company_desc_all_keys_set = set()
+    company_desc_list_json_1 = []
+    for file_name in os.listdir(company_desc_list_dir_path):
+        count += 1
+        print('\r' + str(count), end='')
+        # if count == 1:
+        #     continue
+        file_path = os.path.join(company_desc_list_dir_path, file_name)
+        with open(file_path, 'r', encoding='utf8') as fp:
+            data_stream = fp.read()
+        soup = BeautifulSoup(data_stream, 'html.parser')
+        # print(soup)
+
+        temp_dict = {}
+
+        company_id = str(file_name.split('^')[-1]).split('.')[0]
+        company_id_key = 'company_id'
+        temp_dict[company_id_key] = company_id
+        company_desc_all_keys_set.add(company_id_key)
+        # print(company_id)
+
+        company_name_select = soup.select('div.the06 > h1')
+        if len(company_name_select) > 0:
+            company_name = company_name_select[0].text.strip()
+            company_name_key = 'company_name'
+            temp_dict[company_name_key] = company_name
+            company_desc_all_keys_set.add(company_name_key)
+            # print(company_name)
+
+        company_desc_select = soup.select('div.the08')
+        if len(company_desc_select) > 0:
+            company_desc = company_desc_select[0].text.replace('Company Description', '', 1).strip()
+            company_desc_key = 'company_desc'
+            temp_dict[company_desc_key] = company_desc
+            company_desc_all_keys_set.add(company_desc_key)
+            # print(company_desc)
+
+        company_info_and_contact_info_select = soup.select('div.the09 > ul')
+
+        if len(company_info_and_contact_info_select) > 0:
+            company_info_select = company_info_and_contact_info_select[0].select('li')
+            for item_li in company_info_select:
+                company_info_key = item_li.select('strong')[0].text.strip().replace(':', '')
+                company_info_value = item_li.select('span')[0].text.strip()
+                if company_info_value == '- -':
+                    company_info_value = ''
+                temp_dict[company_info_key] = company_info_value
+                company_desc_all_keys_set.add(company_info_key)
+                # print(company_info_key, ':', company_info_value)
+
+        # print()
+        has_url_end_keys_list = []
+        if len(company_info_and_contact_info_select) > 1:
+            company_contact_info_select = company_info_and_contact_info_select[1].select('li')
+            for item_li in company_contact_info_select:
+                company_info_key = item_li.select('strong')[0].text.strip().replace(':', '')
+                company_info_value = item_li.select('span')[0].text.strip()
+                if company_info_value == '':
+                    company_info_img_select = item_li.select('span')[0].select('img')
+                    if len(company_info_img_select) > 0:
+                        has_url_end_keys_list.append(company_info_key)
+                        company_info_value = company_info_img_select[0].get('src').strip()
+                temp_dict[company_info_key] = company_info_value
+                temp_dict['has_url_end_keys_list_key'] = has_url_end_keys_list
+                company_desc_all_keys_set.add(company_info_key)
+                # print(company_info_key, ':', company_info_value)
+
+        # print(temp_dict)
+        # if count == 5:
+        #     break
+        # break
+        company_desc_list_json_1.append(temp_dict)
+    # print(company_desc_list_json_1)
+    # print(company_desc_all_keys_set)
+
+    with open(company_desc_list_json_1_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_list_json_1))
+
+    with open(company_desc_all_keys_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(list(company_desc_all_keys_set)))
+
+
+def parse_test_demo():
+    """
+    解析测试
+    :return:
+    """
+    test_file_path = r'E:\work_all\topease\company_spider_2\company_desc_list\www.listcompany' \
+                     r'.org_Yi_Wu_Zhan_Xin_Wig_Factory_Info^407223.html'
+    with open(test_file_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    # soup = BeautifulSoup(bytes(data_stream, 'utf8').decode('iso-8859-1'), 'html.parser')
+    soup = BeautifulSoup(data_stream, 'html.parser')
+    print(soup)
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
     # download_countries_company_list_files()
     # parse_countries_company_list_to_json()
-    multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)
+    # multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)
     # while_multiprocessing_download_files()
+    parse_company_desc_files_to_json()
+    # parse_test_demo()

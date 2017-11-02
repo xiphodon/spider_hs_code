@@ -88,7 +88,7 @@ def while_requests_get(page_url):
             if while_times < 1000:
                 while_times += 1
                 print('**********', '尝试重新链接', while_times, '次:', page_url)
-                time.sleep(0.1)
+                time.sleep(0.2)
                 continue
             else:
                 raise e
@@ -276,7 +276,7 @@ def while_multiprocessing_download_files():
     """
     while True:
         try:
-            multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=100)
+            multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=70)
         except Exception as e:
             print(e)
 
@@ -286,4 +286,5 @@ if __name__ == '__main__':
     # parse_countries_list_to_json()
     # download_countries_company_list_files()
     # parse_countries_company_list_to_json()
-    while_multiprocessing_download_files()
+    multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)
+    # while_multiprocessing_download_files()

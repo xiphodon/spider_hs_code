@@ -890,7 +890,7 @@ def multiprocessing_get_company_web_to_json():
     company_desc_list = read_company_desc_list_json()
     print(len(company_desc_list))
     # print(desc_href_and_desc_href_file_path_list)
-    pool = Pool(30)
+    pool = Pool(50)
     pool.map(inner_multiprocessing_get_company_web_to_json, company_desc_list)
     pool.close()
     pool.join()
@@ -902,40 +902,60 @@ def inner_multiprocessing_get_company_web_to_json(company_desc_dict):
     :param company_desc_dict:
     :return:
     """
-    company_web_mask = company_desc_dict['company_web']
-    if company_web_mask == '':
-        company_desc_dict['company_web_origin'] = ''
-        company_desc_dict['company_web_enable'] = False
-        return
-
-    # company_web_mask =
-    # r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
-    try:
-        result = while_requests_get(company_web_mask, while_times_define=10, timeout=5)
-    except (requests.exceptions.ConnectionError,
-            requests.exceptions.ReadTimeout) as e:
-        # raise e
-        pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d+"
-        re_result = re.search(pattern, str(e))
-        if re_result:
-            company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
-            company_desc_dict['company_web_enable'] = False
-        else:
-            company_desc_dict['company_web_origin'] = ''
-            company_desc_dict['company_web_enable'] = False
-        print(company_desc_dict['company_id'], company_desc_dict['company_web_origin'], 'False **********')
-    except Exception as e:
-        print("=========================", e)
-
-    else:
-        company_desc_dict['company_web_origin'] = result.url
-        company_desc_dict['company_web_enable'] = True
-        print(company_desc_dict['company_id'], result.url, 'True')
-
     file_name = company_desc_dict['company_id'] + '.txt'
     file_path = os.path.join(company_desc_has_web_list_dir_path, file_name)
-    with open(file_path, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(company_desc_dict))
+
+    if not os.path.exists(file_path):
+        company_web_mask = company_desc_dict['company_web']
+        if company_web_mask == '':
+            company_desc_dict['company_web_origin'] = ''
+            company_desc_dict['company_web_enable'] = False
+        else:
+            # company_web_mask =
+            # r'https://companylist.org/Details/11549714/Arabia/Webhostmaker_com_Alpha_Reseller_Hosting/clickthru/'
+            try:
+                result = while_requests_get(company_web_mask, while_times_define=10, timeout=5)
+            except (requests.exceptions.ConnectionError,
+                    requests.exceptions.ReadTimeout) as e:
+                # raise e
+                pattern = r"\w{18}\W\w{4}\W{2}(.+)\W{2}\s\w{4}\W\d+"
+                re_result = re.search(pattern, str(e))
+                if re_result:
+                    company_desc_dict['company_web_origin'] = 'http://' + re_result.group(1)
+                    company_desc_dict['company_web_enable'] = False
+                else:
+                    company_desc_dict['company_web_origin'] = ''
+                    company_desc_dict['company_web_enable'] = False
+                print(company_desc_dict['company_id'], company_desc_dict['company_web_origin'], 'False **********')
+            except Exception as e:
+                print("=========================", e)
+
+            else:
+                company_desc_dict['company_web_origin'] = result.url
+                company_desc_dict['company_web_enable'] = True
+                print(company_desc_dict['company_id'], result.url, 'True')
+
+        with open(file_path, 'w', encoding='utf8') as fp:
+            fp.write(json.dumps(company_desc_dict))
+    else:
+        print('====================  saved  =========================')
+
+
+def merge_all_company_desc_dict_to_json():
+    """
+    合并所有的公司详情（包含网址）存为json文件
+    :return:
+    """
+    new_company_desc_dict = []
+    for file_name in os.listdir(company_desc_has_web_list_dir_path):
+        file_path = os.path.join(company_desc_has_web_list_dir_path, file_name)
+        with open(file_path, 'r', encoding='utf8') as fp:
+            temp_dict = json.loads(fp.read())
+        new_company_desc_dict.append(temp_dict)
+        print(file_name)
+
+    with open(company_desc_list_has_web_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(new_company_desc_dict))
 
 
 def read_data_test():
@@ -948,7 +968,7 @@ def read_data_test():
     read_json = json.loads(data)
 
     for i in read_json:
-        print(i)
+        print(json.dumps(i))
         break
 
 
@@ -968,5 +988,6 @@ if __name__ == '__main__':
     # parse_all_countries_company_desc_files_to_json()
     # extend_all_company_desc_json()
     # get_company_web_to_json()
-    multiprocessing_get_company_web_to_json()
-    # read_data_test()
+    # multiprocessing_get_company_web_to_json()
+    # merge_all_company_desc_dict_to_json()
+    read_data_test()

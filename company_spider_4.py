@@ -20,12 +20,14 @@ home_data = r'E:\work_all\topease\company_spider_2'
 countries_list_dir_path = os.path.join(home_data, r'country_list')
 company_desc_list_dir_path = os.path.join(home_data, r'company_desc_list')
 company_desc_phone_list_dir_path = os.path.join(home_data, r'company_desc_phone_list')
+phone_img_list_dir_path = os.path.join(home_data, r'phone_img_list')
 
 company_countries_list_html = os.path.join(home_data, r'company_countries_list.html')
 countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json')
 company_desc_url_list_json_path = os.path.join(home_data, r'company_desc_url_list.json')
 company_desc_list_json_1_path = os.path.join(home_data, r'company_desc_list_1.json')
 company_desc_all_keys_json_path = os.path.join(home_data, r'company_desc_all_keys.json')
+company_desc_has_phone_url_json_path = os.path.join(home_data, r'company_desc_has_phone_url.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -372,6 +374,49 @@ def parse_company_desc_files_to_json():
         fp.write(json.dumps(list(company_desc_all_keys_set)))
 
 
+def merge_phone_url_to_company_desc_json():
+    """
+    合并手机号码图片url地址到公司详情json
+    :return:
+    """
+    company_desc_has_phone_url = []
+    with open(company_desc_url_list_json_path, 'r', encoding='utf8') as fp:
+        company_desc_url_list_json = json.loads(fp.read())
+
+    with open(company_desc_list_json_1_path, 'r', encoding='utf8') as fp:
+        company_desc_list_json_1 = json.loads(fp.read())
+
+    # print(len(company_desc_url_list_json))
+    # print(len(company_desc_list_json_1))
+    # print()
+    # print(json.dumps(company_desc_url_list_json[0]))
+    # print(json.dumps(company_desc_list_json_1[0]))
+
+    count = 0
+
+    for desc_json_item in company_desc_list_json_1:
+        desc_json_item_id_str = desc_json_item['company_id']
+
+        for url_json_item in company_desc_url_list_json:
+            url_json_item_id_int = url_json_item['company_id']
+
+            if desc_json_item_id_str == str(url_json_item_id_int):
+                company_href = url_json_item['company_href']
+                has_url_end_keys_list_key_list = desc_json_item.get('has_url_end_keys_list_key', [])
+                for item_has_url_key in has_url_end_keys_list_key_list:
+                    desc_json_item[item_has_url_key] = company_href + desc_json_item[item_has_url_key]
+                count += 1
+                print(url_json_item_id_int, count)
+                company_desc_has_phone_url.append(desc_json_item)
+                break
+
+        # if count > 10:
+        #     break
+
+    with open(company_desc_has_phone_url_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_has_phone_url))
+
+
 def parse_test_demo():
     """
     解析测试
@@ -393,5 +438,6 @@ if __name__ == '__main__':
     # parse_countries_company_list_to_json()
     # multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)
     # while_multiprocessing_download_files()
-    parse_company_desc_files_to_json()
+    # parse_company_desc_files_to_json()
+    merge_phone_url_to_company_desc_json()
     # parse_test_demo()

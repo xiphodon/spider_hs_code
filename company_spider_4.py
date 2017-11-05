@@ -28,6 +28,7 @@ company_desc_url_list_json_path = os.path.join(home_data, r'company_desc_url_lis
 company_desc_list_json_1_path = os.path.join(home_data, r'company_desc_list_1.json')
 company_desc_all_keys_json_path = os.path.join(home_data, r'company_desc_all_keys.json')
 company_desc_has_phone_url_json_path = os.path.join(home_data, r'company_desc_has_phone_url.json')
+company_id_and_phone_url_json_path = os.path.join(home_data, r'company_id_and_phone_url.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -417,6 +418,54 @@ def merge_phone_url_to_company_desc_json():
         fp.write(json.dumps(company_desc_has_phone_url))
 
 
+def parse_company_id_and_phone_url_to_json():
+    """
+    解析出公司id和对应手机号码
+    :return:
+    """
+    company_id_and_phone_url_json = []
+    with open(company_desc_has_phone_url_json_path, 'r', encoding='utf8') as fp:
+        company_desc_has_phone_url_json = json.loads(fp.read())
+
+    for item_dict in company_desc_has_phone_url_json:
+        company_id = item_dict['company_id']
+        has_url_end_keys_list_key = item_dict.get('has_url_end_keys_list_key', [])
+        for item_key in has_url_end_keys_list_key:
+            item_value = item_dict[item_key]
+            temp_list = [company_id, item_value]
+            company_id_and_phone_url_json.append(temp_list)
+            print(temp_list)
+
+    with open(company_id_and_phone_url_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_id_and_phone_url_json))
+
+
+def download_all_company_phone_img(item):
+    """
+    下载所有的公司手机号图片
+    :param item: 单条信息，形如[company_id, phone_url]
+    :return:
+    """
+    company_id, phone_url = item
+    img_dir_path = os.path.join(phone_img_list_dir_path, company_id)
+
+    if not os.path.exists(img_dir_path):
+        os.mkdir(img_dir_path)
+
+    img_name = str(phone_url).split('/')[-1]
+    img_path = os.path.join(img_dir_path, img_name)
+
+    if not os.path.exists(img_path):
+        result = while_requests_get(phone_url)
+        if result.status_code == 200:
+            with open(img_path, 'wb') as fp:
+                for chunk in result.iter_content(1024):
+                    fp.write(chunk)
+            print(img_path, 'OK')
+    else:
+        print(img_path, 'saved')
+
+
 def parse_test_demo():
     """
     解析测试
@@ -431,6 +480,16 @@ def parse_test_demo():
     print(soup)
 
 
+def read_company_id_and_phone_url_list():
+    """
+    读取公司id和公司手机号码图片url的json
+    :return:
+    """
+    with open(company_id_and_phone_url_json_path, 'r', encoding='utf8') as fp:
+        data_stream = fp.read()
+    return json.loads(data_stream)
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
@@ -439,5 +498,7 @@ if __name__ == '__main__':
     # multiprocessing_download_files(download_company_desc_html, read_company_desc_url_list(), pool_num=50)
     # while_multiprocessing_download_files()
     # parse_company_desc_files_to_json()
-    merge_phone_url_to_company_desc_json()
+    # merge_phone_url_to_company_desc_json()
+    # parse_company_id_and_phone_url_to_json()
+    multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=50)
     # parse_test_demo()

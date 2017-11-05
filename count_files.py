@@ -44,6 +44,15 @@ def count_spider3_desc_files():
     count_dir_files(company_spider_3.company_desc_has_web_list_dir_path)
 
 
+def count_spider4_phone_img_dirs():
+    """
+    统计spider3的公司详情页数量
+    :return:
+    """
+    count_dir_files(company_spider_4.phone_img_list_dir_path)
+
+
 if __name__ == '__main__':
     # count_spider4_desc_files()
-    count_spider3_desc_files()
+    # count_spider3_desc_files()
+    count_spider4_phone_img_dirs()

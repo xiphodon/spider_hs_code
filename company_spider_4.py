@@ -500,5 +500,5 @@ if __name__ == '__main__':
     # parse_company_desc_files_to_json()
     # merge_phone_url_to_company_desc_json()
     # parse_company_id_and_phone_url_to_json()
-    multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=50)
+    multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=80)
     # parse_test_demo()

@@ -17,8 +17,13 @@ except ImportError:
 
 import pytesseract
 
+# 设置Tesseract-OCR的启动入口和训练集目录
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe'
 tessdata_dir_config = r'--tessdata-dir "C:\Program Files (x86)\Tesseract-OCR\tessdata"'
+
+
+test_img_png_dir_path = r'E:\work_all\topease\company_spider_2\phone_img_list_test'
+test_img_png_path = os.path.join(test_img_png_dir_path, 'test.png')
 
 
 def download_img_png(img_url):
@@ -29,7 +34,7 @@ def download_img_png(img_url):
     """
     result = requests.get(img_url, timeout=5, stream=True)
     if result.status_code == 200:
-        file_path = os.path.join(company_spider_4.phone_img_list_dir_path, 'test.png')
+        file_path = test_img_png_path
         with open(file_path, 'wb') as fp:
             for chunk in result.iter_content(1024):
                 fp.write(chunk)
@@ -63,7 +68,7 @@ def depoint(_img):
     w,h = _img.size
 
     cover_y = 8
-    cover_recode_0_list = []
+    # cover_recode_0_list = []
     cover_recode_255_list = []
 
     for y in range(1, h-1):
@@ -103,7 +108,7 @@ def shrink_space(_img):
         if flag == 1:
             return _img
 
-        x_start_index = 0
+        x_start_index = x_iter_start_index
         x_end_index = -1
 
         for x in range(x_iter_start_index, w):
@@ -125,7 +130,8 @@ def shrink_space(_img):
                         for yy in range(h):
                             if xx + move_len < w:
                                 pixdata[xx, yy] = pixdata[xx + move_len, yy]
-                    _img.show()
+
+                    # _img.show()
                     # 跳出循环，执行while True
                     break
 
@@ -138,10 +144,15 @@ def shrink_space(_img):
                     break
 
 
-if __name__ == '__main__':
+def img_to_str(img_png_path):
+    """
+    手机号图片转文字
+    :param img_png_path:
+    :return:
+    """
     # download_img_png(r'http://www.listcompany.org/0086_Art_Gallery_Info.html/phone-3-1291926.png')
-    download_img_png(r'http://www.listcompany.org/011expo_Inc_Info.html/phone-1-1726623.png')
-    image = Image.open(os.path.join(company_spider_4.phone_img_list_dir_path, 'test.png'))
+    # download_img_png(r'http://www.listcompany.org/011expo_Inc_Info.html/phone-1-1726623.png')
+    image = Image.open(img_png_path)
 
     # 转化为灰度图
     img = image.convert('L')
@@ -151,6 +162,25 @@ if __name__ == '__main__':
     img1 = depoint(img1)
     # 缩小多余的空格
     img1 = shrink_space(img1)
-    img1.show()
+    # img1.show()
     img_str = pytesseract.image_to_string(img1, config=tessdata_dir_config)
     print(img_str)
+    print(img_str.replace(' ', '-'))
+
+
+def bat_test_img_to_str():
+    """
+    批处理检测图像转文字
+    :return:
+    """
+    for company_id_dir in os.listdir(test_img_png_dir_path):
+        company_id_dir_path = os.path.join(test_img_png_dir_path, company_id_dir)
+        for img_file in os.listdir(company_id_dir_path):
+            img_path = os.path.join(company_id_dir_path, img_file)
+            print(company_id_dir)
+            img_to_str(img_path)
+            print()
+
+if __name__ == '__main__':
+    # img_to_str(test_img_png_path)
+    bat_test_img_to_str()

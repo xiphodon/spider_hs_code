@@ -24,6 +24,7 @@ company_desc_list_dir_path = os.path.join(home_data, r'company_desc_list')
 company_countries_list_html = os.path.join(home_data, r'company_countries_list.html')
 countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json')
 company_url_list_json_path = os.path.join(home_data, r'company_url_list.json')
+company_desc_list_json_path = os.path.join(home_data, r'company_desc_list.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -257,10 +258,170 @@ def multiprocessing_download_company_desc_files(pool_num=50):
     pool.join()
 
 
+def parse_company_desc_files_to_json():
+    """
+    解析所有的公司详情页并存为json文件
+    :return:
+    """
+    company_desc_list_json = []
+    for country_dir_name in os.listdir(company_desc_list_dir_path):
+        country_dir_path = os.path.join(company_desc_list_dir_path, country_dir_name)
+        for file_name in os.listdir(country_dir_path):
+            file_path = os.path.join(country_dir_path, file_name)
+
+            print(country_dir_name, '_____', file_name)
+
+            company_id = str(file_name.split('^')[-1]).split('.')[0]
+
+            with open(file_path, 'r', encoding='utf8') as fp:
+                context = fp.read()
+
+            soup = BeautifulSoup(context, 'html.parser')
+
+            company_all_info_select = soup.select('div[itemtype^="http"]')
+
+            if len(company_all_info_select) > 0:
+                company_desc_en = ''
+                company_desc_cn = ''
+                company_desc_select = company_all_info_select[0].select('dl')
+                if len(company_desc_select) > 0:
+                    company_desc_select_dd = company_desc_select[0].select('dd')
+                    if len(company_desc_select_dd) >= 3:
+                        company_desc_en = company_desc_select_dd[1].text.strip()
+                        company_desc_cn = company_desc_select_dd[2].text.strip()
+                        if company_desc_cn.startswith('('):
+                            company_desc_cn = company_desc_cn.replace('(', '', 1).strip()
+                        if company_desc_cn.endswith(')'):
+                            company_desc_cn = company_desc_cn.replace(')', '', 1).strip()
+                # print(company_desc_en, company_desc_cn)
+                # print()
+
+                company_name = ''
+                company_name_select = company_all_info_select[0].select('span[itemprop="name"]')
+                if len(company_name_select) > 0:
+                    company_name = company_name_select[0].text.strip()
+                # print(company_name)
+                # print()
+
+                country_or_area_en = ''
+                country_or_area_cn = ''
+                country_or_area_select = company_all_info_select[0].select('span[itemprop="location"]')
+                if len(country_or_area_select) > 0:
+                    country_or_area = country_or_area_select[0].text.strip()
+                    country_or_area_list = country_or_area.split('(')
+                    country_or_area_en = country_or_area_list[0].strip()
+                    country_or_area_cn = country_or_area_list[1].replace(')', '').strip()
+                # print(country_or_area)
+                # print()
+
+                company_introduction = ''
+                company_introduction_select = company_all_info_select[0].select('span[itemprop="description"]')
+                if len(company_introduction_select) > 0:
+                    company_introduction = company_introduction_select[0].text.strip()
+                # print(company_introduction)
+                # print()
+
+                all_dl_dd_dl_dd_select = company_all_info_select[0].select('dl > dd > dl > dd')
+                # for i in all_dl_dd_dl_dd_select:
+                #     print(i)
+
+                employee_count = ''
+                if len(all_dl_dd_dl_dd_select) > 5:
+                    employee_count = all_dl_dd_dl_dd_select[5].text.strip()
+                # print(employee_count)
+                # print()
+
+                contact_person = ''
+                contact_person_select = company_all_info_select[0].select('span[itemprop="employees"]')
+                if len(contact_person_select) > 0:
+                    contact_person = contact_person_select[0].text.strip()
+                # print(contact_person)
+                # print()
+
+                company_address = ''
+                company_address_select = company_all_info_select[0].select('span[itemprop="address"]')
+                if len(company_address_select) > 0:
+                    company_address = company_address_select[0].text.strip()
+                # print(company_address)
+                # print()
+
+                post_code = ''
+                if len(all_dl_dd_dl_dd_select) > 8:
+                    post_code = all_dl_dd_dl_dd_select[8].text.strip()
+                # print(post_code)
+                # print()
+
+                company_telephone = ''
+                company_telephone_select = company_all_info_select[0].select('span[itemprop="telephone"]')
+                if len(company_telephone_select) > 0:
+                    company_telephone = company_telephone_select[0].text.strip()
+                # print(company_telephone)
+                # print()
+
+                company_fax = ''
+                company_fax_select = company_all_info_select[0].select('span[itemprop="faxNumber"]')
+                if len(company_fax_select) > 0:
+                    company_fax = company_fax_select[0].text.strip()
+                # print(company_fax)
+                # print()
+
+                company_email = ''
+                company_email_select = company_all_info_select[0].select('span[itemprop="email"]')
+                if len(company_email_select) > 0:
+                    company_email = company_email_select[0].text.strip()
+                # print(company_email)
+                # print()
+
+                company_web = ''
+                if len(all_dl_dd_dl_dd_select) > 12:
+                    company_web = all_dl_dd_dl_dd_select[12].text.strip()
+                # print(company_web)
+                # print()
+
+                category = ''
+                category_select = company_all_info_select[0].select('dl > dd > dl > dd > a.extiw')
+                if len(category_select) > 0:
+                    category = category_select[-1].text.strip()
+                # print(category)
+                # print()
+
+                temp_dict = {
+                    'company_id': company_id,
+                    'company_desc_en': company_desc_en,
+                    'company_desc_cn': company_desc_cn,
+                    'company_name': company_name,
+                    'country_or_area_en': country_or_area_en,
+                    'country_or_area_cn': country_or_area_cn,
+                    'company_introduction': company_introduction,
+                    'employee_count': employee_count,
+                    'contact_person': contact_person,
+                    'company_address': company_address,
+                    'post_code': post_code,
+                    'company_telephone': company_telephone,
+                    'company_fax': company_fax,
+                    'company_email': company_email,
+                    'company_web': company_web,
+                    'category': category
+                }
+
+                for key, value in temp_dict.items():
+                    if value == 'N.A.':
+                        temp_dict[key] = ''
+
+                company_desc_list_json.append(temp_dict)
+
+                # print(temp_dict)
+            # break
+        # break
+    with open(company_desc_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_list_json))
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
     # download_country_company_list()
     # parse_country_company_list_to_json()
     # download_company_desc_files(read_company_url_list_json()[0])
-    multiprocessing_download_company_desc_files()
+    # multiprocessing_download_company_desc_files()
+    parse_company_desc_files_to_json()

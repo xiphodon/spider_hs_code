@@ -160,7 +160,7 @@ def img_to_str(img_png_path):
     img = image.convert('L')
     # 把图片变成二值图像。
     img1 = binarizing(img, 128)
-    # 去除干扰线
+    # 去号码中横杠
     img1 = depoint(img1)
     # 缩小多余的空格
     img1 = shrink_space(img1)

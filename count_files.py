@@ -46,13 +46,33 @@ def count_spider3_desc_files():
 
 def count_spider4_phone_img_dirs():
     """
-    统计spider3的公司详情页数量
+    统计spider4的手机图片文件夹数量
     :return:
     """
     count_dir_files(company_spider_4.phone_img_list_dir_path)
 
 
+def count_spider4_phone_img_files(root_dir_path):
+    """
+    统计spider4的手机图片文件数量
+    :return:
+    """
+    last_count = 0
+    while True:
+        files_count = 0
+        for item_dir in os.listdir(root_dir_path):
+            item_dir_path = os.path.join(root_dir_path, item_dir)
+            temp_files_count = len(os.listdir(item_dir_path))
+            files_count += temp_files_count
+            print('\r' + str(last_count) + '---------' + str(files_count), end='')
+        print('\r' + str(files_count) + '  +' + str(files_count - last_count) + '  ' +
+              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), end='')
+        last_count = files_count
+        time.sleep(1 * 60 * 60)
+
+
 if __name__ == '__main__':
     # count_spider4_desc_files()
     # count_spider3_desc_files()
-    count_spider4_phone_img_dirs()
+    # count_spider4_phone_img_dirs()
+    count_spider4_phone_img_files(company_spider_4.phone_img_list_dir_path)

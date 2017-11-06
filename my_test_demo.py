@@ -130,8 +130,10 @@ def shrink_space(_img):
                         for yy in range(h):
                             if xx + move_len < w:
                                 pixdata[xx, yy] = pixdata[xx + move_len, yy]
+                            else:
+                                pixdata[xx, yy] = 255
 
-                    # _img.show()
+                    _img.show()
                     # 跳出循环，执行while True
                     break
 
@@ -181,6 +183,7 @@ def bat_test_img_to_str():
             img_to_str(img_path)
             print()
 
+
 if __name__ == '__main__':
-    # img_to_str(test_img_png_path)
-    bat_test_img_to_str()
+    img_to_str(test_img_png_path)
+    # bat_test_img_to_str()

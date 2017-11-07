@@ -292,7 +292,7 @@ def parse_company_desc_files_to_json():
                         if company_desc_cn.startswith('('):
                             company_desc_cn = company_desc_cn.replace('(', '', 1).strip()
                         if company_desc_cn.endswith(')'):
-                            company_desc_cn = company_desc_cn.replace(')', '', 1).strip()
+                            company_desc_cn = company_desc_cn[:-1].strip()
                 # print(company_desc_en, company_desc_cn)
                 # print()
 

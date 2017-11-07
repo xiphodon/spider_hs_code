@@ -25,6 +25,7 @@ industry_list_html = os.path.join(home_data, r'industry_list.html')
 industry_list_json_path = os.path.join(home_data, r'industry_list.json')
 company_list_href_json_path = os.path.join(home_data, r'company_list_href.json')
 company_desc_url_list_json_path = os.path.join(home_data, r'company_desc_url_list.json')
+company_desc_list_json_path = os.path.join(home_data, r'company_desc_list.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -287,6 +288,97 @@ def download_company_desc_file(company_dict):
         print(company_industry, file_name, 'saved')
 
 
+def parse_company_desc_files_to_json():
+    """
+    解析公司详情页并存为json文件
+    :return:
+    """
+    company_desc_list_json = []
+    company_id = 0
+    for dir_name in os.listdir(company_desc_dir_path):
+        dir_path = os.path.join(company_desc_dir_path, dir_name)
+        for file_name in os.listdir(dir_path):
+
+            print(dir_name, company_id, file_name)
+
+            file_path = os.path.join(dir_path, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            soup = BeautifulSoup(content, 'html.parser')
+
+            content_select_list = soup.select('div.content.clearfix')
+
+            temp_dict = {}
+            if len(content_select_list) > 0:
+
+                # if company_id > 50:
+                #     break
+                company_id += 1
+                temp_dict['company_id'] = str(company_id)
+
+                industry_category = dir_name
+                temp_dict['industry_category'] = industry_category
+
+                content_select = content_select_list[0]
+
+                content_desc_en = ''
+                content_desc_cn = ''
+                content_desc = content_select.select('p')
+                if len(content_desc) > 2:
+                    content_desc_en = content_desc[1].text.strip()
+                    content_desc_cn = content_desc[2].text.strip()
+
+                    if content_desc_cn.startswith('('):
+                        content_desc_cn = content_desc_cn.replace('(', '', 1).strip()
+                    if content_desc_cn.endswith(')'):
+                        content_desc_cn = content_desc_cn[:-1].strip()
+                        # print(content_desc_en)
+                        # print(content_desc_cn)
+                        # print()
+                temp_dict['content_desc_en'] = content_desc_en
+                temp_dict['content_desc_cn'] = content_desc_cn
+
+                company_info_select = content_select.select('div.field.field-type-text.field-field-product')
+                if len(company_info_select) > 2:
+                    company_profile_select = company_info_select[0]
+                    company_profile_label_select = company_profile_select.select('div.field-label')
+                    company_profile_items_select = company_profile_select.select('div.field-items')
+                    for key_select, value_select in zip(company_profile_label_select, company_profile_items_select):
+                        key = key_select.text.replace(':', '').strip()
+                        value = value_select.text.replace(':', '').strip()
+                        temp_dict[key] = value
+                        # print(key, value)
+
+                    company_contact_info_select = company_info_select[2]
+                    company_profile_label_select = company_contact_info_select.select('div.field-label')
+                    company_profile_items_select = company_contact_info_select.select('div.field-items')
+                    for key_select, value_select in zip(company_profile_label_select, company_profile_items_select):
+                        key = key_select.text.replace(':', '').strip()
+                        if key == 'Contact Info (联系方式)':
+                            value_select_p = value_select.select('p')
+                            if len(value_select_p) > 0:
+                                value_p_str = str(value_select_p[0]).replace('<p>', '').replace('</p>', '')
+                                value_p_k_v_list = [i.strip() for i in value_p_str.split('<br/>')]
+                                for item_k_v in value_p_k_v_list:
+                                    p_k_v_list = item_k_v.split(':', 1)
+                                    p_k = p_k_v_list[0].strip()
+                                    p_v = p_k_v_list[1].strip()
+                                    temp_dict[p_k] = p_v
+                                    # print(p_k, p_v)
+                        else:
+                            value = value_select.text.replace(':', '').strip()
+                            temp_dict[key] = value
+                            # print(key, value)
+            # print(temp_dict)
+            company_desc_list_json.append(temp_dict)
+
+            # break
+        # break
+    with open(company_desc_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_list_json))
+
+
 if __name__ == '__main__':
     # download_industry_html()
     # parse_industry_html_to_json()
@@ -294,4 +386,5 @@ if __name__ == '__main__':
     # multiprocessing_download_files(download_company_list_files, read_company_list_href_json())
     # parse_company_list_files_to_json()
     # download_company_desc_file(read_company_desc_url_list_json()[0])
-    multiprocessing_download_files(download_company_desc_file, read_company_desc_url_list_json(), pool_num=10)
+    # multiprocessing_download_files(download_company_desc_file, read_company_desc_url_list_json(), pool_num=10)
+    parse_company_desc_files_to_json()

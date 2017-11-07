@@ -967,9 +967,11 @@ def read_data_test():
         data = fp.read()
     read_json = json.loads(data)
 
-    for i in read_json:
-        print(json.dumps(i))
-        break
+    random_choices_list = random.choices(read_json, k=20)
+    print(json.dumps(random_choices_list))
+    # for i in read_json:
+    #     print(json.dumps(i))
+    #     break
 
 
 if __name__ == '__main__':

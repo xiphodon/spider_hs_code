@@ -44,6 +44,14 @@ def count_spider3_desc_files():
     count_dir_files(company_spider_3.company_desc_has_web_list_dir_path)
 
 
+def count_spider4_img_to_str_json_files():
+    """
+    统计spider4的公司手机号json文件数量
+    :return:
+    """
+    count_dir_files(company_spider_4.phone_str_json_list_dir_path)
+
+
 def count_spider4_phone_img_dirs():
     """
     统计spider4的手机图片文件夹数量
@@ -74,5 +82,6 @@ def count_spider4_phone_img_files(root_dir_path):
 if __name__ == '__main__':
     # count_spider4_desc_files()
     # count_spider3_desc_files()
-    count_spider4_phone_img_dirs()
+    # count_spider4_phone_img_dirs()
     # count_spider4_phone_img_files(company_spider_4.phone_img_list_dir_path)
+    count_spider4_img_to_str_json_files()

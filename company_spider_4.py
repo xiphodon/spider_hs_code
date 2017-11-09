@@ -13,6 +13,8 @@ from bs4 import BeautifulSoup
 import time
 # import random
 from multiprocessing import Pool
+import ocr_img_to_str
+import re
 
 home_url = r'http://www.listcompany.org'
 
@@ -21,6 +23,7 @@ countries_list_dir_path = os.path.join(home_data, r'country_list')
 company_desc_list_dir_path = os.path.join(home_data, r'company_desc_list')
 company_desc_phone_list_dir_path = os.path.join(home_data, r'company_desc_phone_list')
 phone_img_list_dir_path = os.path.join(home_data, r'phone_img_list')
+phone_str_json_list_dir_path = os.path.join(home_data, r'phone_str_json_list')
 
 company_countries_list_html = os.path.join(home_data, r'company_countries_list.html')
 countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json')
@@ -29,6 +32,7 @@ company_desc_list_json_1_path = os.path.join(home_data, r'company_desc_list_1.js
 company_desc_all_keys_json_path = os.path.join(home_data, r'company_desc_all_keys.json')
 company_desc_has_phone_url_json_path = os.path.join(home_data, r'company_desc_has_phone_url.json')
 company_id_and_phone_url_json_path = os.path.join(home_data, r'company_id_and_phone_url.json')
+company_id_and_phone_str_json_path = os.path.join(home_data, r'company_id_and_phone_str.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -420,7 +424,7 @@ def merge_phone_url_to_company_desc_json():
 
 def parse_company_id_and_phone_url_to_json():
     """
-    解析出公司id和对应手机号码
+    解析出公司id和对应手机号码url
     :return:
     """
     company_id_and_phone_url_json = []
@@ -491,6 +495,50 @@ def read_company_id_and_phone_url_list():
     return json.loads(data_stream)
 
 
+def read_company_desc_has_phone_url_json_list():
+    """
+    读取公司详情（含有手机号码图片链接的json）
+    :return:
+    """
+    with open(company_desc_has_phone_url_json_path, 'r', encoding='utf8') as fp:
+        company_desc_has_phone_url_json = json.loads(fp.read())
+    return company_desc_has_phone_url_json
+
+
+def ocr_phone_img_to_str(item_dict):
+    """
+    ocr
+    手机号码图像识别
+    :param item_dict:单条信息，形如[company_id, phone_url]
+    :return:
+    """
+    company_id, phone_url = item_dict
+    img_dir_path = os.path.join(phone_img_list_dir_path, company_id)
+
+    img_name = str(phone_url).split('/')[-1]
+    img_path = os.path.join(img_dir_path, img_name)
+    img_str_json_path = os.path.join(phone_str_json_list_dir_path, company_id + '^' + img_name + '.txt')
+
+    if not os.path.exists(img_str_json_path):
+        if os.path.exists(img_path):
+            img_str = ocr_img_to_str.img_to_str(img_path)
+
+            if len(img_str) <= 3:
+                img_str = ''
+
+            if re.search(r'[a-zA-Z]+', img_str):
+                print(img_str_json_path, ' --- error --- ', img_str)
+                img_str = ''
+
+            temp_dict = {
+                'company_id': company_id,
+                'phone_str': img_str
+            }
+
+            with open(img_str_json_path, 'w', encoding='utf8') as fp:
+                fp.write(json.dumps(temp_dict))
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
@@ -501,5 +549,6 @@ if __name__ == '__main__':
     # parse_company_desc_files_to_json()
     # merge_phone_url_to_company_desc_json()
     # parse_company_id_and_phone_url_to_json()
-    multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=80)
+    # multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=80)
+    multiprocessing_download_files(ocr_phone_img_to_str, read_company_id_and_phone_url_list(), pool_num=7)
     # parse_test_demo()

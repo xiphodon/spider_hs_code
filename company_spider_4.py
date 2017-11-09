@@ -463,7 +463,8 @@ def download_all_company_phone_img(item):
                     fp.write(chunk)
             print(img_path, 'OK')
     else:
-        print(img_path, 'saved')
+        # print(img_path, 'saved')
+        pass
 
 
 def parse_test_demo():

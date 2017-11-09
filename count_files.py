@@ -68,11 +68,11 @@ def count_spider4_phone_img_files(root_dir_path):
         print('\r' + str(files_count) + '  +' + str(files_count - last_count) + '  ' +
               time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), end='')
         last_count = files_count
-        time.sleep(1 * 60 * 60)
+        time.sleep(60 * 10)
 
 
 if __name__ == '__main__':
     # count_spider4_desc_files()
     # count_spider3_desc_files()
-    # count_spider4_phone_img_dirs()
-    count_spider4_phone_img_files(company_spider_4.phone_img_list_dir_path)
+    count_spider4_phone_img_dirs()
+    # count_spider4_phone_img_files(company_spider_4.phone_img_list_dir_path)

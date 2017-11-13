@@ -31,6 +31,7 @@ company_desc_url_list_json_path = os.path.join(home_data, r'company_desc_url_lis
 company_desc_list_json_1_path = os.path.join(home_data, r'company_desc_list_1.json')
 company_desc_all_keys_json_path = os.path.join(home_data, r'company_desc_all_keys.json')
 company_desc_has_phone_url_json_path = os.path.join(home_data, r'company_desc_has_phone_url.json')
+company_desc_has_phone_str_json_path = os.path.join(home_data, r'company_desc_has_phone_str.json')
 company_id_and_phone_url_json_path = os.path.join(home_data, r'company_id_and_phone_url.json')
 company_id_and_phone_str_json_path = os.path.join(home_data, r'company_id_and_phone_str.json')
 
@@ -568,6 +569,50 @@ def marge_all_phone_str_to_json():
         fp.write(json.dumps(all_phone_str_json))
 
 
+def read_company_id_and_phone_str_json():
+    """
+    读取公司id&手机号码的json文件
+    :return:
+    """
+    with open(company_id_and_phone_str_json_path, 'r', encoding='utf8') as fp:
+        company_id_and_phone_str_json = json.loads(fp.read())
+    return company_id_and_phone_str_json
+
+
+def marge_company_desc_and_phone_str_to_new_json():
+    """
+    合并公司详情与手机号码到新的json文件
+    :return:
+    """
+    company_desc_has_phone_str_json = []
+    company_desc_has_phone_url_json = read_company_desc_has_phone_url_json_list()
+    company_id_and_phone_str_json = read_company_id_and_phone_str_json()
+
+    count = 0
+    all_count = len(company_id_and_phone_str_json)
+
+    for item_desc in company_desc_has_phone_url_json:
+        company_id_1 = item_desc['company_id']
+        has_url_end_keys_list_key_list = item_desc.get('has_url_end_keys_list_key', [])
+        for key in has_url_end_keys_list_key_list:
+            url_value = str(item_desc[key])
+            phone_img_name_1 = url_value.split('/')[-1]
+
+            for item_phone in company_id_and_phone_str_json:
+                company_id_2 = item_phone['company_id']
+                phone_img_name_2 = item_phone['phone_img_name']
+                if company_id_1 == company_id_2 and phone_img_name_1 == phone_img_name_2:
+                    item_desc[key] = item_phone['phone_str']
+                    count += 1
+                    print('\r%.4f%%, %s' % ((count / all_count * 100), company_id_1), end='')
+                else:
+                    continue
+        company_desc_has_phone_str_json.append(item_desc)
+        # if len(company_desc_has_phone_str_json) == 10:
+        #     break
+
+    with open(company_desc_has_phone_str_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_desc_has_phone_str_json))
 
 
 if __name__ == '__main__':
@@ -582,5 +627,6 @@ if __name__ == '__main__':
     # parse_company_id_and_phone_url_to_json()
     # multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=80)
     # multiprocessing_download_files(ocr_phone_img_to_str, read_company_id_and_phone_url_list(), pool_num=7)
-    marge_all_phone_str_to_json()
+    # marge_all_phone_str_to_json()
+    marge_company_desc_and_phone_str_to_new_json()
     # parse_test_demo()

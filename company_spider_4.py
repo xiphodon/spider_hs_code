@@ -539,6 +539,37 @@ def ocr_phone_img_to_str(item_dict):
                 fp.write(json.dumps(temp_dict))
 
 
+def marge_all_phone_str_to_json():
+    """
+    合并所有的图像识别后的手机号码
+    :return:
+    """
+    count = 0
+    all_count = len(os.listdir(phone_str_json_list_dir_path))
+    all_phone_str_json = []
+    for file_name in os.listdir(phone_str_json_list_dir_path):
+        file_path = os.path.join(phone_str_json_list_dir_path, file_name)
+        file_name_split_list = file_name.split('^')
+        company_id = file_name_split_list[0]
+        phone_img_name = file_name_split_list[1].replace('.txt', '')
+        # print(company_id, phone_img_name)
+
+        with open(file_path, 'r', encoding='utf8') as fp:
+            item_dict = json.loads(fp.read())
+
+        item_dict['phone_img_name'] = phone_img_name
+
+        all_phone_str_json.append(item_dict)
+
+        count += 1
+        print('\r%.4f%%' % (count / all_count * 100), end='')
+
+    with open(company_id_and_phone_str_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(all_phone_str_json))
+
+
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
@@ -550,5 +581,6 @@ if __name__ == '__main__':
     # merge_phone_url_to_company_desc_json()
     # parse_company_id_and_phone_url_to_json()
     # multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=80)
-    multiprocessing_download_files(ocr_phone_img_to_str, read_company_id_and_phone_url_list(), pool_num=7)
+    # multiprocessing_download_files(ocr_phone_img_to_str, read_company_id_and_phone_url_list(), pool_num=7)
+    marge_all_phone_str_to_json()
     # parse_test_demo()

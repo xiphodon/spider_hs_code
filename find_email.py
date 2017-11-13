@@ -67,5 +67,5 @@ def find_email_from_domain(target_url):
 if __name__ == '__main__':
     url_1 = r'http://www.festo.com'
     url_2 = r'http://www.closeoutdistributors.com'
-    # find_email_yingyanso(url_2)
-    find_email_from_domain(url_2)
+    find_email_yingyanso(url_2)
+    # find_email_from_domain(url_2)

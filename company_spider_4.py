@@ -34,6 +34,7 @@ company_desc_has_phone_url_json_path = os.path.join(home_data, r'company_desc_ha
 company_desc_has_phone_str_json_path = os.path.join(home_data, r'company_desc_has_phone_str.json')
 company_id_and_phone_url_json_path = os.path.join(home_data, r'company_id_and_phone_url.json')
 company_id_and_phone_str_json_path = os.path.join(home_data, r'company_id_and_phone_str.json')
+company_id_and_phone_str_dict_json_path = os.path.join(home_data, r'company_id_and_phone_str_dict.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -579,6 +580,34 @@ def read_company_id_and_phone_str_json():
     return company_id_and_phone_str_json
 
 
+def read_new_company_id_and_phone_str_dict_json():
+    """
+    读取公司id&手机号码的dict格式的json文件
+    :return:
+    """
+    with open(company_id_and_phone_str_dict_json_path, 'r', encoding='utf8') as fp:
+        company_id_and_phone_str_dict_json = json.loads(fp.read())
+    return company_id_and_phone_str_dict_json
+
+
+def company_id_and_phone_str_list_to_dict():
+    """
+    公司id&手机号码的list的json文件转为dict的json文件
+    :return:
+    """
+    new_company_id_and_phone_str_json = {}
+    company_id_and_phone_str_json = read_company_id_and_phone_str_json()
+    for item in company_id_and_phone_str_json:
+        company_id = item['company_id']
+        if company_id not in new_company_id_and_phone_str_json:
+            new_company_id_and_phone_str_json[company_id] = []
+        new_company_id_and_phone_str_json[company_id].append(item)
+        print(company_id)
+
+    with open(company_id_and_phone_str_dict_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(new_company_id_and_phone_str_json))
+
+
 def marge_company_desc_and_phone_str_to_new_json():
     """
     合并公司详情与手机号码到新的json文件
@@ -586,33 +615,49 @@ def marge_company_desc_and_phone_str_to_new_json():
     """
     company_desc_has_phone_str_json = []
     company_desc_has_phone_url_json = read_company_desc_has_phone_url_json_list()
-    company_id_and_phone_str_json = read_company_id_and_phone_str_json()
+    new_company_id_and_phone_str_dict_json = read_new_company_id_and_phone_str_dict_json()
+    print('data OK')
 
     count = 0
-    all_count = len(company_id_and_phone_str_json)
+    all_count = sum(len(new_company_id_and_phone_str_dict_json[key]) for key in new_company_id_and_phone_str_dict_json)
+    print('all_count: ', all_count)
 
     for item_desc in company_desc_has_phone_url_json:
-        company_id_1 = item_desc['company_id']
         has_url_end_keys_list_key_list = item_desc.get('has_url_end_keys_list_key', [])
+        company_id_1 = item_desc['company_id']
+
         for key in has_url_end_keys_list_key_list:
             url_value = str(item_desc[key])
             phone_img_name_1 = url_value.split('/')[-1]
 
-            for item_phone in company_id_and_phone_str_json:
-                company_id_2 = item_phone['company_id']
+            item_phone_list = new_company_id_and_phone_str_dict_json.get(company_id_1, [])
+
+            for item_phone in item_phone_list:
+
                 phone_img_name_2 = item_phone['phone_img_name']
-                if company_id_1 == company_id_2 and phone_img_name_1 == phone_img_name_2:
+
+                if phone_img_name_1 == phone_img_name_2:
                     item_desc[key] = item_phone['phone_str']
                     count += 1
-                    print('\r%.4f%%, %s' % ((count / all_count * 100), company_id_1), end='')
-                else:
-                    continue
+                    print('\r%.4f%%' % (count / all_count * 100), end='')
+
         company_desc_has_phone_str_json.append(item_desc)
-        # if len(company_desc_has_phone_str_json) == 10:
+
+        # if item_desc['company_name'] == '0086 Art Gallery':
         #     break
 
     with open(company_desc_has_phone_str_json_path, 'w', encoding='utf8') as fp:
         fp.write(json.dumps(company_desc_has_phone_str_json))
+
+
+def read_company_desc_has_phone_str_json():
+    """
+    读取公司详情的json（含手机号）
+    :return:
+    """
+    with open(company_desc_has_phone_str_json_path, 'r', encoding='utf8') as fp:
+        company_desc_has_phone_str_json = json.loads(fp.read())
+    return company_desc_has_phone_str_json
 
 
 if __name__ == '__main__':
@@ -628,5 +673,7 @@ if __name__ == '__main__':
     # multiprocessing_download_files(download_all_company_phone_img, read_company_id_and_phone_url_list(), pool_num=80)
     # multiprocessing_download_files(ocr_phone_img_to_str, read_company_id_and_phone_url_list(), pool_num=7)
     # marge_all_phone_str_to_json()
-    marge_company_desc_and_phone_str_to_new_json()
+    # company_id_and_phone_str_list_to_dict()
+    # marge_company_desc_and_phone_str_to_new_json()
+    print(json.dumps(read_company_desc_has_phone_str_json()[:20]))
     # parse_test_demo()

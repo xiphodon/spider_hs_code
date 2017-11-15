@@ -25,6 +25,7 @@ company_countries_list_html = os.path.join(home_data, r'company_countries_list.h
 countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json')
 company_url_list_json_path = os.path.join(home_data, r'company_url_list.json')
 company_desc_list_json_path = os.path.join(home_data, r'company_desc_list.json')
+all_keys_json_path = os.path.join(home_data, r'all_keys_list.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -415,6 +416,16 @@ def parse_company_desc_files_to_json():
         # break
     with open(company_desc_list_json_path, 'w', encoding='utf8') as fp:
         fp.write(json.dumps(company_desc_list_json))
+
+
+def read_company_desc_list_json():
+    """
+    读取公司详情列表json文件
+    :return:
+    """
+    with open(company_desc_list_json_path, 'r', encoding='utf8') as fp:
+        company_desc_list_json = json.loads(fp.read())
+    return company_desc_list_json
 
 
 if __name__ == '__main__':

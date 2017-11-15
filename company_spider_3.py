@@ -38,6 +38,7 @@ all_company_desc_no_web_json_path = os.path.join(home_data, 'all_company_desc_no
 company_desc_list_json_path = os.path.join(home_data, 'company_desc_list.json')
 company_desc_list_has_web_json_path = os.path.join(home_data, 'company_desc_list_has_web.json')
 company_desc_list_has_web_json_error_path = os.path.join(home_data, 'company_desc_list_has_web_error.json')
+all_keys_set_json_path = os.path.join(home_data, 'all_keys_set.json')
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -958,14 +959,22 @@ def merge_all_company_desc_dict_to_json():
         fp.write(json.dumps(new_company_desc_dict))
 
 
+def read_company_desc_list_has_web_json():
+    """
+    读取公司详情json（最终版）
+    :return:
+    """
+    with open(company_desc_list_has_web_json_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    return json.loads(data)
+
+
 def read_data_test():
     """
     读数据测试
     :return:
     """
-    with open(company_desc_list_has_web_json_path, 'r', encoding='utf8') as fp:
-        data = fp.read()
-    read_json = json.loads(data)
+    read_json = read_company_desc_list_has_web_json()
 
     random_choices_list = random.choices(read_json, k=20)
     print(json.dumps(random_choices_list))
@@ -992,4 +1001,5 @@ if __name__ == '__main__':
     # get_company_web_to_json()
     # multiprocessing_get_company_web_to_json()
     # merge_all_company_desc_dict_to_json()
-    read_data_test()
+    check_all_keys()
+    # read_data_test()

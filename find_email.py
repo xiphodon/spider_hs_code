@@ -9,6 +9,7 @@
 import requests
 import re
 
+
 def find_email_yingyanso(target_url):
     """
     查找邮箱（通过yingyanso）

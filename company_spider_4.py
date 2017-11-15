@@ -30,6 +30,7 @@ countries_url_list_json_path = os.path.join(home_data, r'countries_url_list.json
 company_desc_url_list_json_path = os.path.join(home_data, r'company_desc_url_list.json')
 company_desc_list_json_1_path = os.path.join(home_data, r'company_desc_list_1.json')
 company_desc_all_keys_json_path = os.path.join(home_data, r'company_desc_all_keys.json')
+company_desc_all_keys_json_path_2 = os.path.join(home_data, r'company_desc_all_keys_2.json')
 company_desc_has_phone_url_json_path = os.path.join(home_data, r'company_desc_has_phone_url.json')
 company_desc_has_phone_str_json_path = os.path.join(home_data, r'company_desc_has_phone_str.json')
 company_id_and_phone_url_json_path = os.path.join(home_data, r'company_id_and_phone_url.json')

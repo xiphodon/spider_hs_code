@@ -11,7 +11,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 # import time
-# import random
+import random
 from multiprocessing import Pool
 
 home_url = r'http://buyer.waimaoba.com'
@@ -401,6 +401,15 @@ def read_company_desc_list_json():
     return company_desc_list_json
 
 
+def read_json_test(num):
+    """
+    读取json文件测试
+    :return:
+    """
+    data = read_company_desc_list_json()
+    return json.dumps(random.choices(data, k=num))
+
+
 if __name__ == '__main__':
     # download_industry_html()
     # parse_industry_html_to_json()
@@ -409,4 +418,5 @@ if __name__ == '__main__':
     # parse_company_list_files_to_json()
     # download_company_desc_file(read_company_desc_url_list_json()[0])
     # multiprocessing_download_files(download_company_desc_file, read_company_desc_url_list_json(), pool_num=10)
-    parse_company_desc_files_to_json()
+    # parse_company_desc_files_to_json()
+    print(read_json_test(20))

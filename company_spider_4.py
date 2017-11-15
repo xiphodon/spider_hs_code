@@ -11,7 +11,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import time
-# import random
+import random
 from multiprocessing import Pool
 import ocr_img_to_str
 import re
@@ -661,6 +661,15 @@ def read_company_desc_has_phone_str_json():
     return company_desc_has_phone_str_json
 
 
+def read_json_test(num):
+    """
+    读取json文件测试
+    :return:
+    """
+    data = read_company_desc_has_phone_str_json()
+    return json.dumps(random.choices(data, k=num))
+
+
 if __name__ == '__main__':
     # download_countries_list()
     # parse_countries_list_to_json()
@@ -676,5 +685,6 @@ if __name__ == '__main__':
     # marge_all_phone_str_to_json()
     # company_id_and_phone_str_list_to_dict()
     # marge_company_desc_and_phone_str_to_new_json()
-    print(json.dumps(read_company_desc_has_phone_str_json()[:20]))
+    # print(json.dumps(read_company_desc_has_phone_str_json()[:20]))
+    print(read_json_test(20))
     # parse_test_demo()

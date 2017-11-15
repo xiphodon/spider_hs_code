@@ -553,8 +553,8 @@ def marge_all_phone_str_to_json():
     for file_name in os.listdir(phone_str_json_list_dir_path):
         file_path = os.path.join(phone_str_json_list_dir_path, file_name)
         file_name_split_list = file_name.split('^')
-        company_id = file_name_split_list[0]
-        phone_img_name = file_name_split_list[1].replace('.txt', '')
+        # company_id = file_name_split_list[0]
+        phone_img_name = str(file_name_split_list[1]).replace('.txt', '')
         # print(company_id, phone_img_name)
 
         with open(file_path, 'r', encoding='utf8') as fp:

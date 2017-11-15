@@ -9,7 +9,7 @@
 # 图像识别ocr
 
 import requests
-import company_spider_4
+# import company_spider_4
 import os
 
 try:
@@ -183,7 +183,6 @@ def img_to_str(img_png_path):
     # print(img_str.replace(' ', '-'))
     img_str = check_img_str(img_str)
     return img_str
-
 
 
 def bat_test_img_to_str():

@@ -1001,5 +1001,4 @@ if __name__ == '__main__':
     # get_company_web_to_json()
     # multiprocessing_get_company_web_to_json()
     # merge_all_company_desc_dict_to_json()
-    check_all_keys()
-    # read_data_test()
+    read_data_test()

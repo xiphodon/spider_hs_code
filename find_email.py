@@ -8,6 +8,7 @@
 
 import requests
 import re
+import time
 
 
 def find_email_yingyanso(target_url):
@@ -54,13 +55,42 @@ def find_email_from_domain(target_url):
     target_url = check_url(target_url)
     result = requests.get(target_url)
     if result.status_code == 200:
+        time_1 = time.time()
+
         content = result.text
-        # print(content)
-        re_result = re.search(r'([a-zA-Z0-9_.-]?)+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+', content)
-        if re_result:
-            print(re_result.group())
-        else:
-            print('匹配失败')
+
+        pattern_at = re.compile(r'@')
+        # pattern = re.compile(r'(?:[a-zA-Z0-9_.-]?)+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+')
+        pattern = re.compile(r'([A-Za-z0-9_-]+(\.\w+)*@(\w+\.)+\w{2,5})')
+
+        span_len = 30
+        new_content = ' ' * span_len + content + ' ' * span_len
+        at_result_list = pattern_at.finditer(new_content)
+        at_index_list = []
+        if at_result_list:
+            for item_at in at_result_list:
+                item_index_span = item_at.span()
+                at_index_list.append(item_index_span[0])
+
+            for i in range(len(at_index_list)):
+
+                if i == 0:
+                    start_index = at_index_list[i] - span_len
+                else:
+                    start_index = at_index_list[i] - span_len \
+                        if at_index_list[i] - span_len > at_index_list[i - 1] else at_index_list[i - 1] + 1
+
+                if i == len(at_index_list) - 1:
+                    end_index = at_index_list[i] + span_len
+                else:
+                    end_index = at_index_list[i] + span_len \
+                        if at_index_list[i] + span_len < at_index_list[i + 1] else at_index_list[i + 1]
+
+                result = pattern.search(new_content, start_index, end_index)
+                if result:
+                    print(result.group())
+        time_2 = time.time()
+        print(time_2 - time_1)
     else:
         print('请求异常')
 
@@ -68,5 +98,10 @@ def find_email_from_domain(target_url):
 if __name__ == '__main__':
     url_1 = r'http://www.festo.com'
     url_2 = r'http://www.closeoutdistributors.com'
-    find_email_yingyanso(url_2)
-    # find_email_from_domain(url_2)
+    url_3 = r'https://www.azure.cn/'
+    url_4 = r'http://www.bokesoft.com/boke/contact'
+    # find_email_yingyanso(url_2)
+    # time_1 = time.time()
+    find_email_from_domain(url_3)
+    # time_2 = time.time()
+    # print(time_2 - time_1)

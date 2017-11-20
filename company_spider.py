@@ -12,11 +12,12 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 # 创建浏览器对象
-driver = webdriver.Firefox()
+driver = webdriver.PhantomJS()
+# driver = webdriver.Firefox()
 # browser = webdriver.Chrome()
 # 导航到百度主页
-driver.get('http://listings.findthecompany.com/')
-# driver.get('https://www.baidu.com')
+# driver.get('http://listings.findthecompany.com/')
+driver.get('https://www.baidu.com')
 time.sleep(2)
 # 检查标题是否为‘百度一下，你就知道’
 assert '百度一下，你就知道' in driver.title

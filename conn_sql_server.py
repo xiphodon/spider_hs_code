@@ -95,7 +95,7 @@ def save_spider_3_data_to_db(conn, cur):
             cur.execute(sql_str.encode('utf8'))
             conn.commit()
             count += 1
-            print(company_id, 'OK')
+            print(company_id, 'OK', ',当前 count:', count, ', error_count:', error_count)
             # time.sleep(0.005)
         except Exception as e:
             error_count += 1

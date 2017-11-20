@@ -16,6 +16,14 @@ import company_spider_6
 import json
 
 
+# # settings.py 文件
+# host = '192.168.19.110'
+# user = 'sasa'
+# password = 'sasa19990909!@#'
+# database = 'LTCYT'
+# charset = 'utf8'
+
+
 def save_to_sql_server():
     """
     存数据至sql——server

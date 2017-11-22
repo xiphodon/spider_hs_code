@@ -38,8 +38,8 @@ def save_to_sql_server():
 
     # save_spider_3_data_to_db(conn, cur)
     # save_spider_4_data_to_db(conn, cur)
-    save_spider_5_data_to_db(conn, cur)
-    # save_spider_6_data_to_db(conn, cur)
+    # save_spider_5_data_to_db(conn, cur)
+    save_spider_6_data_to_db(conn, cur)
 
     conn.close()
 
@@ -385,7 +385,7 @@ def check_str(_str):
     :param _str:
     :return:
     """
-    problem_str_list = ['\n', '\xa0', '\xc2', '\u3000']
+    problem_str_list = ['\n', '\xa0', '\xc2', '\u3000', '<br />', '&nbsp;']
     for item_problem in problem_str_list:
         _str = _str.replace(item_problem, ' ')
 

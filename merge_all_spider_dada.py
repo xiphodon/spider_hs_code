@@ -28,23 +28,31 @@ def merge_all_json_data():
     合并所有的json数据，统一格式
     :return:
     """
-    # OOM 异常
 
     all_data_json = []
 
     merge_spider_3_data(all_data_json)
     merge_spider_5_data(all_data_json)
 
-    with open(all_company_json_path_1, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(all_data_json))
+    # OOM 异常
 
-    all_data_json = []
+    # with open(all_company_json_path_1, 'w', encoding='utf8') as fp:
+    #     fp.write(json.dumps(all_data_json))
+    #
+    # all_data_json = []
 
     merge_spider_4_data(all_data_json)
     merge_spider_6_data(all_data_json)
 
-    with open(all_company_json_path_2, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(all_data_json))
+    # with open(all_company_json_path_2, 'w', encoding='utf8') as fp:
+    #     fp.write(json.dumps(all_data_json))
+
+    with open(all_company_json_path, 'w', encoding='utf8') as fp:
+        fp.write('[')
+        for item_dict in all_data_json:
+            fp.write(json.dumps(item_dict) + ',')
+        fp.seek(fp.tell()-1, 0)
+        fp.write(']')
 
 
 def merge_all_json_data_2():
@@ -101,7 +109,7 @@ def merge_spider_3_data(all_data_json):
         temp_dict['Address'] = item_dict.get('company_adrress', '')
         temp_dict['Website'] = item_dict.get('company_web_origin', '')
         temp_dict['MainProduct'] = item_dict.get('company_product', '')
-        temp_dict['Telephone'] = item_dict.get('company_telephone', '')
+        temp_dict['Telephone'] = check_phone(item_dict.get('company_telephone', ''))
         temp_dict['Type'] = 'buyer or seller'
         print(temp_dict['_from_spider'], company_id)
 
@@ -135,9 +143,9 @@ def merge_spider_4_data(all_data_json):
         temp_dict['Address'] = item_dict.get('Address', '')
         temp_dict['Website'] = item_dict.get('Website', '')
         temp_dict['MainProduct'] = item_dict.get('Main Products', '')
-        temp_dict['Fax'] = item_dict.get('Fax Number', '')
-        temp_dict['Telephone'] = item_dict.get('Telephone', '')
-        temp_dict['CustomerPhone'] = item_dict.get('Mobilephone', '')
+        temp_dict['Fax'] = check_phone(item_dict.get('Fax Number', ''))
+        temp_dict['Telephone'] = check_phone(item_dict.get('Telephone', ''))
+        temp_dict['CustomerPhone'] = check_phone(item_dict.get('Mobilephone', ''))
         temp_dict['SalesVolume'] = item_dict.get('Total Annual Sales Volume', '')
         temp_dict['MainMarkets'] = item_dict.get('Main Markets', '')
         temp_dict['PostCode'] = item_dict.get('Zip/Post Code', '')
@@ -196,8 +204,8 @@ def merge_spider_5_data(all_data_json):
         temp_dict['Address'] = item_dict.get('company_address', '')
         temp_dict['Website'] = item_dict.get('company_web', '')
         temp_dict['Email'] = item_dict.get('company_email', '')
-        temp_dict['Fax'] = item_dict.get('company_fax', '')
-        temp_dict['Telephone'] = item_dict.get('company_telephone', '')
+        temp_dict['Fax'] = check_phone(item_dict.get('company_fax', ''))
+        temp_dict['Telephone'] = check_phone(item_dict.get('company_telephone', ''))
         temp_dict['PostCode'] = item_dict.get('post_code', '')
         temp_dict['ContactPerson'] = item_dict.get('contact_person', '')
         temp_dict['NumberOfEmployess'] = item_dict.get('employee_count', '')
@@ -243,10 +251,10 @@ def merge_spider_6_data(all_data_json):
         temp_dict['Email'] = item_dict.get('Email Address (电子邮件)', '')
         Fax_1 = item_dict.get('Fax', '')
         Fax_2 = item_dict.get('Fax (传真)', '')
-        temp_dict['Fax'] = Fax_1 if Fax_1 != '' else Fax_2
+        temp_dict['Fax'] = check_phone(Fax_1 if Fax_1 != '' else Fax_2)
         Telephone_1 = item_dict.get('Tel', '')
         Telephone_2 = item_dict.get('Tel (电话)', '')
-        temp_dict['Telephone'] = Telephone_1 if Telephone_1 != '' else Telephone_2
+        temp_dict['Telephone'] = check_phone(Telephone_1 if Telephone_1 != '' else Telephone_2)
         ContactPerson_1 = item_dict.get('Contact Person', '')
         ContactPerson_2 = item_dict.get('Contact Person (联系人)', '')
         temp_dict['ContactPerson'] = ContactPerson_1 if ContactPerson_1 != '' else ContactPerson_2
@@ -279,7 +287,37 @@ def merge_spider_all_data_2(all_data_json):
     all_data_json.extend(data_2)
 
 
+def check_phone(phone_str):
+    """
+    检查手机号码
+    :return:
+    """
+    allow_char_list = [' ', '-', '(', ')', '+', '/', ',', ';']
+
+    new_phone_str = ''
+    for item_char in phone_str:
+        if (not is_int(item_char)) and (item_char not in allow_char_list):
+                item_char = ' '
+        new_phone_str += item_char
+    return new_phone_str
+
+
+def is_int(char):
+    """
+    字符是否为数字
+    :param char: 单字符
+    :return:
+    """
+    try:
+        int(char)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
 if __name__ == '__main__':
     # merge_all_json_data()
     # merge_all_json_data_2()
-    print(len(read_all_company_json()))
+    # print(read_all_company_json()[:5])
+    merge_all_json_data()

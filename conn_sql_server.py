@@ -14,6 +14,7 @@ import company_spider_4
 import company_spider_5
 import company_spider_6
 import json
+import merge_all_spider_dada
 
 
 # # settings.py 文件
@@ -39,9 +40,121 @@ def save_to_sql_server():
     # save_spider_3_data_to_db(conn, cur)
     # save_spider_4_data_to_db(conn, cur)
     # save_spider_5_data_to_db(conn, cur)
-    save_spider_6_data_to_db(conn, cur)
+    # save_spider_6_data_to_db(conn, cur)
+
+    save_spider_all_data_to_db(conn, cur)
 
     conn.close()
+
+
+def save_spider_all_data_to_db(conn, cur):
+    """
+    存储spider所有数据至数据库
+    :return:
+    """
+    data = merge_all_spider_dada.read_all_company_json()
+    print('data OK **************')
+
+    error_count = 0
+
+    cur.execute("select top 1 company_id from Company3 order by ID desc")
+    last_company_id_int = cur.fetchone()
+
+    is_find = False
+    if last_company_id_int is None:
+        is_find = True
+
+    count = 0
+    for item_dict in data:
+
+        item_dict = check_dict(item_dict)
+        company_id = int(item_dict.get('company_id', ''))
+
+        # if company_id != 1000189:
+        #     continue
+        # print(item_dict)
+
+        if not is_find:
+            if company_id == last_company_id_int[0]:
+                print(company_id)
+                is_find = True
+                continue
+            else:
+                continue
+
+        Industry = item_dict.get('Industry', '').replace("'", "''")
+        Name = item_dict.get('Name', '').replace("'", "''")
+        Introduction = item_dict.get('Introduction', '').replace("'", "''")
+        Description = item_dict.get('Description', '').replace("'", "''")
+        Description_cn = item_dict.get('Description_cn', '').replace("'", "''")
+        Country = item_dict.get('Country', '').replace("'", "''")
+        Country_cn = item_dict.get('Country_cn', '').replace("'", "''")
+        City = item_dict.get('City', '').replace("'", "''")
+        Address = item_dict.get('Address', '').replace("'", "''")
+        Website = item_dict.get('Website', '').replace("'", "''")
+        MainProduct = item_dict.get('MainProduct', '').replace("'", "''")
+        Email = item_dict.get('Email', '').replace("'", "''")
+        Fax = item_dict.get('Fax', '').replace("'", "''")
+        Telephone = item_dict.get('Telephone', '').replace("'", "''")
+        CustomerPhone = item_dict.get('CustomerPhone', '').replace("'", "''")
+        SalesVolume = item_dict.get('SalesVolume', '').replace("'", "''")
+        MainMarkets = item_dict.get('MainMarkets', '').replace("'", "''")
+        PostCode = item_dict.get('PostCode', '').replace("'", "''")
+        BusinessType = item_dict.get('BusinessType', '').replace("'", "''")
+        YearStartExporting = item_dict.get('YearStartExporting', '').replace("'", "''")
+        ContactPerson = item_dict.get('ContactPerson', '').replace("'", "''")
+        JobTitle = item_dict.get('JobTitle', '').replace("'", "''")
+        OfficeAddress_Detail = item_dict.get('OfficeAddress_Detail', '').replace("'", "''")
+        Department = item_dict.get('Department', '').replace("'", "''")
+        TradeCapacity = item_dict.get('TradeCapacity', '').replace("'", "''")
+        ProductionCapacity = item_dict.get('ProductionCapacity', '').replace("'", "''")
+        AverageLeadTime = item_dict.get('AverageLeadTime', '').replace("'", "''")
+        ContractManufacturing = item_dict.get('ContractManufacturing', '').replace("'", "''")
+        RegisteredCapital = item_dict.get('RegisteredCapital', '').replace("'", "''")
+        RDCapacity = item_dict.get('RDCapacity', '').replace("'", "''")
+        LegalRepresentative = item_dict.get('LegalRepresentative', '').replace("'", "''")
+        QCStaff = item_dict.get('QCStaff', '').replace("'", "''")
+        QualityControl = item_dict.get('QualityControl', '').replace("'", "''")
+        YearEstablished = item_dict.get('YearEstablished', '').replace("'", "''")
+        Certificates = item_dict.get('Certificates', '').replace("'", "''")
+        Revenue = item_dict.get('Revenue', '').replace("'", "''")
+        NumberOfEmployess = item_dict.get('NumberOfEmployess', '').replace("'", "''")
+        PurchaseProduct = item_dict.get('PurchaseProduct', '').replace("'", "''")
+        Type = 'buyer or seller'
+
+        try:
+            sql_str = "insert into Company3(company_id,Industry,Name,Introduction,Description,Description_cn,Country," \
+                      "Country_cn,City,Address,Website," \
+                      "MainProduct,Email,Fax,Telephone,CustomerPhone,SalesVolume,MainMarkets,PostCode,BusinessType," \
+                      "YearStartExporting,ContactPerson,JobTitle,OfficeAddress_Detail,Department,TradeCapacity," \
+                      "ProductionCapacity,AverageLeadTime,ContractManufacturing,RegisteredCapital,RDCapacity," \
+                      "LegalRepresentative,QCStaff,QualityControl,YearEstablished,Certificates,Revenue," \
+                      "NumberOfEmployess,PurchaseProduct,Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s', \
+                      N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s', N'%s',N'%s',\
+                      N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s', \
+                      N'%s',N'%s',N'%s')" \
+                      % (company_id, Industry, Name, Introduction, Description, Description_cn, Country, Country_cn,
+                         City, Address, Website, MainProduct, Email, Fax, Telephone, CustomerPhone, SalesVolume,
+                         MainMarkets, PostCode, BusinessType, YearStartExporting, ContactPerson, JobTitle,
+                         OfficeAddress_Detail, Department, TradeCapacity, ProductionCapacity,AverageLeadTime,
+                         ContractManufacturing, RegisteredCapital, RDCapacity, LegalRepresentative, QCStaff,
+                         QualityControl, YearEstablished, Certificates, Revenue, NumberOfEmployess, PurchaseProduct,
+                         Type)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            count += 1
+            print(company_id, 'OK', ',当前 count:', count, ', error_count:', error_count)
+
+        except Exception as e:
+            error_count += 1
+            print(e, error_count, company_id, '===================')
+            # raise e
+
+        # finally:
+        #     print(json.dumps(item_dict))
+        #     break
+    # conn.commit()
+    print('count:', count, ', error_count:', error_count)
 
 
 def save_spider_3_data_to_db(conn, cur):

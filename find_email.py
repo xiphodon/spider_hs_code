@@ -57,16 +57,17 @@ def find_email_from_domain(target_url):
     if result.status_code == 200:
         time_1 = time.time()
 
-        content = result.text
+        content = bytes(result.text, 'iso-8859-1').decode('utf-8')
 
         pattern_at = re.compile(r'@')
-        # pattern = re.compile(r'(?:[a-zA-Z0-9_.-]?)+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+')
-        pattern = re.compile(r'([A-Za-z0-9_-]+(\.\w+)*@(\w+\.)+\w{2,5})')
+        pattern = re.compile(r'(?:[a-zA-Z0-9_.-]?)+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+')
+        # pattern = re.compile(r'([A-Za-z0-9_-]+(\.\w+)*@(\w+\.)+\w{2,5})')
 
         span_len = 30
         new_content = ' ' * span_len + content + ' ' * span_len
         at_result_list = pattern_at.finditer(new_content)
         at_index_list = []
+        email_set = set()
         if at_result_list:
             for item_at in at_result_list:
                 item_index_span = item_at.span()
@@ -87,9 +88,12 @@ def find_email_from_domain(target_url):
                         if at_index_list[i] + span_len < at_index_list[i + 1] else at_index_list[i + 1]
 
                 result = pattern.search(new_content, start_index, end_index)
+                # print('content:', new_content[start_index: end_index])
                 if result:
-                    print(result.group())
+                    email_set.add(result.group())
         time_2 = time.time()
+        for item_email in email_set:
+            print(item_email)
         print(time_2 - time_1)
     else:
         print('请求异常')
@@ -100,8 +104,11 @@ if __name__ == '__main__':
     url_2 = r'http://www.closeoutdistributors.com'
     url_3 = r'https://www.azure.cn/'
     url_4 = r'http://www.bokesoft.com/boke/contact'
+    url_5 = r'http://www.hoo-design.com/'
+    url_6 = r'http://www.hoo-design.com/e_product.asp'
+    url_7 = r'http://www.woo-hoo.in/'
     # find_email_yingyanso(url_2)
     # time_1 = time.time()
-    find_email_from_domain(url_3)
+    find_email_from_domain(url_7)
     # time_2 = time.time()
     # print(time_2 - time_1)

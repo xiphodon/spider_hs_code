@@ -8,6 +8,7 @@
 
 # 乐天
 from company_spider_6 import while_requests_get
+from company_spider_6 import multiprocessing_download_files
 import os
 from bs4 import BeautifulSoup
 from lxml import etree
@@ -19,6 +20,8 @@ data_home = r'E:\work_all\topease\rakuten_spider'
 
 types_html_path = os.path.join(data_home, 'types.html')
 all_types_json_path = os.path.join(data_home, 'all_types.json')
+
+html_files_dir_path = os.path.join(data_home, 'html_files')
 
 
 def download_types_html():
@@ -74,6 +77,81 @@ def parse_types_file_to_types_json():
         fp.write(json.dumps(all_types_json_list))
 
 
+def get_download_every_type_product_list():
+    """
+    获取下载每个类型内的商品列表
+    :return:
+    """
+    with open(all_types_json_path, 'r', encoding='utf8') as fp:
+        all_types_json = json.loads(fp.read())
+    # print(all_types_json)
+
+    multiprocessing_download_origin_list = list()
+
+    for item_type_first in all_types_json:
+        type_title_name = item_type_first['type_title_name']
+        type_title_href = item_type_first['type_title_href']
+        type_list = item_type_first['type_list']
+
+        item_first_type_dir_path = os.path.join(html_files_dir_path, type_title_name)
+        if not os.path.exists(item_first_type_dir_path):
+            os.mkdir(item_first_type_dir_path)
+
+        # print(type_title_name, type_title_href, type_list)
+        for item_type_second in type_list:
+            type_name = item_type_second['type_name'].replace('(=>)', '')
+            type_href = item_type_second['type_href']
+            # print(type_name, type_href)
+
+            item_second_type_dir_path = os.path.join(item_first_type_dir_path, type_name)
+            if not os.path.exists(item_second_type_dir_path):
+                os.mkdir(item_second_type_dir_path)
+
+            multiprocessing_download_origin_list.append((type_name, type_href, item_second_type_dir_path))
+
+            # break
+        # break
+
+    return multiprocessing_download_origin_list
+
+
+def download_one_type_product_list(item_tuple):
+    """
+    下载一个类型内的商品列表
+    :param type_name: 该类型名称
+    :param type_href: 该类型href
+    :param item_type_dir_path: 该类型存储目录文件夹path
+    :return:
+    """
+    type_name, type_href, item_type_dir_path = item_tuple
+    page_index = 0
+    while True:
+        page_index += 1
+        href_page_suffix = '?p=' + str(page_index)
+        file_href = type_href + href_page_suffix
+
+        html_file_path = os.path.join(item_type_dir_path, type_name + '_' + str(page_index) + '.html')
+
+        if os.path.exists(html_file_path):
+            continue
+
+        result = while_requests_get(file_href)
+        content_data = result.text
+        # print(result.content)
+        with open(html_file_path, 'w', encoding='utf8') as fp:
+            fp.write(content_data)
+
+        print(file_href, 'OK')
+
+        selector = etree.HTML(content_data)
+
+        next_page_button_list = selector.xpath('//a[@class="item -next"]')
+
+        if len(next_page_button_list) == 0:
+            break
+
+
 if __name__ == '__main__':
     # download_types_html()
-    parse_types_file_to_types_json()
+    # parse_types_file_to_types_json()
+    multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 10)

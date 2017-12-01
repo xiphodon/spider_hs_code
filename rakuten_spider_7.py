@@ -13,6 +13,7 @@ import os
 from bs4 import BeautifulSoup
 from lxml import etree
 import json
+import time
 
 types_url = r'https://directory.rakuten.co.jp/'
 
@@ -20,8 +21,11 @@ data_home = r'E:\work_all\topease\rakuten_spider'
 
 types_html_path = os.path.join(data_home, 'types.html')
 all_types_json_path = os.path.join(data_home, 'all_types.json')
+all_shop_info_json_path = os.path.join(data_home, 'all_shop_info.json')
+shop_href_mapping_json_path = os.path.join(data_home, 'shop_href_mapping.json')
 
 html_files_dir_path = os.path.join(data_home, 'html_files')
+all_shop_info_dir_path = os.path.join(data_home, 'all_shop_info_dir')
 
 
 def download_types_html():
@@ -151,7 +155,95 @@ def download_one_type_product_list(item_tuple):
             break
 
 
+def parse_all_type_product_list_files():
+    """
+    解析所有类型的商品列表页面
+    :return:
+    """
+    shop_href_mapping = dict()
+    shop_href_mapping_id = 1
+
+    for type_first_dir in os.listdir(html_files_dir_path):
+        type_first_dir_path = os.path.join(html_files_dir_path, type_first_dir)
+        for type_second_dir in os.listdir(type_first_dir_path):
+
+            print(type_first_dir, type_second_dir)
+
+            type_second_dir_path = os.path.join(type_first_dir_path, type_second_dir)
+            for item_file_name in os.listdir(type_second_dir_path):
+                item_file_path = os.path.join(type_second_dir_path, item_file_name)
+
+                with open(item_file_path, 'r', encoding='utf8') as fp:
+                    # content = fp.read()
+                    selector = etree.HTML(fp.read())
+
+                product_div_list = selector.xpath('//div[@class="dui-card"]')
+
+                for item_product_div in product_div_list:
+                    shop_a = item_product_div.xpath('.//div[@class="content merchant _ellipsis"]/a')[0]
+                    shop_href = shop_a.xpath('./@href')[0]
+                    shop_text = shop_a.xpath('./text()')[0]
+                    # print(shop_href, shop_text)
+
+                    product_title_a = item_product_div.xpath('.//div[@class="content title"]/h2/a')[0]
+                    product_title_href = product_title_a.xpath('./@href')[0]
+                    product_title_text = product_title_a.xpath('./@title')[0]
+                    # print(product_title_href, product_title_text)
+
+                    product_price_span = item_product_div.xpath('.//div[@class="content price"]/span')[0]
+                    product_price_text = product_price_span.xpath('./text()')[0]
+                    product_price_suffix = product_price_span.xpath('./small/text()')[0]
+                    product_price = product_price_text + product_price_suffix
+                    # print(product_price)
+
+                    product_score_text_list = item_product_div.xpath('.//span[@class="score"]/text()')
+                    product_legend_text_list = item_product_div.xpath('.//span[@class="legend"]/text()')
+
+                    if len(product_score_text_list) > 0:
+                        product_score_text = product_score_text_list[0]
+                    else:
+                        product_score_text = ''
+
+                    if len(product_legend_text_list) > 0:
+                        product_legend_text = product_legend_text_list[0][1:-2]
+                    else:
+                        product_legend_text = ''
+
+                    # print(product_score_text, product_legend_text)
+
+                    temp_product_dict = {'shop_name': shop_text,
+                                         'shop_href': shop_href,
+                                         'product_title': product_title_text,
+                                         'product_href': product_title_href,
+                                         'product_price': product_price,
+                                         'product_score': product_score_text,
+                                         'product_legend': product_legend_text}
+
+                    if shop_href not in shop_href_mapping:
+                        shop_href_mapping[shop_href] = str(shop_href_mapping_id)
+                        shop_href_mapping_id += 1
+
+                    shop_href_dir_path = os.path.join(all_shop_info_dir_path, shop_href_mapping[shop_href])
+                    if not os.path.exists(shop_href_dir_path):
+                        os.mkdir(shop_href_dir_path)
+
+                    file_path = os.path.join(shop_href_dir_path, 'products.txt')
+
+                    with open(file_path, 'a', encoding='utf8') as fp:
+                        fp.write(json.dumps(temp_product_dict) + '\n')
+
+                    # print(product_title_text)
+                    # break
+                # break
+            # break
+        # break
+
+    with open(shop_href_mapping_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(shop_href_mapping))
+
+
 if __name__ == '__main__':
     # download_types_html()
     # parse_types_file_to_types_json()
-    multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 10)
+    # multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 10)
+    parse_all_type_product_list_files()

@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from lxml import etree
 import json
 import time
+import hashlib
 
 types_url = r'https://directory.rakuten.co.jp/'
 
@@ -160,8 +161,6 @@ def parse_all_type_product_list_files():
     解析所有类型的商品列表页面
     :return:
     """
-    shop_href_mapping = dict()
-    shop_href_mapping_id = 1
 
     for type_first_dir in os.listdir(html_files_dir_path):
         type_first_dir_path = os.path.join(html_files_dir_path, type_first_dir)
@@ -221,37 +220,75 @@ def parse_all_type_product_list_files():
                                                  'product_score': product_score_text,
                                                  'product_legend': product_legend_text}
 
-                            if shop_href not in shop_href_mapping:
-                                shop_href_mapping[shop_href] = str(shop_href_mapping_id)
-                                shop_href_mapping_id += 1
+                            shop_href_md5 = hashlib.md5(shop_href.encode('utf8')).hexdigest()
 
-                            shop_href_dir_path = os.path.join(all_shop_info_dir_path, shop_href_mapping[shop_href])
-                            if not os.path.exists(shop_href_dir_path):
-                                os.mkdir(shop_href_dir_path)
+                            shop_href_md5_dir_path = os.path.join(all_shop_info_dir_path, shop_href_md5)
 
-                            file_path = os.path.join(shop_href_dir_path, 'products.txt')
+                            if not os.path.exists(shop_href_md5_dir_path):
+                                os.mkdir(shop_href_md5_dir_path)
+                                file_mark_path = os.path.join(shop_href_md5_dir_path, 'shop_href.txt')
+                                with open(file_mark_path, 'w', encoding='utf8') as fp:
+                                    fp.write(shop_href)
+
+                            file_path = os.path.join(shop_href_md5_dir_path, 'products.txt')
 
                             with open(file_path, 'a', encoding='utf8') as fp:
                                 fp.write(json.dumps(temp_product_dict) + '\n')
 
-                            # print(product_title_text)
                             # break
                         except Exception as e:
-                            print(e)
+                            print('inner', e)
                             continue
                 except Exception as e:
-                    print(e)
+                    print('outter', e)
                     continue
                 # break
             # break
         # break
 
-    with open(shop_href_mapping_json_path, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(shop_href_mapping))
+
+def download_shop_info_files():
+    """
+    下载商家信息页面
+    :return:
+    """
+    for shop_href_md5 in os.listdir(all_shop_info_dir_path):
+        shop_href_md5_path = os.path.join(all_shop_info_dir_path, shop_href_md5)
+        print(shop_href_md5)
+
+        shop_info_html_path = os.path.join(shop_href_md5_path, 'shop_info.html')
+        if os.path.exists(shop_info_html_path):
+            continue
+
+        shop_href_txt_path = os.path.join(shop_href_md5_path, 'shop_href.txt')
+
+        with open(shop_href_txt_path, 'r', encoding='utf8') as fp:
+            shop_href = fp.read().strip()
+
+        result = while_requests_get(shop_href)
+
+        selector = etree.HTML(result.text)
+        # <meta property="og:url" content="https://www.rakuten.co.jp/mono-b/"/>
+        shop_info_href_list = selector.xpath('//meta[@property="og:url"]/@content')
+
+        if len(shop_info_href_list) > 0:
+            shop_info_href = shop_info_href_list[0] + 'info.html'
+            # print(shop_info_href)
+            info_result = while_requests_get(shop_info_href)
+
+            with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
+                fp.write(info_result.content.decode('EUC-JP'))
+
+            print(shop_href_md5, 'save OK')
+
+        print()
+
+        # break
 
 
 if __name__ == '__main__':
     # download_types_html()
     # parse_types_file_to_types_json()
     # multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 10)
-    parse_all_type_product_list_files()
+    # parse_all_type_product_list_files()
+    download_shop_info_files()

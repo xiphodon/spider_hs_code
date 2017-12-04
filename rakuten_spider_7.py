@@ -253,35 +253,38 @@ def download_shop_info_files():
     :return:
     """
     for shop_href_md5 in os.listdir(all_shop_info_dir_path):
-        shop_href_md5_path = os.path.join(all_shop_info_dir_path, shop_href_md5)
-        print(shop_href_md5)
+        try:
+            shop_href_md5_path = os.path.join(all_shop_info_dir_path, shop_href_md5)
+            print(shop_href_md5)
 
-        shop_info_html_path = os.path.join(shop_href_md5_path, 'shop_info.html')
-        if os.path.exists(shop_info_html_path):
-            continue
+            shop_info_html_path = os.path.join(shop_href_md5_path, 'shop_info.html')
+            if os.path.exists(shop_info_html_path):
+                continue
 
-        shop_href_txt_path = os.path.join(shop_href_md5_path, 'shop_href.txt')
+            shop_href_txt_path = os.path.join(shop_href_md5_path, 'shop_href.txt')
 
-        with open(shop_href_txt_path, 'r', encoding='utf8') as fp:
-            shop_href = fp.read().strip()
+            with open(shop_href_txt_path, 'r', encoding='utf8') as fp:
+                shop_href = fp.read().strip()
 
-        result = while_requests_get(shop_href)
+            result = while_requests_get(shop_href)
 
-        selector = etree.HTML(result.text)
-        # <meta property="og:url" content="https://www.rakuten.co.jp/mono-b/"/>
-        shop_info_href_list = selector.xpath('//meta[@property="og:url"]/@content')
+            selector = etree.HTML(result.text)
+            # <meta property="og:url" content="https://www.rakuten.co.jp/mono-b/"/>
+            shop_info_href_list = selector.xpath('//meta[@property="og:url"]/@content')
 
-        if len(shop_info_href_list) > 0:
-            shop_info_href = shop_info_href_list[0] + 'info.html'
-            # print(shop_info_href)
-            info_result = while_requests_get(shop_info_href)
+            if len(shop_info_href_list) > 0:
+                shop_info_href = shop_info_href_list[0] + 'info.html'
+                # print(shop_info_href)
+                info_result = while_requests_get(shop_info_href)
 
-            with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
-                fp.write(info_result.content.decode('EUC-JP'))
+                with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
+                    fp.write(info_result.content.decode('EUC-JP'))
 
-            print(shop_href_md5, 'save OK')
+                print(shop_href_md5, 'save OK')
 
-        print()
+            print()
+        except Exception as e:
+            print(e)
 
         # break
 

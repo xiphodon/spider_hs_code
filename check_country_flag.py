@@ -39,7 +39,7 @@ def get_country_flag_set():
     :return:
     """
     flag_set = set()
-    for item_flag in os.listdir(r'C:\Users\topeasecpb\Desktop\country(1)\country'):
+    for item_flag in os.listdir(r'C:\Users\topeasecpb\Desktop\country 2\country'):
         # print(item_flag)
         if item_flag.endswith('.png'):
             flag_set.add(item_flag.lower().replace('.png', ''))
@@ -57,6 +57,10 @@ def get_no_flag_country_set():
     # print(country_set)
     no_flag_country_set = country_set - flag_set
     no_country_flag_set = flag_set - country_set
+
+    print(flag_set)
+    print(len(flag_set))
+    print(len(country_set))
 
     print(no_country_flag_set)
     print(len(no_country_flag_set))

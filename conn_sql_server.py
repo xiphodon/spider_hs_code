@@ -15,6 +15,7 @@ import company_spider_5
 import company_spider_6
 import json
 import merge_all_spider_dada
+import rakuten_spider_7
 
 
 # # settings.py 文件
@@ -42,9 +43,157 @@ def save_to_sql_server():
     # save_spider_5_data_to_db(conn, cur)
     # save_spider_6_data_to_db(conn, cur)
 
-    save_spider_all_data_to_db(conn, cur)
+    # save_spider_all_data_to_db(conn, cur)
+    # save_rakuten_spider_shop_info_to_db(conn, cur)
+    save_rakuten_spider_products_info_to_db(conn, cur)
 
     conn.close()
+
+
+def save_rakuten_spider_shop_info_to_db(conn, cur):
+    """
+    存储乐天spider商家信息至数据库
+    :param conn:
+    :param cur:
+    :return:
+    """
+    data = rakuten_spider_7.read_shop_info_json()
+    print('data', 'OK')
+
+    cur.execute("select top 1 company_md5 from rakuten_company order by id desc")
+    server_company_md5 = cur.fetchone()
+    print(server_company_md5)
+
+    is_find = False
+    if server_company_md5 is None:
+        is_find = True
+
+    error_count = 0
+    count = 0
+
+    for item_dict in data:
+
+        company_md5 = item_dict.get('company_md5', '').replace("'", "''")
+
+        if not is_find:
+            if company_md5 == server_company_md5[0]:
+                # print(company_md5)
+                is_find = True
+                continue
+            else:
+                continue
+
+        company_name = item_dict.get('company_name', '').replace("'", "''")
+        company_address = item_dict.get('company_address', '').replace("'", "''")
+        company_tel = item_dict.get('company_tel', '').replace("'", "''")
+        company_fax = item_dict.get('company_fax', '').replace("'", "''")
+        company_representative = item_dict.get('company_representative', '').replace("'", "''")
+        company_operator = item_dict.get('company_operator', '').replace("'", "''")
+        company_shopowner = item_dict.get('company_shopowner', '').replace("'", "''")
+        company_email = item_dict.get('company_email', '').replace("'", "''")
+
+        sql_str = None
+        try:
+            sql_str = "insert into rakuten_company(company_md5,company_name,company_address,company_tel,company_fax," \
+                      "company_representative,company_operator,company_shopowner,company_email)" \
+                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      % (company_md5, company_name, company_address, company_tel, company_fax, company_representative,
+                         company_operator, company_shopowner, company_email)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            count += 1
+            print(company_md5, 'OK', ',当前 count:', count, ', error_count:', error_count)
+            # time.sleep(0.005)
+        except Exception as e:
+            error_count += 1
+            print(e, error_count, company_md5, '===================')
+            print(sql_str)
+
+            print(len(company_md5))
+            print(len(company_name))
+            print(len(company_address))
+            print(len(company_tel))
+            print(len(company_fax))
+            print(len(company_representative))
+            print(len(company_operator))
+            print(len(company_shopowner))
+            print(len(company_email))
+            # raise e
+        # break
+    # conn.commit()
+    print('count:', count, ', error_count:', error_count)
+
+
+def save_rakuten_spider_products_info_to_db(conn, cur):
+    """
+    存储乐天spider产品信息至数据库
+    :param conn:
+    :param cur:
+    :return:
+    """
+    data = rakuten_spider_7.read_products_json()
+    print('data', 'OK')
+
+    cur.execute("select top 1 shop_md5 from rakuten_product order by id desc")
+    server_shop_md5 = cur.fetchone()
+    print(server_shop_md5)
+
+    is_find = False
+    if server_shop_md5 is None:
+        is_find = True
+
+    error_count = 0
+    count = 0
+
+    for item_dict in data:
+
+        shop_md5 = item_dict.get('shop_md5', '').replace("'", "''")
+
+        if not is_find:
+            if shop_md5 == server_shop_md5[0]:
+                # print(company_md5)
+                is_find = True
+                continue
+            else:
+                continue
+
+        shop_name = item_dict.get('shop_name', '').replace("'", "''")
+        shop_href = item_dict.get('shop_href', '').replace("'", "''")
+        product_title = item_dict.get('product_title', '').replace("'", "''")
+        product_href = item_dict.get('product_href', '').replace("'", "''")
+        product_price = item_dict.get('product_price', '').replace("'", "''")
+        product_score = item_dict.get('product_score', '').replace("'", "''")
+        product_legend = item_dict.get('product_legend', '').replace("'", "''")
+
+        sql_str = None
+        try:
+            sql_str = "insert into rakuten_product(shop_name,shop_href,product_title,product_href,product_price," \
+                      "product_score,product_legend,shop_md5)" \
+                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      % (shop_name, shop_href, product_title, product_href, product_price, product_score,
+                         product_legend, shop_md5)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            count += 1
+            print(shop_md5, 'OK', ',当前 count:', count, ', error_count:', error_count)
+            # time.sleep(0.005)
+        except Exception as e:
+            error_count += 1
+            print(e, error_count, shop_md5, '===================')
+            print(sql_str)
+
+            print(len(shop_name))
+            print(len(shop_href))
+            print(len(product_title))
+            print(len(product_href))
+            print(len(product_price))
+            print(len(product_score))
+            print(len(product_legend))
+            print(len(shop_md5))
+            # raise e
+        # break
+    # conn.commit()
+    print('count:', count, ', error_count:', error_count)
 
 
 def save_spider_all_data_to_db(conn, cur):

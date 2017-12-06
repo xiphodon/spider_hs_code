@@ -24,6 +24,8 @@ types_html_path = os.path.join(data_home, 'types.html')
 all_types_json_path = os.path.join(data_home, 'all_types.json')
 all_shop_info_json_path = os.path.join(data_home, 'all_shop_info.json')
 shop_href_mapping_json_path = os.path.join(data_home, 'shop_href_mapping.json')
+shop_info_json_path = os.path.join(data_home, 'shop_info.json')
+all_products_json_path = os.path.join(data_home, 'all_products.json')
 
 html_files_dir_path = os.path.join(data_home, 'html_files')
 all_shop_info_dir_path = os.path.join(data_home, 'all_shop_info_dir')
@@ -285,8 +287,152 @@ def download_shop_info_files():
             print()
         except Exception as e:
             print(e)
-
         # break
+
+
+def parse_shop_info_to_json():
+    """
+    解析商家信息并存为json文件
+    :return:
+    """
+    shop_info_json = list()
+    for shop_info_md5 in os.listdir(all_shop_info_dir_path):
+        try:
+            shop_info_md5_path = os.path.join(all_shop_info_dir_path, shop_info_md5)
+            # print(shop_info_md5_path)
+            shop_info_html_path = os.path.join(shop_info_md5_path, 'shop_info.html')
+            if os.path.exists(shop_info_html_path):
+                with open(shop_info_html_path, 'r', encoding='EUC-JP') as fp:
+                    content = fp.read()
+                # print(content)
+
+                soup = BeautifulSoup(content, 'lxml')
+
+                # shop_info_list = selector.xpath('//tr/td[@valign="top"]/font/dl/dt/text()')
+                shop_info_dl_list = soup.select('td[valign="top"] > font > dl')
+
+                if len(shop_info_dl_list) > 0:
+                    shop_info_dl = shop_info_dl_list[0]
+
+                    shop_info_dl_dt_list = shop_info_dl.select('dt')
+                    shop_info_dl_dd_list = shop_info_dl.select('dd')
+
+                    if len(shop_info_dl_dt_list) >= 2 and len(shop_info_dl_dd_list) >= 1:
+                        company_name = shop_info_dl.select('dt')[1].text.strip()
+                        shop_info_dl_dd = shop_info_dl.select('dd')[0].text.strip()
+
+                        # print(company_name)
+                        # print(shop_info_dl_dd)
+
+                        shop_info_list = [x.strip() for x in shop_info_dl_dd.split('\n')]
+
+                        if len(shop_info_list) != 6:
+                            continue
+
+                        # print(shop_info_list)
+                        company_address = shop_info_list[0]
+                        company_tel = shop_info_list[1].split('  ')[0].split(':')[-1]
+                        company_fax = shop_info_list[1].split('  ')[1].split(':')[-1]
+                        company_info_001 = shop_info_list[2].split(':')
+                        company_info_002 = shop_info_list[3].split(':')
+                        company_info_003 = shop_info_list[4].split(':')
+                        company_info_004 = shop_info_list[5].split(':')
+
+                        temp_dict = {
+                            'company_md5': shop_info_md5,
+                            'company_name': check_str(company_name),
+                            'company_address': check_str(company_address),
+                            'company_tel': check_str(company_tel),
+                            'company_fax': check_str(company_fax),
+                            'company_representative': check_str(company_info_001[1]),
+                            'company_operator': check_str(company_info_002[1]),
+                            'company_shopowner': check_str(company_info_003[1]),
+                            'company_email': check_str(company_info_004[1]),
+                        }
+
+                        shop_info_json.append(temp_dict)
+
+                        # print(company_name)
+                        # print(company_address)
+                        # print(company_tel)
+                        # print(company_fax)
+                        # print(company_info_001)
+                        # print(company_info_002)
+                        # print(company_info_003)
+                        # print(company_info_004)
+
+                        print(temp_dict)
+        except Exception as e:
+            print(e)
+
+    with open(shop_info_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(shop_info_json))
+
+
+def read_shop_info_json():
+    """
+    读取商家信息json
+    :return:
+    """
+    with open(shop_info_json_path, 'r', encoding='utf8') as fp:
+        data = json.loads(fp.read())
+    return data
+
+
+def read_products_json():
+    """
+    读取产品信息json
+    :return:
+    """
+    with open(all_products_json_path, 'r', encoding='utf8') as fp:
+        data = json.loads(fp.read())
+    return data
+
+
+def check_str(_str):
+    """
+    检查字符串 \n, \xa0, \xc2, \u3000 等特殊字符
+    :param _str:
+    :return:
+    """
+    problem_str_list = ['\n', '\xa0', '\xc2', '\u3000', '<br />', '&nbsp;']
+    for item_problem in problem_str_list:
+        _str = _str.replace(item_problem, ' ')
+
+    strip_str_list = [',', ' ']
+    for item_strip in strip_str_list:
+        _str = _str.strip(item_strip)
+    return _str
+
+
+def merge_all_product_to_json():
+    """
+    合并所有产品并存为json文件
+    :return:
+    """
+
+    with open(all_products_json_path, 'w', encoding='utf8') as fw:
+        fw.write('[')
+
+        for shop_info_md5 in os.listdir(all_shop_info_dir_path):
+            print(shop_info_md5)
+            shop_info_md5_path = os.path.join(all_shop_info_dir_path, shop_info_md5)
+            products_txt_path = os.path.join(shop_info_md5_path, 'products.txt')
+
+            with open(products_txt_path, 'r', encoding='utf8') as fp:
+                for line in fp.readlines():
+                    line_str = line.strip('\n')
+                    line_dict = json.loads(line_str)
+                    line_dict['shop_md5'] = shop_info_md5
+
+                    fw.write(json.dumps(line_dict) + ',')
+
+                    # break
+
+            # break
+
+        fw.seek(fw.tell() - 1, 0)
+        fw.write(']')
 
 
 if __name__ == '__main__':
@@ -294,4 +440,8 @@ if __name__ == '__main__':
     # parse_types_file_to_types_json()
     # multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 10)
     # parse_all_type_product_list_files()
-    download_shop_info_files()
+    # download_shop_info_files()
+    # parse_shop_info_to_json()
+    # print(len(read_shop_info_json()))
+    merge_all_product_to_json()
+

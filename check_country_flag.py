@@ -25,7 +25,7 @@ def get_server_country_set():
     if not cur:
         raise (NameError, "数据库连接失败")
 
-    cur.execute("select Name from Country")
+    cur.execute('select Name from Country')
     country_name_list = cur.fetchall()
     country_name_set = set([x[0].lower() for x in country_name_list])
 
@@ -39,7 +39,7 @@ def get_country_flag_set():
     :return:
     """
     flag_set = set()
-    for item_flag in os.listdir(r'C:\Users\topeasecpb\Desktop\country 2\country'):
+    for item_flag in os.listdir(r'C:\Users\topeasecpb\Desktop\new-country\country'):
         # print(item_flag)
         if item_flag.endswith('.png'):
             flag_set.add(item_flag.lower().replace('.png', ''))

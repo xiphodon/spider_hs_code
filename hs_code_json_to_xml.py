@@ -12,6 +12,7 @@ import dicttoxml
 import json
 import pymssql
 import settings
+import hs_spider
 
 
 def read_hs_code_json():
@@ -19,7 +20,7 @@ def read_hs_code_json():
     读取hs编码的json文件
     :return: hs编码字典
     """
-    with open(r'E:\work_all\topease\hs_spider_data\hs_code_desc\spider_hs_code_3.json', 'r', encoding='utf8') as fp:
+    with open(hs_spider.hs_code_json_path, 'r', encoding='utf8') as fp:
         hs_code_json_dict = json.loads(fp.read())
     return hs_code_json_dict
 
@@ -47,13 +48,15 @@ def start():
     if not cur:
         raise (NameError, "数据库连接失败")
 
+    count = 0
     for item_dict in hs_code_json_dict:
         item_xml = hs_code_json_to_xml(item_dict)
-
+        count += 1
         try:
             sql_str = "insert into hscode([content]) values(N'%s')" % (item_xml,)
             cur.execute(sql_str.encode('utf8'))
             conn.commit()
+            print(count)
         except Exception as e:
             print(sql_str)
             print(e)

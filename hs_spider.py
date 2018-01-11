@@ -29,6 +29,8 @@ catalog_json = os.path.join(home_data, r'spider_hs_code.json')
 catalog_json_2 = os.path.join(home_data, r'spider_hs_code_2.json')
 # 包含二类下所有hs编码详情的json
 catalog_json_3 = os.path.join(home_data, r'spider_hs_code_3.json')
+# 合并后的hs_code_json_path
+hs_code_json_path = os.path.join(home_data, r'merge_hs_code.json')
 
 # 简单统计信息
 sample_stat_json_file_path = os.path.join(home_data, r'sample_stat.json')
@@ -612,6 +614,42 @@ def sample_stat_json():
         fp.write(json.dumps(stat_dict))
 
 
+def merge_hs_code_json():
+    """
+    合并hs_code的json
+    :return:
+    """
+    with open(catalog_json_3, 'r', encoding='utf8') as fp:
+        data_list = json.loads(fp.read())
+
+    hs_code_json = []
+    for item_sample_data, item_data in zip(get_all_chapter_hs_code_json_item_sample_data(), data_list):
+        item_data['hs_code'] = item_sample_data['hs_code']
+        item_data['hs_code_invalid'] = item_sample_data['hs_code_invalid']
+        item_data['hs_code_recommend'] = item_sample_data['hs_code_recommend']
+        item_data['type_name'] = item_sample_data['type_name']
+        item_data['example_times'] = item_sample_data['example_times']
+
+        hs_code_json.append(item_data)
+
+        print(item_data)
+
+    with open(hs_code_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(hs_code_json))
+
+
+def get_all_chapter_hs_code_json_item_sample_data():
+    """
+    获取二级目录详情的json文件的单条hs_code简单数据块
+    :return:
+    """
+    all_chapter_hs_code_json = get_all_chapter_hs_code_list_json()
+
+    for item_chapter in all_chapter_hs_code_json:
+        for item_sample_data in item_chapter:
+            yield item_sample_data
+
+
 if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
@@ -621,4 +659,5 @@ if __name__ == "__main__":
     # parse_all_hs_code_desc_html()
     # split_all_hs_code_desc_json()
     # check_split_json_file()
-    sample_stat_json()
+    # sample_stat_json()
+    merge_hs_code_json()

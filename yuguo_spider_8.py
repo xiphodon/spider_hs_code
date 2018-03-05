@@ -72,7 +72,8 @@ def parse_news_list_page(page_content):
     :param page_content: 页面内容
     :return:
     """
-    print(page_content)
+    selector = etree.HTML(page_content)
+    print(selector)
 
 
 if __name__ == '__main__':

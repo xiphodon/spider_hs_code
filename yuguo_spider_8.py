@@ -32,7 +32,6 @@ url_4 = home_url + r'/tag/393'
 
 page_size = -1
 
-
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
     'Connection': 'keep-alive'
@@ -60,17 +59,32 @@ def while_requests_get(page_url):
             return result
 
 
-def get_news_list_content_one_page(url, page=1):
+def get_news_list_content_one_page(url):
     """
     获取某页的新闻列表内容
     :param url: 地址
-    :param page: 页数
     :return:
     """
-    this_page_url = url + '/?page=' + str(page)
-    result = while_requests_get(this_page_url)
-    print(this_page_url, page_size)
+    result = while_requests_get(url)
     return result.text
+
+
+def get_news_detail_page(url):
+    """
+    获取资讯详情页
+    :param url: 地址
+    :return:
+    """
+    result = while_requests_get(url)
+
+    selector = etree.HTML(result.text)
+
+    update_time = selector.xpath('//div[@class="leftcont"]/div[1]/span[2]/text()')[0]
+    news_content_list = list(map(lambda x: x.xpath('string()'),
+                                 selector.xpath('//div[@class="leftcont"]/div[@class="fetch-read fetch-view"]/p')))
+    news_content = ''.join(news_content_list).replace('\r', '').replace('\n', '').replace('\t', '')
+
+    return update_time, news_content
 
 
 def parse_news_list_page(page_content, this_page_url_main):
@@ -99,9 +113,13 @@ def parse_news_list_page(page_content, this_page_url_main):
     for news_image_src, news_detail_href, news_title_text, news_desc, news_from in \
             zip(news_image_src_list, news_detail_href_list, news_title_text_list, news_desc_list, news_from_list):
 
+        news_detail_href = home_url + news_detail_href
         news_from_item_list = news_from.xpath('.//a/text()')
 
-        news_image_md5_name = hashlib.md5(news_image_src.encode('utf8')).hexdigest() + str(time.time()) + '.jpg'
+        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
+
+        # 下载图片
+        news_image_md5_name = hashlib.md5(news_image_src.encode('utf8')).hexdigest() + str(int(time.time())) + '.jpg'
         news_image_path = os.path.join(images_path, news_image_md5_name)
 
         ir = requests.get(news_image_src)
@@ -109,14 +127,19 @@ def parse_news_list_page(page_content, this_page_url_main):
             with open(news_image_path, 'wb') as fp:
                 fp.write(ir.content)
 
+        # 下载详情页
+        update_time, news_content = get_news_detail_page(news_detail_href)
+
         news_item = {
             'news_image_src': news_image_src,
-            'news_detail_href': home_url + news_detail_href,
+            'news_detail_href': news_detail_href,
             'news_title': news_title_text,
             'news_desc': news_desc,
             'news_from': news_from_item_list,
             'mark': this_page_url_main,
-            'news_image_path': news_image_path
+            'news_image_path': news_image_path,
+            'update_time': update_time,
+            'news_content': news_content
         }
 
         collection = get_mongodb_collection()
@@ -127,6 +150,14 @@ def parse_news_list_page(page_content, this_page_url_main):
         # print(news_item)
         # break
 
+
+def set_page_size(url):
+    """
+    获取并设置总页数
+    :return:
+    """
+    result = while_requests_get(url)
+    selector = etree.HTML(result.text)
     # 获取资讯页数
     global page_size
     if page_size == -1:
@@ -134,20 +165,137 @@ def parse_news_list_page(page_content, this_page_url_main):
         # print(page_size)
 
 
+def start_url_1_news(url):
+    """
+    多进程爬取
+    :param url:
+    :return:
+    """
+    try:
+        content = get_news_list_content_one_page(url)
+        parse_news_list_page(content, url_1)
+        print(url)
+    except Exception as e:
+        print(e)
+
+
 def get_url_1_news():
     """
     获取出口电商资讯
     :return:
     """
-    page_no = 1
-    while True:
-        content = get_news_list_content_one_page(url_1, page_no)
-        parse_news_list_page(content, url_1)
-        page_no += 1
-        if page_no > page_size:
-            break
-        else:
-            break
+    set_page_size(url_1)
+
+    temp_list = list()
+    temp_list.append(url_1)
+    url_list_main = temp_list * page_size
+
+    url_list = list(map(lambda x: x[0] + '?page=' + str(x[1]), zip(url_list_main, range(1, page_size+1))))
+
+    multiprocessing_download_files(start_url_1_news, url_list)
+
+
+def start_url_2_news(url):
+    """
+    多进程爬取
+    :param url:
+    :return:
+    """
+    try:
+        content = get_news_list_content_one_page(url)
+        parse_news_list_page(content, url_2)
+        print(url)
+    except Exception as e:
+        print(e)
+
+
+def get_url_2_news():
+    """
+    获取进口电商资讯
+    :return:
+    """
+    set_page_size(url_2)
+
+    temp_list = list()
+    temp_list.append(url_2)
+    url_list_main = temp_list * page_size
+
+    url_list = list(map(lambda x: x[0] + '?page=' + str(x[1]), zip(url_list_main, range(1, page_size+1))))
+
+    multiprocessing_download_files(start_url_2_news, url_list)
+
+
+def start_url_3_news(url):
+    """
+    多进程爬取
+    :param url:
+    :return:
+    """
+    try:
+        content = get_news_list_content_one_page(url)
+        parse_news_list_page(content, url_3)
+        print(url)
+    except Exception as e:
+        print(e)
+
+
+def get_url_3_news():
+    """
+    获取b2b电商资讯
+    :return:
+    """
+    set_page_size(url_3)
+
+    temp_list = list()
+    temp_list.append(url_3)
+    url_list_main = temp_list * page_size
+
+    url_list = list(map(lambda x: x[0] + '?page=' + str(x[1]), zip(url_list_main, range(1, page_size+1))))
+
+    multiprocessing_download_files(start_url_3_news, url_list)
+
+
+def start_url_4_news(url):
+    """
+    多进程爬取
+    :param url:
+    :return:
+    """
+    try:
+        content = get_news_list_content_one_page(url)
+        parse_news_list_page(content, url_4)
+        print(url)
+    except Exception as e:
+        print(e)
+
+
+def get_url_4_news():
+    """
+    获取市场观察资讯
+    :return:
+    """
+    set_page_size(url_4)
+
+    temp_list = list()
+    temp_list.append(url_4)
+    url_list_main = temp_list * page_size
+
+    url_list = list(map(lambda x: x[0] + '?page=' + str(x[1]), zip(url_list_main, range(1, page_size+1))))
+
+    multiprocessing_download_files(start_url_4_news, url_list)
+
+
+def multiprocessing_download_files(download_file_func, url_list, pool_num=20):
+    """
+    多进程下载页面
+    :return:
+    """
+    print(len(url_list))
+
+    pool = Pool(pool_num)
+    pool.map(download_file_func, url_list)
+    pool.close()
+    pool.join()
 
 
 def get_mongodb_collection():
@@ -162,6 +310,7 @@ def get_mongodb_collection():
 
 
 if __name__ == '__main__':
-    get_url_1_news()
-
-
+    # get_url_1_news()
+    # get_url_2_news()
+    # get_url_3_news()
+    get_url_4_news()

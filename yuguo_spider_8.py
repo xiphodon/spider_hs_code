@@ -17,6 +17,9 @@ from multiprocessing import Pool
 import pymongo
 import hashlib
 import time
+import pymssql
+import settings
+
 
 images_path = r'E:\work_all\topease\fastfishdata\news_images'
 
@@ -29,6 +32,13 @@ url_2 = home_url + r'/tag/366'
 url_3 = home_url + r'/tag/394'
 # 市场观察
 url_4 = home_url + r'/tag/393'
+
+desc_dict = {
+    '82': '出口电商',
+    '366': '进口电商',
+    '394': 'B2B电商',
+    '393': '市场观察'
+}
 
 page_size = -1
 
@@ -309,8 +319,70 @@ def get_mongodb_collection():
     return collection
 
 
+def copy_data_from_mongodb_to_sqlserver():
+    """
+    从mongodb拷贝数据到sqlserver
+    :return:
+    """
+    # sqlserver
+    conn = pymssql.connect(host=settings.host, user=settings.user, password=settings.password,
+                           database=settings.database, charset=settings.charset)
+    cur = conn.cursor()
+    if not cur:
+        raise (NameError, "数据库连接失败")
+
+    # mongodb
+    collection = get_mongodb_collection()
+    res = collection.find({})
+
+    for item in res:
+        # print(item)
+        news_image_src = item['news_image_src'].replace("'", "''")
+        news_detail_href = item['news_detail_href'].replace("'", "''")
+        news_title = item['news_title'].replace("'", "''")
+        news_desc = check_str(item['news_desc']).replace("'", "''")
+        news_from = ','.join(item['news_from']).replace("'", "''")
+        mark = item['mark']
+        news_image_path = item['news_image_path'].replace("'", "''")
+        update_time = item['update_time'].replace("'", "''")
+        news_content = check_str(item['news_content']).replace("'", "''")
+
+        mark = mark[str(mark).rfind(r'/') + 1:].replace("'", "''")
+        mark_desc = desc_dict[mark]
+
+        sql_str = "insert into news(news_image_src,news_detail_href,news_title,news_desc,news_from," \
+                  "mark,news_image_path,update_time,news_content,mark_desc)" \
+                  " values('%s','%s',N'%s',N'%s','%s','%s',N'%s',N'%s',N'%s',N'%s')" \
+                  % (news_image_src, news_detail_href, news_title, news_desc, news_from, mark,
+                     news_image_path, update_time, news_content, mark_desc)
+
+        print(sql_str)
+        print(len(news_desc), len(news_title))
+        cur.execute(sql_str.encode('utf8'))
+        conn.commit()
+
+        # break
+
+
+def check_str(_str):
+    """
+    检查字符串 \n, \xa0, \xc2, \u3000 等特殊字符
+    :param _str:
+    :return:
+    """
+    problem_str_list = ['\r\n', '\n', '\xa0', '\xc2', '\u3000', '<br />', '&nbsp;']
+    for item_problem in problem_str_list:
+        _str = _str.replace(item_problem, ' ')
+
+    strip_str_list = [',', ' ']
+    for item_strip in strip_str_list:
+        _str = _str.strip(item_strip)
+    return _str
+
+
 if __name__ == '__main__':
     # get_url_1_news()
     # get_url_2_news()
     # get_url_3_news()
-    get_url_4_news()
+    # get_url_4_news()
+    copy_data_from_mongodb_to_sqlserver()

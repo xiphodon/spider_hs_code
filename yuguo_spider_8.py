@@ -48,7 +48,11 @@ headers = {
     'Connection': 'keep-alive'
 }
 
+# 忽略下载的图片地址
 ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/201704131357564290.png']
+
+# 已下载过的图片地址
+img_src_download_dict = dict()
 
 
 def while_requests_get(page_url):
@@ -190,19 +194,26 @@ def download_img(img_src, images_dir_path):
     下载图片
     :return: 图片路径
     """
-    img_format_index = str(img_src).rfind(r".")
-    img_format = img_src[img_format_index:]
+    if img_src not in img_src_download_dict:
 
-    news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
-        int(time.time())) + img_format
-    news_image_path = os.path.join(images_dir_path, news_image_md5_name)
+        img_format_index = str(img_src).rfind(r".")
+        img_format = img_src[img_format_index:]
 
-    ir = requests.get(img_src)
-    if ir.status_code == 200:
-        with open(news_image_path, 'wb') as fp:
-            fp.write(ir.content)
+        news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
+            int(time.time())) + img_format
+        news_image_path = os.path.join(images_dir_path, news_image_md5_name)
 
-    return news_image_path
+        ir = requests.get(img_src)
+        if ir.status_code == 200:
+            with open(news_image_path, 'wb') as fp:
+                fp.write(ir.content)
+
+        img_src_download_dict[img_src] = news_image_path
+
+        return news_image_path
+
+    else:
+        return img_src_download_dict[img_src]
 
 
 def set_page_size(url):

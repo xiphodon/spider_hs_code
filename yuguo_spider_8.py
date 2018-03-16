@@ -123,8 +123,9 @@ def get_news_detail_page(url):
             # 无插图直接取文本
             item_str = item_p.xpath('string()')
 
-        item_str = r"<p>" + item_str + r"</p>"
-        news_content_list.append(item_str)
+        if len(item_str) != 0:
+            item_str = r"<p>" + item_str + r"</p>"
+            news_content_list.append(item_str)
 
     news_content = ''.join(news_content_list).replace('\r', '').replace('\n', '').replace('\t', '')
 
@@ -186,7 +187,7 @@ def parse_news_list_page(page_content, this_page_url_main):
         print(result.inserted_id)
 
         print(news_item)
-        break
+        # break
 
 
 def download_img(img_src, images_dir_path):
@@ -227,7 +228,7 @@ def set_page_size(url):
     global page_size
     if page_size == -1:
         page_size = int(selector.xpath('//div[@class="page"]/a/text()')[-2])
-        page_size = 1
+        # page_size = 1
         # print(page_size)
 
 
@@ -351,7 +352,7 @@ def get_url_4_news():
     multiprocessing_download_files(start_url_4_news, url_list)
 
 
-def multiprocessing_download_files(download_file_func, url_list, pool_num=20):
+def multiprocessing_download_files(download_file_func, url_list, pool_num=50):
     """
     多进程下载页面
     :return:

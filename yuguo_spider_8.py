@@ -54,6 +54,9 @@ ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/2017041313575642
 # 已下载过的图片地址
 img_src_download_dict = dict()
 
+# 已下载过的资讯详情页面
+news_detail_page_href_set = set()
+
 
 def while_requests_get(page_url):
     """
@@ -161,15 +164,20 @@ def parse_news_list_page(page_content, this_page_url_main):
             zip(news_image_src_list, news_detail_href_list, news_title_text_list, news_desc_list, news_from_list):
 
         news_detail_href = home_url + news_detail_href
+
+        if news_detail_href not in news_detail_page_href_set:
+            # 下载详情页
+            update_time, news_content = get_news_detail_page(news_detail_href)
+            news_detail_page_href_set.add(news_detail_href)
+        else:
+            continue
+
         news_from_item_list = news_from.xpath('.//a/text()')
 
         news_image_src = news_image_src[:str(news_image_src).rfind('!')]
 
         # 下载图片
         news_image_path = download_img(news_image_src, images_path)
-
-        # 下载详情页
-        update_time, news_content = get_news_detail_page(news_detail_href)
 
         news_item = {
             'news_image_src': news_image_src,
@@ -228,7 +236,7 @@ def set_page_size(url):
     global page_size
     if page_size == -1:
         page_size = int(selector.xpath('//div[@class="page"]/a/text()')[-2])
-        # page_size = 1
+        page_size = 2
         # print(page_size)
 
 

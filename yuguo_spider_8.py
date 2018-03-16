@@ -22,6 +22,7 @@ import settings
 
 
 images_path = r'E:\work_all\topease\fastfishdata\news_images'
+inset_images_path = r'E:\work_all\topease\fastfishdata\news_inset_images'
 
 home_url = r'http://www.cifnews.com'
 # 出口电商
@@ -90,8 +91,34 @@ def get_news_detail_page(url):
     selector = etree.HTML(result.text)
 
     update_time = selector.xpath('//div[@class="leftcont"]/div[1]/span[2]/text()')[0]
-    news_content_list = list(map(lambda x: x.xpath('string()'),
-                                 selector.xpath('//div[@class="leftcont"]/div[@class="fetch-read fetch-view"]/p')))
+
+    selector_p = selector.xpath('//div[@class="leftcont"]/div[@class="fetch-read fetch-view"]/p')
+
+    news_content_list = list()
+
+    for item_p in selector_p:
+        img_src_list = item_p.xpath('.//img/@src')
+
+        item_str = ''
+
+        if len(img_src_list) > 0:
+            # 有插图
+            for img_src in img_src_list:
+                print(img_src_list)
+                if str(img_src).startswith('http'):
+                    # 下载插图
+                    inset_image_path = download_img(img_src, inset_images_path)
+
+                    item_str += "<img src='%s'>" % (inset_image_path,)
+                    print(img_src, inset_image_path)
+
+        else:
+            # 无插图直接取文本
+            item_str = item_p.xpath('string()')
+
+        item_str = r"<p>" + item_str + r"</p>"
+        news_content_list.append(item_str)
+
     news_content = ''.join(news_content_list).replace('\r', '').replace('\n', '').replace('\t', '')
 
     return update_time, news_content
@@ -120,6 +147,8 @@ def parse_news_list_page(page_content, this_page_url_main):
     # print(len(news_desc_list))
     # print(len(news_from_list))
 
+    collection = get_mongodb_collection()
+
     for news_image_src, news_detail_href, news_title_text, news_desc, news_from in \
             zip(news_image_src_list, news_detail_href_list, news_title_text_list, news_desc_list, news_from_list):
 
@@ -129,13 +158,7 @@ def parse_news_list_page(page_content, this_page_url_main):
         news_image_src = news_image_src[:str(news_image_src).rfind('!')]
 
         # 下载图片
-        news_image_md5_name = hashlib.md5(news_image_src.encode('utf8')).hexdigest() + str(int(time.time())) + '.jpg'
-        news_image_path = os.path.join(images_path, news_image_md5_name)
-
-        ir = requests.get(news_image_src)
-        if ir.status_code == 200:
-            with open(news_image_path, 'wb') as fp:
-                fp.write(ir.content)
+        news_image_path = download_img(news_image_src, images_path)
 
         # 下载详情页
         update_time, news_content = get_news_detail_page(news_detail_href)
@@ -152,13 +175,28 @@ def parse_news_list_page(page_content, this_page_url_main):
             'news_content': news_content
         }
 
-        collection = get_mongodb_collection()
-
         result = collection.insert_one(news_item)
-        # print(result.inserted_id)
+        print(result.inserted_id)
 
-        # print(news_item)
-        # break
+        print(news_item)
+        break
+
+
+def download_img(img_src, images_dir_path):
+    """
+    下载图片
+    :return: 图片路径
+    """
+    news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
+        int(time.time())) + '.jpg'
+    news_image_path = os.path.join(images_dir_path, news_image_md5_name)
+
+    ir = requests.get(img_src)
+    if ir.status_code == 200:
+        with open(news_image_path, 'wb') as fp:
+            fp.write(ir.content)
+
+    return news_image_path
 
 
 def set_page_size(url):
@@ -172,6 +210,7 @@ def set_page_size(url):
     global page_size
     if page_size == -1:
         page_size = int(selector.xpath('//div[@class="page"]/a/text()')[-2])
+        page_size = 1
         # print(page_size)
 
 
@@ -381,8 +420,8 @@ def check_str(_str):
 
 
 if __name__ == '__main__':
-    # get_url_1_news()
+    get_url_1_news()
     # get_url_2_news()
     # get_url_3_news()
     # get_url_4_news()
-    copy_data_from_mongodb_to_sqlserver()
+    # copy_data_from_mongodb_to_sqlserver()

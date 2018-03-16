@@ -55,7 +55,7 @@ ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/2017041313575642
 img_src_download_dict = dict()
 
 # 已下载过的资讯详情页面
-news_detail_page_href_set = set()
+news_detail_page_href_list = set()
 
 
 def while_requests_get(page_url):
@@ -126,11 +126,13 @@ def get_news_detail_page(url):
             # 无插图直接取文本
             item_str = item_p.xpath('string()')
 
+        item_str = item_str.replace('\r', '').replace('\n', '').replace('\t', '')
+
         if len(item_str) != 0:
             item_str = r"<p>" + item_str + r"</p>"
             news_content_list.append(item_str)
 
-    news_content = ''.join(news_content_list).replace('\r', '').replace('\n', '').replace('\t', '')
+    news_content = ''.join(news_content_list)
 
     return update_time, news_content
 
@@ -163,21 +165,20 @@ def parse_news_list_page(page_content, this_page_url_main):
     for news_image_src, news_detail_href, news_title_text, news_desc, news_from in \
             zip(news_image_src_list, news_detail_href_list, news_title_text_list, news_desc_list, news_from_list):
 
+        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
+        # 下载图片
+        news_image_path = download_img(news_image_src, images_path)
+
         news_detail_href = home_url + news_detail_href
 
-        if news_detail_href not in news_detail_page_href_set:
+        if news_detail_href not in news_detail_page_href_list:
             # 下载详情页
+            news_detail_page_href_list.append(news_detail_href)
             update_time, news_content = get_news_detail_page(news_detail_href)
-            news_detail_page_href_set.add(news_detail_href)
         else:
             continue
 
         news_from_item_list = news_from.xpath('.//a/text()')
-
-        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
-
-        # 下载图片
-        news_image_path = download_img(news_image_src, images_path)
 
         news_item = {
             'news_image_src': news_image_src,
@@ -195,7 +196,10 @@ def parse_news_list_page(page_content, this_page_url_main):
         print(result.inserted_id)
 
         print(news_item)
-        # break
+
+        print(img_src_download_dict)
+        print(news_detail_page_href_list)
+        break
 
 
 def download_img(img_src, images_dir_path):
@@ -207,6 +211,9 @@ def download_img(img_src, images_dir_path):
 
         img_format_index = str(img_src).rfind(r".")
         img_format = img_src[img_format_index:]
+
+        if len(img_format) <= 2:
+            img_format = '.jpg'
 
         news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
             int(time.time())) + img_format

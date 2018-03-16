@@ -48,6 +48,8 @@ headers = {
     'Connection': 'keep-alive'
 }
 
+ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/201704131357564290.png']
+
 
 def while_requests_get(page_url):
     """
@@ -98,19 +100,20 @@ def get_news_detail_page(url):
 
     for item_p in selector_p:
         img_src_list = item_p.xpath('.//img/@src')
+        # print(img_src_list)
 
         item_str = ''
 
         if len(img_src_list) > 0:
             # 有插图
             for img_src in img_src_list:
-                print(img_src_list)
-                if str(img_src).startswith('http'):
+
+                if img_src not in ignore_img_src_list:
                     # 下载插图
                     inset_image_path = download_img(img_src, inset_images_path)
 
                     item_str += "<img src='%s'>" % (inset_image_path,)
-                    print(img_src, inset_image_path)
+                    # print(img_src, inset_image_path)
 
         else:
             # 无插图直接取文本
@@ -187,8 +190,11 @@ def download_img(img_src, images_dir_path):
     下载图片
     :return: 图片路径
     """
+    img_format_index = str(img_src).rfind(r".")
+    img_format = img_src[img_format_index:]
+
     news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
-        int(time.time())) + '.jpg'
+        int(time.time())) + img_format
     news_image_path = os.path.join(images_dir_path, news_image_md5_name)
 
     ir = requests.get(img_src)

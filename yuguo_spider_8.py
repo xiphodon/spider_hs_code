@@ -58,7 +58,7 @@ img_src_download_dict = dict()
 news_detail_page_href_list = set()
 
 
-def while_requests_get(page_url):
+def while_requests_get(page_url, times=100):
     """
     循环请求
     :return:
@@ -69,7 +69,7 @@ def while_requests_get(page_url):
             result = requests.get(page_url, headers=headers, timeout=5)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
-            if while_times < 100:
+            if while_times < times:
                 while_times += 1
                 print('**********', '尝试重新链接', while_times, '次:', page_url)
                 continue

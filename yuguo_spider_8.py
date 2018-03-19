@@ -329,20 +329,6 @@ def set_page_size(url):
         # print(page_size)
 
 
-def start_url_1_news(url):
-    """
-    多进程爬取
-    :param url:
-    :return:
-    """
-    try:
-        content = get_news_list_content_one_page(url)
-        parse_news_list_page(content, url_1)
-        print(url)
-    except Exception as e:
-        print(e)
-
-
 def save_temp_download_json(file_dir):
     """
     缓存下载数据
@@ -421,6 +407,20 @@ def multiprocessing_download_files(download_file_func, url_list, pool_num=300):
     pool.map(download_file_func, url_list)
     pool.close()
     pool.join()
+
+
+def start_url_1_news(url):
+    """
+    多进程爬取
+    :param url:
+    :return:
+    """
+    try:
+        content = get_news_list_content_one_page(url)
+        parse_news_list_page(content, url_1)
+        print(url)
+    except Exception as e:
+        print(e)
 
 
 # @read_save_temp_data('url_1')

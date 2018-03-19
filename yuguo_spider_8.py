@@ -13,7 +13,8 @@ import json
 import os
 import requests
 import random
-from multiprocessing import Pool
+# from multiprocessing import Pool
+from multiprocessing.dummy import Pool, Lock
 import pymongo
 import hashlib
 import time
@@ -49,13 +50,15 @@ headers = {
 }
 
 # 忽略下载的图片地址
-ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/201704131357564290.png']
+ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/201704131357564290.png',
+                       'http://static.cifnews.com/yuguo/image/appdownload.png?v=1.0']
 
 # 已下载过的图片地址
 img_src_download_dict = dict()
-
 # 已下载过的资讯详情页面
-news_detail_page_href_list = set()
+news_detail_page_href_set = set()
+# 互斥锁
+mutex = Lock()
 
 
 def while_requests_get(page_url, times=100):
@@ -171,9 +174,11 @@ def parse_news_list_page(page_content, this_page_url_main):
 
         news_detail_href = home_url + news_detail_href
 
-        if news_detail_href not in news_detail_page_href_list:
+        if news_detail_href not in news_detail_page_href_set:
             # 下载详情页
-            news_detail_page_href_list.append(news_detail_href)
+            mutex.acquire()
+            news_detail_page_href_set.add(news_detail_href)
+            mutex.release()
             update_time, news_content = get_news_detail_page(news_detail_href)
         else:
             continue
@@ -196,10 +201,10 @@ def parse_news_list_page(page_content, this_page_url_main):
         print(result.inserted_id)
 
         print(news_item)
-
-        print(img_src_download_dict)
-        print(news_detail_page_href_list)
-        break
+        #
+        # print(img_src_download_dict)
+        # print(news_detail_page_href_set)
+        # break
 
 
 def download_img(img_src, images_dir_path):
@@ -209,7 +214,8 @@ def download_img(img_src, images_dir_path):
     """
     if img_src not in img_src_download_dict:
 
-        img_format_index = str(img_src).rfind(r".")
+        temp_img_src = str(img_src).split(r"?")[0]
+        img_format_index = str(temp_img_src).rfind(r".")
         img_format = img_src[img_format_index:]
 
         if len(img_format) <= 2:
@@ -224,7 +230,9 @@ def download_img(img_src, images_dir_path):
             with open(news_image_path, 'wb') as fp:
                 fp.write(ir.content)
 
+        mutex.acquire()
         img_src_download_dict[img_src] = news_image_path
+        mutex.release()
 
         return news_image_path
 
@@ -243,7 +251,7 @@ def set_page_size(url):
     global page_size
     if page_size == -1:
         page_size = int(selector.xpath('//div[@class="page"]/a/text()')[-2])
-        page_size = 2
+        # page_size = 2
         # print(page_size)
 
 
@@ -367,7 +375,7 @@ def get_url_4_news():
     multiprocessing_download_files(start_url_4_news, url_list)
 
 
-def multiprocessing_download_files(download_file_func, url_list, pool_num=50):
+def multiprocessing_download_files(download_file_func, url_list, pool_num=300):
     """
     多进程下载页面
     :return:

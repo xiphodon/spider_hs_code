@@ -21,6 +21,7 @@ import time
 import pymssql
 import settings
 
+json_base_path = r'E:\work_all\topease\fastfishdata'
 
 images_path = r'E:\work_all\topease\fastfishdata\news_images'
 inset_images_path = r'E:\work_all\topease\fastfishdata\news_inset_images'
@@ -90,6 +91,78 @@ def get_news_list_content_one_page(url):
     """
     result = while_requests_get(url)
     return result.text
+
+
+def get_mongodb_collection():
+    """
+    获取MongoDB
+    :return:
+    """
+    client = pymongo.MongoClient(host='localhost', port=27017)
+    db = client.fastfishdata
+    collection = db.news
+    return collection
+
+
+def copy_data_from_mongodb_to_sqlserver():
+    """
+    从mongodb拷贝数据到sqlserver
+    :return:
+    """
+    # sqlserver
+    conn = pymssql.connect(host=settings.host, user=settings.user, password=settings.password,
+                           database=settings.database, charset=settings.charset)
+    cur = conn.cursor()
+    if not cur:
+        raise (NameError, "数据库连接失败")
+
+    # mongodb
+    collection = get_mongodb_collection()
+    res = collection.find({})
+
+    for item in res:
+        # print(item)
+        news_image_src = item['news_image_src'].replace("'", "''")
+        news_detail_href = item['news_detail_href'].replace("'", "''")
+        news_title = item['news_title'].replace("'", "''")
+        news_desc = check_str(item['news_desc']).replace("'", "''")
+        news_from = ','.join(item['news_from']).replace("'", "''")
+        mark = item['mark']
+        news_image_path = item['news_image_path'].replace("'", "''")
+        update_time = item['update_time'].replace("'", "''")
+        news_content = check_str(item['news_content']).replace("'", "''")
+
+        mark = mark[str(mark).rfind(r'/') + 1:].replace("'", "''")
+        mark_desc = desc_dict[mark]
+
+        sql_str = "insert into news(news_image_src,news_detail_href,news_title,news_desc,news_from," \
+                  "mark,news_image_path,update_time,news_content,mark_desc)" \
+                  " values('%s','%s',N'%s',N'%s','%s','%s',N'%s',N'%s',N'%s',N'%s')" \
+                  % (news_image_src, news_detail_href, news_title, news_desc, news_from, mark,
+                     news_image_path, update_time, news_content, mark_desc)
+
+        print(sql_str)
+        print(len(news_desc), len(news_title))
+        cur.execute(sql_str.encode('utf8'))
+        conn.commit()
+
+        # break
+
+
+def check_str(_str):
+    """
+    检查字符串 \n, \xa0, \xc2, \u3000 等特殊字符
+    :param _str:
+    :return:
+    """
+    problem_str_list = ['\r\n', '\n', '\xa0', '\xc2', '\u3000', '<br />', '&nbsp;']
+    for item_problem in problem_str_list:
+        _str = _str.replace(item_problem, ' ')
+
+    strip_str_list = [',', ' ']
+    for item_strip in strip_str_list:
+        _str = _str.strip(item_strip)
+    return _str
 
 
 def get_news_detail_page(url):
@@ -168,6 +241,10 @@ def parse_news_list_page(page_content, this_page_url_main):
     for news_image_src, news_detail_href, news_title_text, news_desc, news_from in \
             zip(news_image_src_list, news_detail_href_list, news_title_text_list, news_desc_list, news_from_list):
 
+        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
+        # 下载图片
+        news_image_path = download_img(news_image_src, images_path)
+
         if not str(news_detail_href).startswith('http'):
             news_detail_href = home_url + news_detail_href
 
@@ -179,10 +256,6 @@ def parse_news_list_page(page_content, this_page_url_main):
             update_time, news_content = get_news_detail_page(news_detail_href)
         else:
             continue
-
-        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
-        # 下载图片
-        news_image_path = download_img(news_image_src, images_path)
 
         news_from_item_list = news_from.xpath('.//a/text()')
 
@@ -270,6 +343,87 @@ def start_url_1_news(url):
         print(e)
 
 
+def save_temp_download_json(file_dir):
+    """
+    缓存下载数据
+    :param file_dir:
+    :return:
+    """
+    json_dir_path = os.path.join(json_base_path, file_dir)
+
+    if not os.path.exists(json_dir_path):
+        os.mkdir(json_dir_path)
+
+    img_src_download_dict_json_path = os.path.join(json_dir_path, 'img_src_download_dict.json')
+    with open(img_src_download_dict_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(img_src_download_dict))
+
+    print(len(img_src_download_dict), img_src_download_dict)
+
+    news_detail_page_href_set_json_path = os.path.join(json_dir_path, 'news_detail_page_href_set.json')
+    with open(news_detail_page_href_set_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(list(news_detail_page_href_set)))
+
+    print(len(news_detail_page_href_set), news_detail_page_href_set)
+
+
+def read_temp_download_json(file_dir):
+    """
+    读取缓存数据
+    :param file_dir:
+    :return:
+    """
+    json_dir_path = os.path.join(json_base_path, file_dir)
+
+    if os.path.exists(json_dir_path):
+
+        img_src_download_dict_json_path = os.path.join(json_dir_path, 'img_src_download_dict.json')
+
+        if os.path.exists(img_src_download_dict_json_path):
+            with open(img_src_download_dict_json_path, 'r', encoding='utf8') as fp:
+                global img_src_download_dict
+                img_src_download_dict = json.loads(fp.read())
+
+            print(len(img_src_download_dict), img_src_download_dict)
+
+        news_detail_page_href_set_json_path = os.path.join(json_dir_path, 'news_detail_page_href_set.json')
+
+        if os.path.exists(news_detail_page_href_set_json_path):
+            with open(news_detail_page_href_set_json_path, 'r', encoding='utf8') as fp:
+                global news_detail_page_href_set
+                news_detail_page_href_set = set(json.loads(fp.read()))
+
+            print(len(news_detail_page_href_set), news_detail_page_href_set)
+
+
+def read_save_temp_data(file_dir):
+    """
+    读存缓存数据
+    :param file_dir: 读存路径
+    :return:
+    """
+    def inner_run(_func):
+        read_temp_download_json(file_dir)
+        _func()
+        save_temp_download_json(file_dir)
+
+    return inner_run
+
+
+def multiprocessing_download_files(download_file_func, url_list, pool_num=300):
+    """
+    多进程下载页面
+    :return:
+    """
+    print(len(url_list))
+
+    pool = Pool(pool_num)
+    pool.map(download_file_func, url_list)
+    pool.close()
+    pool.join()
+
+
+# @read_save_temp_data('url_1')
 def get_url_1_news():
     """
     获取出口电商资讯
@@ -376,93 +530,9 @@ def get_url_4_news():
     multiprocessing_download_files(start_url_4_news, url_list)
 
 
-def multiprocessing_download_files(download_file_func, url_list, pool_num=300):
-    """
-    多进程下载页面
-    :return:
-    """
-    print(len(url_list))
-
-    pool = Pool(pool_num)
-    pool.map(download_file_func, url_list)
-    pool.close()
-    pool.join()
-
-
-def get_mongodb_collection():
-    """
-    获取MongoDB
-    :return:
-    """
-    client = pymongo.MongoClient(host='localhost', port=27017)
-    db = client.fastfishdata
-    collection = db.news
-    return collection
-
-
-def copy_data_from_mongodb_to_sqlserver():
-    """
-    从mongodb拷贝数据到sqlserver
-    :return:
-    """
-    # sqlserver
-    conn = pymssql.connect(host=settings.host, user=settings.user, password=settings.password,
-                           database=settings.database, charset=settings.charset)
-    cur = conn.cursor()
-    if not cur:
-        raise (NameError, "数据库连接失败")
-
-    # mongodb
-    collection = get_mongodb_collection()
-    res = collection.find({})
-
-    for item in res:
-        # print(item)
-        news_image_src = item['news_image_src'].replace("'", "''")
-        news_detail_href = item['news_detail_href'].replace("'", "''")
-        news_title = item['news_title'].replace("'", "''")
-        news_desc = check_str(item['news_desc']).replace("'", "''")
-        news_from = ','.join(item['news_from']).replace("'", "''")
-        mark = item['mark']
-        news_image_path = item['news_image_path'].replace("'", "''")
-        update_time = item['update_time'].replace("'", "''")
-        news_content = check_str(item['news_content']).replace("'", "''")
-
-        mark = mark[str(mark).rfind(r'/') + 1:].replace("'", "''")
-        mark_desc = desc_dict[mark]
-
-        sql_str = "insert into news(news_image_src,news_detail_href,news_title,news_desc,news_from," \
-                  "mark,news_image_path,update_time,news_content,mark_desc)" \
-                  " values('%s','%s',N'%s',N'%s','%s','%s',N'%s',N'%s',N'%s',N'%s')" \
-                  % (news_image_src, news_detail_href, news_title, news_desc, news_from, mark,
-                     news_image_path, update_time, news_content, mark_desc)
-
-        print(sql_str)
-        print(len(news_desc), len(news_title))
-        cur.execute(sql_str.encode('utf8'))
-        conn.commit()
-
-        # break
-
-
-def check_str(_str):
-    """
-    检查字符串 \n, \xa0, \xc2, \u3000 等特殊字符
-    :param _str:
-    :return:
-    """
-    problem_str_list = ['\r\n', '\n', '\xa0', '\xc2', '\u3000', '<br />', '&nbsp;']
-    for item_problem in problem_str_list:
-        _str = _str.replace(item_problem, ' ')
-
-    strip_str_list = [',', ' ']
-    for item_strip in strip_str_list:
-        _str = _str.strip(item_strip)
-    return _str
-
-
 if __name__ == '__main__':
-    get_url_1_news()
+    read_save_temp_data('url_1')(get_url_1_news)
+    # get_url_1_news()
     # get_url_2_news()
     # get_url_3_news()
     # get_url_4_news()

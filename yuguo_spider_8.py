@@ -168,11 +168,8 @@ def parse_news_list_page(page_content, this_page_url_main):
     for news_image_src, news_detail_href, news_title_text, news_desc, news_from in \
             zip(news_image_src_list, news_detail_href_list, news_title_text_list, news_desc_list, news_from_list):
 
-        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
-        # 下载图片
-        news_image_path = download_img(news_image_src, images_path)
-
-        news_detail_href = home_url + news_detail_href
+        if not str(news_detail_href).startswith('http'):
+            news_detail_href = home_url + news_detail_href
 
         if news_detail_href not in news_detail_page_href_set:
             # 下载详情页
@@ -182,6 +179,10 @@ def parse_news_list_page(page_content, this_page_url_main):
             update_time, news_content = get_news_detail_page(news_detail_href)
         else:
             continue
+
+        news_image_src = news_image_src[:str(news_image_src).rfind('!')]
+        # 下载图片
+        news_image_path = download_img(news_image_src, images_path)
 
         news_from_item_list = news_from.xpath('.//a/text()')
 

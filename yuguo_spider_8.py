@@ -13,8 +13,8 @@ import json
 import os
 import requests
 import random
-# from multiprocessing import Pool
-from multiprocessing.dummy import Pool, Lock
+from multiprocessing import Pool
+# from multiprocessing.dummy import Pool, Lock
 import pymongo
 import hashlib
 import time
@@ -53,13 +53,13 @@ headers = {
 # 忽略下载的图片地址
 ignore_img_src_list = ['http://pic.cifnews.com/upload/201704/13/201704131357564290.png',
                        'http://static.cifnews.com/yuguo/image/appdownload.png?v=1.0']
-
+#
 # 已下载过的图片地址
-img_src_download_dict = dict()
+# img_src_download_dict = dict()
 # 已下载过的资讯详情页面
-news_detail_page_href_set = set()
-# 互斥锁
-mutex = Lock()
+# news_detail_page_href_set = set()
+# # 互斥锁
+# mutex = Lock()
 
 
 def while_requests_get(page_url, times=100):
@@ -135,7 +135,7 @@ def copy_data_from_mongodb_to_sqlserver():
         mark = mark[str(mark).rfind(r'/') + 1:].replace("'", "''")
         mark_desc = desc_dict[mark]
 
-        sql_str = "insert into news(news_image_src,news_detail_href,news_title,news_desc,news_from," \
+        sql_str = "insert into news2(news_image_src,news_detail_href,news_title,news_desc,news_from," \
                   "mark,news_image_path,update_time,news_content,mark_desc)" \
                   " values('%s','%s',N'%s',N'%s','%s','%s',N'%s',N'%s',N'%s',N'%s')" \
                   % (news_image_src, news_detail_href, news_title, news_desc, news_from, mark,
@@ -248,14 +248,14 @@ def parse_news_list_page(page_content, this_page_url_main):
         if not str(news_detail_href).startswith('http'):
             news_detail_href = home_url + news_detail_href
 
-        if news_detail_href not in news_detail_page_href_set:
+        # if news_detail_href not in news_detail_page_href_set:
             # 下载详情页
-            mutex.acquire()
-            news_detail_page_href_set.add(news_detail_href)
-            mutex.release()
-            update_time, news_content = get_news_detail_page(news_detail_href)
-        else:
-            continue
+            # mutex.acquire()
+            # news_detail_page_href_set.add(news_detail_href)
+            # mutex.release()
+        update_time, news_content = get_news_detail_page(news_detail_href)
+        # else:
+        #     continue
 
         news_from_item_list = news_from.xpath('.//a/text()')
 
@@ -286,32 +286,32 @@ def download_img(img_src, images_dir_path):
     下载图片
     :return: 图片路径
     """
-    if img_src not in img_src_download_dict:
+    # if img_src not in img_src_download_dict:
 
-        temp_img_src = str(img_src).split(r"?")[0]
-        img_format_index = str(temp_img_src).rfind(r".")
-        img_format = img_src[img_format_index:]
+    temp_img_src = str(img_src).split(r"?")[0]
+    img_format_index = str(temp_img_src).rfind(r".")
+    img_format = img_src[img_format_index:]
 
-        if len(img_format) <= 2:
-            img_format = '.jpg'
+    if len(img_format) <= 2:
+        img_format = '.jpg'
 
-        news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
-            int(time.time())) + img_format
-        news_image_path = os.path.join(images_dir_path, news_image_md5_name)
+    news_image_md5_name = hashlib.md5(img_src.encode('utf8')).hexdigest() + str(
+        int(time.time())) + img_format
+    news_image_path = os.path.join(images_dir_path, news_image_md5_name)
 
-        ir = requests.get(img_src)
-        if ir.status_code == 200:
-            with open(news_image_path, 'wb') as fp:
-                fp.write(ir.content)
+    ir = requests.get(img_src)
+    if ir.status_code == 200:
+        with open(news_image_path, 'wb') as fp:
+            fp.write(ir.content)
 
-        mutex.acquire()
-        img_src_download_dict[img_src] = news_image_path
-        mutex.release()
+    # mutex.acquire()
+    # img_src_download_dict[img_src] = news_image_path
+    # mutex.release()
 
-        return news_image_path
-
-    else:
-        return img_src_download_dict[img_src]
+    return news_image_path
+    #
+    # else:
+    #     return img_src_download_dict[img_src]
 
 
 def set_page_size(url):
@@ -335,22 +335,22 @@ def save_temp_download_json(file_dir):
     :param file_dir:
     :return:
     """
-    json_dir_path = os.path.join(json_base_path, file_dir)
-
-    if not os.path.exists(json_dir_path):
-        os.mkdir(json_dir_path)
-
-    img_src_download_dict_json_path = os.path.join(json_dir_path, 'img_src_download_dict.json')
-    with open(img_src_download_dict_json_path, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(img_src_download_dict))
-
-    print(len(img_src_download_dict), img_src_download_dict)
-
-    news_detail_page_href_set_json_path = os.path.join(json_dir_path, 'news_detail_page_href_set.json')
-    with open(news_detail_page_href_set_json_path, 'w', encoding='utf8') as fp:
-        fp.write(json.dumps(list(news_detail_page_href_set)))
-
-    print(len(news_detail_page_href_set), news_detail_page_href_set)
+    # json_dir_path = os.path.join(json_base_path, file_dir)
+    #
+    # if not os.path.exists(json_dir_path):
+    #     os.mkdir(json_dir_path)
+    #
+    # img_src_download_dict_json_path = os.path.join(json_dir_path, 'img_src_download_dict.json')
+    # with open(img_src_download_dict_json_path, 'w', encoding='utf8') as fp:
+    #     fp.write(json.dumps(img_src_download_dict))
+    #
+    # print(len(img_src_download_dict), img_src_download_dict)
+    #
+    # news_detail_page_href_set_json_path = os.path.join(json_dir_path, 'news_detail_page_href_set.json')
+    # with open(news_detail_page_href_set_json_path, 'w', encoding='utf8') as fp:
+    #     fp.write(json.dumps(list(news_detail_page_href_set)))
+    #
+    # print(len(news_detail_page_href_set), news_detail_page_href_set)
 
 
 def read_temp_download_json(file_dir):
@@ -367,7 +367,7 @@ def read_temp_download_json(file_dir):
 
         if os.path.exists(img_src_download_dict_json_path):
             with open(img_src_download_dict_json_path, 'r', encoding='utf8') as fp:
-                global img_src_download_dict
+                # global img_src_download_dict
                 img_src_download_dict = json.loads(fp.read())
 
             print(len(img_src_download_dict), img_src_download_dict)
@@ -376,7 +376,7 @@ def read_temp_download_json(file_dir):
 
         if os.path.exists(news_detail_page_href_set_json_path):
             with open(news_detail_page_href_set_json_path, 'r', encoding='utf8') as fp:
-                global news_detail_page_href_set
+                # global news_detail_page_href_set
                 news_detail_page_href_set = set(json.loads(fp.read()))
 
             print(len(news_detail_page_href_set), news_detail_page_href_set)
@@ -396,7 +396,7 @@ def read_save_temp_data(file_dir):
     return inner_run
 
 
-def multiprocessing_download_files(download_file_func, url_list, pool_num=300):
+def multiprocessing_download_files(download_file_func, url_list, pool_num=50):
     """
     多进程下载页面
     :return:
@@ -531,9 +531,9 @@ def get_url_4_news():
 
 
 if __name__ == '__main__':
-    read_save_temp_data('url_1')(get_url_1_news)
+    # read_save_temp_data('url_1')(get_url_1_news)
     # get_url_1_news()
     # get_url_2_news()
     # get_url_3_news()
     # get_url_4_news()
-    # copy_data_from_mongodb_to_sqlserver()
+    copy_data_from_mongodb_to_sqlserver()

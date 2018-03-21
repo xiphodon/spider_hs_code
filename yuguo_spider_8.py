@@ -135,11 +135,11 @@ def copy_data_from_mongodb_to_sqlserver():
         mark = mark[str(mark).rfind(r'/') + 1:].replace("'", "''")
         mark_desc = desc_dict[mark]
 
-        sql_str = "insert into news2(news_image_src,news_detail_href,news_title,news_desc,news_from," \
-                  "mark,news_image_path,update_time,news_content,mark_desc)" \
-                  " values('%s','%s',N'%s',N'%s','%s','%s',N'%s',N'%s',N'%s',N'%s')" \
+        sql_str = "insert into news(news_image_src,news_detail_href,news_title,news_desc,news_from," \
+                  "mark,news_image_path,update_time,news_content,mark_desc,click)" \
+                  " values('%s','%s',N'%s',N'%s','%s','%s',N'%s',N'%s',N'%s',N'%s',N'%d')" \
                   % (news_image_src, news_detail_href, news_title, news_desc, news_from, mark,
-                     news_image_path, update_time, news_content, mark_desc)
+                     news_image_path, update_time, news_content, mark_desc, 0)
 
         print(sql_str)
         print(len(news_desc), len(news_title))
@@ -195,7 +195,7 @@ def get_news_detail_page(url):
                     # 下载插图
                     inset_image_path = download_img(img_src, inset_images_path)
 
-                    item_str += "<img src='%s'>" % (inset_image_path,)
+                    item_str += "<img class='news_insert_img' src='%s'>" % (inset_image_path,)
                     # print(img_src, inset_image_path)
 
         else:

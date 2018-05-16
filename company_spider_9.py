@@ -6,7 +6,6 @@
 # @File    : company_spider_9.py
 # @Software: PyCharm
 
-from lxml import etree
 import requests
 from gevent import pool, monkey
 monkey.patch_all()
@@ -30,12 +29,26 @@ search_url = r'https://us.kompass.com/searchCompanies?' \
              r'&searchType=' + search_type
 
 home_path = r'E:\work_all\topease\company_spider_9'
-first_html_path = os.path.join(home_path, search_text + r'_' + search_type + r'_0.html')
+
+company_list_pages_dir_path = os.path.join(home_path, 'company_list_dir')
+company_list_pages_product_dir_path = os.path.join(company_list_pages_dir_path, search_text)
+
+company_detail_dir_path = os.path.join(home_path, 'company_detail_dir')
+company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_text)
+
+first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
 page_total = -1
+overwrite = False
 
 sess = requests.session()
+
+if not os.path.exists(company_list_pages_product_dir_path):
+    os.mkdir(company_list_pages_product_dir_path)
+
+if not os.path.exists(company_detail_product_dir_path):
+    os.mkdir(company_detail_product_dir_path)
 
 
 def while_session_get(page_url, times=5000):
@@ -96,16 +109,16 @@ def parse_first_html():
 
 def download_company_list_pages():
     """
-    获取该商品的所有公司列表
+    获取该商品的所有公司列表(废弃)
     :return:
     """
     url_page_postfix = r'/searchCompanies/scroll?tab=cmp&pageNbre='
 
     for i in range(2, page_total):
         url_item = home_url + url_page_postfix + str(i)
-        this_page_html_path = os.path.join(home_path, search_text + r'_' + search_type + r'_' + str(i) + r'.html')
+        this_page_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_' + str(i) + r'.html')
 
-        if os.path.exists(this_page_html_path):
+        if (not overwrite) and os.path.exists(this_page_html_path):
             print('page:' + str(i) + '-------- exist')
             continue
 
@@ -123,7 +136,8 @@ def download_this_page_company_list(url):
     :return:
     """
     this_page_str = url[str(url).rfind('=') + 1:]
-    this_page_html_path = os.path.join(home_path, search_text + r'_' + search_type + r'_' + this_page_str + r'.html')
+    this_page_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_' +
+                                       this_page_str + r'.html')
 
     if os.path.exists(this_page_html_path):
         print('page:' + this_page_str + '-------- exist')
@@ -142,7 +156,7 @@ def gevent_pool_requests():
     :return:
     """
     url_page_postfix = r'/searchCompanies/scroll?tab=cmp&pageNbre='
-    urls = [home_url + url_page_postfix + str(i) for i in range(1, page_total)]
+    urls = [home_url + url_page_postfix + str(i) for i in range(1, page_total + 1)]
 
     gevent_pool = pool.Pool(200)
     result_list = gevent_pool.map(download_this_page_company_list, urls)

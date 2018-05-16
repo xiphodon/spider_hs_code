@@ -210,10 +210,10 @@ def download_this_page_company_detail(url):
             with open(company_detail_path, 'w', encoding='utf8') as fp:
                 fp.write(result.text)
 
-            # if os.path.getsize(company_detail_path) < 125 * 1024:
-            #     print('page:' + company_detail_name + '-------- this page html size < 125k')
-            # else:
-            #     print('page:' + company_detail_name + '-------- download OK')
+            if os.path.getsize(company_detail_path) < 10 * 1024:
+                print('page:' + company_detail_name + '-------- this page html size < 125k  !!!!!!!!!!')
+            else:
+                print('page:' + company_detail_name + '-------- download OK')
         print('page:' + company_detail_name + '-------- download OK')
     except Exception as e:
         print(e)

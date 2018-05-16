@@ -12,14 +12,16 @@ monkey.patch_all()
 import os
 from lxml import etree
 import json
+import time
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
     'Connection': 'keep-alive'
 }
 
-# search_text = 'pump'
-search_text = 'fabric'
+search_text_list = ['pump', 'fabric']
+search_text = 'pump'
+# search_text = 'fabric'
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
 search_type = search_type_dict['supplier']
@@ -40,6 +42,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
+pool_size = 50
 page_total = -1
 overwrite = False
 
@@ -112,27 +115,31 @@ def parse_first_html():
     print(page_total)
 
 
-def download_company_list_pages():
-    """
-    获取该商品的所有公司列表(废弃)
-    :return:
-    """
-    url_page_postfix = r'/searchCompanies/scroll?tab=cmp&pageNbre='
-
-    for i in range(2, page_total):
-        url_item = home_url + url_page_postfix + str(i)
-        this_page_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_' + str(i) + r'.html')
-
-        if (not overwrite) and os.path.exists(this_page_html_path):
-            print('page:' + str(i) + '-------- exist')
-            continue
-
-        result = while_session_get(url_item)
-
-        with open(this_page_html_path, 'w', encoding='utf8') as fp:
-            fp.write(result.text)
-
-        print('page:' + str(i) + '-------- download OK')
+# def download_company_list_pages():
+#     """
+#     获取该商品的所有公司列表(废弃)
+#     :return:
+#     """
+#     url_page_postfix = r'/searchCompanies/scroll?tab=cmp&pageNbre='
+#
+#     for i in range(2, page_total):
+#         url_item = home_url + url_page_postfix + str(i)
+#         this_page_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type +
+#                                            r'_' + str(i) + r'.html')
+#
+#         if (not overwrite) and os.path.exists(this_page_html_path):
+#             print('page:' + str(i) + '-------- exist')
+#             continue
+#
+#         result = while_session_get(url_item)
+#
+#         with open(this_page_html_path, 'w', encoding='utf8') as fp:
+#             fp.write(result.text)
+#
+#         if os.path.getsize(this_page_html_path) < 125 * 1024:
+#             print('page:' + str(i) + '-------- this page html size < 125k')
+#         else:
+#             print('page:' + str(i) + '-------- download OK')
 
 
 def download_this_page_company_list(url):
@@ -152,7 +159,10 @@ def download_this_page_company_list(url):
         with open(this_page_html_path, 'w', encoding='utf8') as fp:
             fp.write(result.text)
 
-        print('page:' + this_page_str + '-------- download OK')
+        if os.path.getsize(this_page_html_path) < 125 * 1024:
+            print('page:' + this_page_str + '-------- this page html size < 125k')
+        else:
+            print('page:' + this_page_str + '-------- download OK')
 
 
 def gevent_pool_requests(func, urls):
@@ -162,7 +172,7 @@ def gevent_pool_requests(func, urls):
     :param urls:
     :return:
     """
-    gevent_pool = pool.Pool(200)
+    gevent_pool = pool.Pool(pool_size)
     result_list = gevent_pool.map(func, urls)
     return result_list
 
@@ -178,24 +188,65 @@ def download_all_company_list_htmls():
     gevent_pool_requests(download_this_page_company_list, urls)
 
 
+def download_this_page_company_detail(url):
+    """
+    下载当前页公司详情页
+    :param url:
+    :return:
+    """
+    try:
+        # print(url)
+        url_split_list = str(url).split(r'/')
+        company_id_str = url_split_list[-2]
+        company_name_str = url_split_list[-3]
+        company_detail_name = company_id_str + r'_' + company_name_str + r'_c' + r'.html'
+        company_detail_path = os.path.join(company_detail_product_dir_path, company_detail_name)
+
+        if os.path.exists(company_detail_path):
+            print('page:' + company_detail_name + '-------- exist')
+        else:
+            result = while_session_get(url)
+
+            with open(company_detail_path, 'w', encoding='utf8') as fp:
+                fp.write(result.text)
+
+            # if os.path.getsize(company_detail_path) < 125 * 1024:
+            #     print('page:' + company_detail_name + '-------- this page html size < 125k')
+            # else:
+            #     print('page:' + company_detail_name + '-------- download OK')
+        print('page:' + company_detail_name + '-------- download OK')
+    except Exception as e:
+        print(e)
+
+
 def download_all_company_detail_htmls():
     """
     下载所有的公司详情页
     :return:
     """
+    count = 0
+    pages = 0
+    all_company_detail_urls_list = list()
     for item_file_name in os.listdir(company_list_pages_product_dir_path):
+        # 单个公司列表页面
+
         file_path = os.path.join(company_list_pages_product_dir_path, item_file_name)
 
         if file_path == first_html_path:
-            print(file_path)
+            print('跳过页码页：', file_path)
             continue
 
         company_detail_urls = get_company_detail_urls_by_company_list_page(file_path)
 
-        for item_url in company_detail_urls:
-            print('下载', item_url)
+        pages += 1
+        count += len(company_detail_urls)
 
-        break
+        all_company_detail_urls_list.extend(company_detail_urls)
+        print('\r正在收集公司详情页url,pages:' + str(pages) + ',count:' + str(count), end='')
+
+    print('\n', pages, count)
+
+    gevent_pool_requests(download_this_page_company_detail, all_company_detail_urls_list)
 
 
 def get_company_detail_urls_by_company_list_page(company_list_page_path):
@@ -207,9 +258,13 @@ def get_company_detail_urls_by_company_list_page(company_list_page_path):
     with open(company_list_page_path, 'r', encoding='utf8') as fp:
         content = fp.read()
 
+    selector = etree.HTML(content)
 
+    this_page_company_detail_urls = selector.xpath('//div[@class="infos"]/div[@class="details"]/h2/a/@href')
 
-    return []
+    this_page_company_detail_urls = [home_url + str(i).replace('\n', '') for i in this_page_company_detail_urls if str(i).startswith(r'/c/')]
+
+    return this_page_company_detail_urls
 
 
 def start():
@@ -217,13 +272,13 @@ def start():
     开始采集
     :return:
     """
-    download_frist_html()
-    parse_first_html()
+    # download_frist_html()
+    # parse_first_html()
+    #
+    # # download_company_list_pages() # 废弃
+    # download_all_company_list_htmls()
 
-    # download_company_list_pages() # 废弃
-    download_all_company_list_htmls()
-
-    # download_all_company_detail_htmls()
+    download_all_company_detail_htmls()
 
 
 if __name__ == '__main__':

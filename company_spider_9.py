@@ -18,7 +18,8 @@ headers = {
     'Connection': 'keep-alive'
 }
 
-search_text = 'pump'
+# search_text = 'pump'
+search_text = 'fabric'
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
 search_type = search_type_dict['supplier']
@@ -100,7 +101,11 @@ def parse_first_html():
     global page_total
 
     if len(total_page_li) >= 2:
-        page_total = int(total_page_li[-2].xpath('./a/text()')[0])
+        try:
+            page_total = int(total_page_li[-1].xpath('./a/text()')[0])
+        except Exception as e:
+            page_total = int(total_page_li[-2].xpath('./a/text()')[0])
+            print(e)
     else:
         page_total = 1
 
@@ -150,17 +155,61 @@ def download_this_page_company_list(url):
         print('page:' + this_page_str + '-------- download OK')
 
 
-def gevent_pool_requests():
+def gevent_pool_requests(func, urls):
     """
     多协程请求
+    :param func:
+    :param urls:
+    :return:
+    """
+    gevent_pool = pool.Pool(200)
+    result_list = gevent_pool.map(func, urls)
+    return result_list
+
+
+def download_all_company_list_htmls():
+    """
+    下载所有的公司列表页
     :return:
     """
     url_page_postfix = r'/searchCompanies/scroll?tab=cmp&pageNbre='
     urls = [home_url + url_page_postfix + str(i) for i in range(1, page_total + 1)]
 
-    gevent_pool = pool.Pool(200)
-    result_list = gevent_pool.map(download_this_page_company_list, urls)
-    return result_list
+    gevent_pool_requests(download_this_page_company_list, urls)
+
+
+def download_all_company_detail_htmls():
+    """
+    下载所有的公司详情页
+    :return:
+    """
+    for item_file_name in os.listdir(company_list_pages_product_dir_path):
+        file_path = os.path.join(company_list_pages_product_dir_path, item_file_name)
+
+        if file_path == first_html_path:
+            print(file_path)
+            continue
+
+        company_detail_urls = get_company_detail_urls_by_company_list_page(file_path)
+
+        for item_url in company_detail_urls:
+            print('下载', item_url)
+
+        break
+
+
+def get_company_detail_urls_by_company_list_page(company_list_page_path):
+    """
+    通过公司列表页获取该页中所有跳转公司详情的url
+    :param company_list_page_path:
+    :return:
+    """
+    with open(company_list_page_path, 'r', encoding='utf8') as fp:
+        content = fp.read()
+
+
+
+    return []
 
 
 def start():
@@ -171,8 +220,10 @@ def start():
     download_frist_html()
     parse_first_html()
 
-    # download_company_list_pages()
-    gevent_pool_requests()
+    # download_company_list_pages() # 废弃
+    download_all_company_list_htmls()
+
+    # download_all_company_detail_htmls()
 
 
 if __name__ == '__main__':

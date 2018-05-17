@@ -202,9 +202,9 @@ def download_this_page_company_detail(url):
         company_detail_name = company_id_str + r'_' + company_name_str + r'_c' + r'.html'
         company_detail_path = os.path.join(company_detail_product_dir_path, company_detail_name)
 
-        min_file_size = 10 * 1024
+        min_file_size = 106 * 1024
         if os.path.exists(company_detail_path) and os.path.getsize(company_detail_path) > min_file_size:
-            print('page:' + company_detail_name + '-------- exist')
+            print('page:' + company_detail_name + '-------- exists')
         else:
             result = while_session_get(url)
 

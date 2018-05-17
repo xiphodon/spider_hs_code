@@ -42,7 +42,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
-pool_size = 50
+pool_size = 800
 page_total = -1
 overwrite = False
 
@@ -202,7 +202,8 @@ def download_this_page_company_detail(url):
         company_detail_name = company_id_str + r'_' + company_name_str + r'_c' + r'.html'
         company_detail_path = os.path.join(company_detail_product_dir_path, company_detail_name)
 
-        if os.path.exists(company_detail_path):
+        min_file_size = 10 * 1024
+        if os.path.exists(company_detail_path) and os.path.getsize(company_detail_path) > min_file_size:
             print('page:' + company_detail_name + '-------- exist')
         else:
             result = while_session_get(url)
@@ -210,11 +211,11 @@ def download_this_page_company_detail(url):
             with open(company_detail_path, 'w', encoding='utf8') as fp:
                 fp.write(result.text)
 
-            if os.path.getsize(company_detail_path) < 10 * 1024:
-                print('page:' + company_detail_name + '-------- this page html size < 125k  !!!!!!!!!!')
+            if os.path.getsize(company_detail_path) < min_file_size:
+                print('page:' + company_detail_name + '-------- this page html size < ' + str(min_file_size/1024)
+                      + 'k  !!!!!!!!!!')
             else:
                 print('page:' + company_detail_name + '-------- download OK')
-        print('page:' + company_detail_name + '-------- download OK')
     except Exception as e:
         print(e)
 

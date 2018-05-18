@@ -20,8 +20,9 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric']
-search_text = 'pump'
-# search_text = 'fabric'
+# search_text = 'pump'
+search_text = 'fabric'
+
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
 search_type = search_type_dict['supplier']
@@ -42,7 +43,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
-pool_size = 800
+pool_size = 1500
 page_total = -1
 overwrite = False
 

@@ -221,9 +221,10 @@ def download_this_page_company_detail(url):
         print(e)
 
 
-def download_all_company_detail_htmls():
+def download_all_company_detail_htmls(while_times=3):
     """
     下载所有的公司详情页
+    while_times：采集轮次数
     :return:
     """
     count = 0
@@ -248,7 +249,9 @@ def download_all_company_detail_htmls():
 
     print('\n', pages, count)
 
-    gevent_pool_requests(download_this_page_company_detail, all_company_detail_urls_list)
+    for i in range(while_times):
+        print('第' + str(i + 1) + '轮爬取')
+        gevent_pool_requests(download_this_page_company_detail, all_company_detail_urls_list)
 
 
 def get_company_detail_urls_by_company_list_page(company_list_page_path):
@@ -264,7 +267,8 @@ def get_company_detail_urls_by_company_list_page(company_list_page_path):
 
     this_page_company_detail_urls = selector.xpath('//div[@class="infos"]/div[@class="details"]/h2/a/@href')
 
-    this_page_company_detail_urls = [home_url + str(i).replace('\n', '') for i in this_page_company_detail_urls if str(i).startswith(r'/c/')]
+    this_page_company_detail_urls = [home_url + str(i).replace('\n', '') for i in this_page_company_detail_urls
+                                     if str(i).startswith(r'/c/')]
 
     return this_page_company_detail_urls
 
@@ -274,12 +278,14 @@ def start():
     开始采集
     :return:
     """
+
+    # 1.下载公司列表页
     # download_frist_html()
     # parse_first_html()
-    #
     # # download_company_list_pages() # 废弃
     # download_all_company_list_htmls()
 
+    # 2.下载公司详情页
     download_all_company_detail_htmls()
 
 

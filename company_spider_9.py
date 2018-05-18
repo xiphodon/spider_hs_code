@@ -6,9 +6,9 @@
 # @File    : company_spider_9.py
 # @Software: PyCharm
 
-import requests
 from gevent import pool, monkey
 monkey.patch_all()
+import requests
 import os
 from lxml import etree
 import json
@@ -19,8 +19,7 @@ headers = {
     'Connection': 'keep-alive'
 }
 
-search_text_list = ['pump', 'fabric']
-# search_text = 'pump'
+search_text_list = ['pump', 'fabric', 'glass']
 search_text = 'fabric'
 
 search_type_dict = {'product': 'PRODUCT',
@@ -178,7 +177,7 @@ def gevent_pool_requests(func, urls):
     return result_list
 
 
-def download_all_company_list_htmls():
+def download_all_company_list_htmls(while_times=3):
     """
     下载所有的公司列表页
     :return:
@@ -186,7 +185,9 @@ def download_all_company_list_htmls():
     url_page_postfix = r'/searchCompanies/scroll?tab=cmp&pageNbre='
     urls = [home_url + url_page_postfix + str(i) for i in range(1, page_total + 1)]
 
-    gevent_pool_requests(download_this_page_company_list, urls)
+    for i in range(while_times):
+        print('第' + str(i + 1) + '轮爬取')
+        gevent_pool_requests(download_this_page_company_list, urls)
 
 
 def download_this_page_company_detail(url):

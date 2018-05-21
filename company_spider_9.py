@@ -151,16 +151,18 @@ def download_this_page_company_list(url):
     this_page_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_' +
                                        this_page_str + r'.html')
 
-    if os.path.exists(this_page_html_path):
-        print('page:' + this_page_str + '-------- exist')
+    if os.path.exists(this_page_html_path) and os.path.getsize(this_page_html_path) >= 125 * 1024:
+        print('page:' + this_page_str + '-------- exists')
     else:
         result = while_session_get(url)
 
         with open(this_page_html_path, 'w', encoding='utf8') as fp:
             fp.write(result.text)
 
-        if os.path.getsize(this_page_html_path) < 125 * 1024:
-            print('page:' + this_page_str + '-------- this page html size < 125k')
+        min_file_size = 125 * 1024
+        if os.path.getsize(this_page_html_path) < min_file_size:
+            print('page:' + this_page_str + '-------- this page html size < ' + str(min_file_size/1024)
+                  + 'k  !!!!!!!!!!')
         else:
             print('page:' + this_page_str + '-------- download OK')
 
@@ -274,20 +276,31 @@ def get_company_detail_urls_by_company_list_page(company_list_page_path):
     return this_page_company_detail_urls
 
 
+def parse_all_company_detail():
+    """
+    解析所有的公司详情页
+    :return:
+    """
+
+
+
 def start():
     """
     开始采集
     :return:
     """
 
-    # 1.下载公司列表页
+    # # 1.下载公司列表页
     # download_frist_html()
     # parse_first_html()
     # # download_company_list_pages() # 废弃
-    # download_all_company_list_htmls()
+    # download_all_company_list_htmls(while_times=5)
 
     # 2.下载公司详情页
-    download_all_company_detail_htmls()
+    # download_all_company_detail_htmls(while_times=5)
+
+    # 3.解析公司详情页
+    parse_all_company_detail()
 
 
 if __name__ == '__main__':

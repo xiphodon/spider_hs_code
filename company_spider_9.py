@@ -11,6 +11,7 @@ monkey.patch_all()
 import requests
 import os
 from lxml import etree
+import settings
 import json
 import time
 
@@ -20,14 +21,14 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric', 'glass']
-search_text = 'fabric'
+search_text = 'pump'
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
 search_type = search_type_dict['supplier']
 
-home_url = r'https://us.kompass.com'
-search_url = r'https://us.kompass.com/searchCompanies?' \
+home_url = settings.company_home_url_1
+search_url = home_url + r'/searchCompanies?' \
              r'acClassif=&localizationCode=&localizationLabel=&localizationType=&text=' + search_text + \
              r'&searchType=' + search_type
 

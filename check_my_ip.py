@@ -109,12 +109,20 @@ def format_print(_ip_str, _collect_ip_dict):
         # print('\t', _collect_ip_dict)
 
         often_used_ip_dict = dict()
+        oftener_used_ip_dict = dict()
+        oftenest_used_ip_dict = dict()
         for key, value in _collect_ip_dict.items():
+            if value > 10:
+                oftenest_used_ip_dict[key] = value
+            if value > 5:
+                oftener_used_ip_dict[key] = value
             if value > 1:
                 often_used_ip_dict[key] = value
 
-        print('\t多次使用过的ip数：' + str(len(often_used_ip_dict)))
-        print('\t', often_used_ip_dict)
+        print('\t重复使用过的ip数(>1)：' + str(len(often_used_ip_dict)))
+        print('\t多次使用过的ip数(>5)：' + str(len(often_used_ip_dict)))
+        print('\t高频使用过的ip数(>10)：' + str(len(often_used_ip_dict)))
+        # print('\t', often_used_ip_dict)
 
 
 def while_print_ip():

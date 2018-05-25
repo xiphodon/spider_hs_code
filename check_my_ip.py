@@ -13,7 +13,7 @@ import datetime
 from lxml import etree
 
 # 睡眠时间
-sleep_time = 3
+sleep_time = 5
 
 used_ip_dict = dict()
 last_used_ip = ''

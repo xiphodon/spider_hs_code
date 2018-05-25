@@ -21,7 +21,7 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric', 'glass']
-search_text = 'pump'
+search_text = 'fabric'
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -33,6 +33,9 @@ search_url = home_url + r'/searchCompanies?' \
              r'&searchType=' + search_type
 
 home_path = r'E:\work_all\topease\company_spider_9'
+
+json_dir_path = os.path.join(home_path, 'json_dir')
+company_detail_main_keyword_json_path = os.path.join(json_dir_path, 'main_keyword.json')
 
 company_list_pages_dir_path = os.path.join(home_path, 'company_list_dir')
 company_list_pages_product_dir_path = os.path.join(company_list_pages_dir_path, search_text)
@@ -69,7 +72,7 @@ def while_session_get(page_url, times=5000):
         except Exception as e:
             if while_times < times:
                 while_times += 1
-                print('**********', '尝试重新链接', while_times, '次:', page_url)
+                print('**********', '尝试重新链接', while_times, '次:', page_url.replace(home_url, ''))
                 continue
             else:
                 raise e
@@ -277,12 +280,140 @@ def get_company_detail_urls_by_company_list_page(company_list_page_path):
     return this_page_company_detail_urls
 
 
+def check_company_detail_keyword():
+    """
+    检查公司详情页各个关键字
+    :return:
+    """
+    all_main_keyword_dict = dict()
+
+    all_company_other_contact_span = dict()
+    all_company_presentation = dict()
+    all_company_keynumbers = dict()
+    all_company_executives = dict()
+    all_company_activities = dict()
+
+    for file_name in os.listdir(company_detail_product_dir_path):
+        _file_name = file_name.replace('.html', '')
+        _company_id_str = file_name.split('_')[0]
+
+        file_path = os.path.join(company_detail_product_dir_path, file_name)
+
+        with open(file_path, 'r', encoding='utf8') as fp:
+            content = fp.read()
+
+        selector = etree.HTML(content)
+
+        # 公司head信息
+        # company_name = selector.xpath('//div[@class="headerDetailsCompany"]//h1[@itemprop="name"]/text()')
+        # _company_name = get_selector_text_string(company_name)
+        #
+        # company_is_premium = selector.xpath('//div[@class="headerDetailsCompany"]/a/span/text()')
+        # _company_is_premium = True if get_selector_text_string(company_is_premium) != 'none' else False
+        #
+        # company_street_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+        #                                         '//div[@class="addressCoordinates"]/p'
+        #                                         '/span[@itemprop="streetAddress"]/text()')
+        # _company_street_address = get_selector_text_string(company_street_address)
+        #
+        # company_city_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+        #                                       '//div[@class="addressCoordinates"]/p/text()')
+        # _company_city_address = get_selector_text_string(company_city_address, index=1)
+        #
+        # company_country_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+        #                                          '//div[@class="addressCoordinates"]/p'
+        #                                          '/span[@itemprop="addressCountry"]/text()')
+        # _company_country_address = get_selector_text_string(company_country_address)
+        #
+        # company_phone = selector.xpath('//div[@class="headerDetailsCompany"]'
+        #                                '//div[@class="contactButton"]/a/input/@value')
+        # _company_phone = get_selector_text_string(company_phone)
+
+        # 其他联系信息
+        # company_other_contact_span = selector.xpath('//div[@class="headerDetailsCompany"]'
+        #                                             '//div[@class="headerRowCoordinates"]'
+        #                                             '//div[@class="coordinate-item"]/a/span')
+
+        company_presentation = selector.xpath('//div[@class="tab-content"]/div[@id="presentation"]'
+                                              '/div[contains(@class,"item")]/div')
+
+        company_keynumbers = selector.xpath('//div[@class="tab-content"]/div[@id="keynumbers"]'
+                                            '/div[contains(@class,"item")]/div')
+
+        # company_executives = selector.xpath('//div[@class="tab-content"]/div[@id="executives"]'
+        #                                     '/div[@class="TabContacts"]/div[contains(@class,"item")]'
+        #                                     '/div')
+        company_executives = selector.xpath('//div[@class="tab-content"]/div[@id="executives"]'
+                                            '/div[@class="TabContacts"]/div')
+
+        # company_activities = selector.xpath('//div[@class="tab-content"]/div[@id="activities"]'
+        #                                     '/div[@class="TabProducts"]/div[contains(@class,"item")]')
+        company_activities = selector.xpath('//div[@class="tab-content"]/div[@id="activities"]'
+                                            '/div[@class="TabProducts"]/div')
+
+        print(_file_name)
+        # print(_company_id_str)
+        # print(_company_name)
+        # print(_company_is_premium)
+        # print(_company_street_address)
+        # print(_company_city_address)
+        # print(_company_country_address)
+        # print(_company_phone)
+
+        # temp_company_other_contact_span = dict([(str(item_span.text).replace('\xa0', ' ').strip(), etree.tostring(item_span.getparent())) for item_span in company_other_contact_span])
+        temp_company_presentation = dict([('Company Summary' if str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip().startswith('Company Summary') else str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), file_name) for item in company_presentation])
+        temp_company_keynumbers = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), file_name) for item in company_keynumbers])
+        temp_company_executives = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), file_name) for item in company_executives])
+        temp_company_activities = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), file_name) for item in company_activities])
+
+        # for temp_key in temp_company_other_contact_span:
+        #     if temp_key not in all_company_other_contact_span:
+        #         all_company_other_contact_span[temp_key] = file_name
+
+        for temp_key, temp_value in temp_company_presentation.items():
+            if temp_key not in all_company_presentation:
+                all_company_presentation[temp_key] = temp_value
+
+        for temp_key, temp_value  in temp_company_keynumbers.items():
+            if temp_key not in all_company_keynumbers:
+                all_company_keynumbers[temp_key] = temp_value
+
+        for temp_key, temp_value in temp_company_executives.items():
+            if temp_key not in all_company_executives:
+                all_company_executives[temp_key] = temp_value
+
+        for temp_key, temp_value  in temp_company_activities.items():
+            if temp_key not in all_company_activities:
+                all_company_activities[temp_key] = temp_value
+
+        # break
+
+    # all_main_keyword_dict['company_other_contact_span'] = all_company_other_contact_span
+    all_main_keyword_dict['company_presentation'] = all_company_presentation
+    all_main_keyword_dict['company_keynumbers'] = all_company_keynumbers
+    all_main_keyword_dict['company_executives'] = all_company_executives
+    all_main_keyword_dict['company_activities'] = all_company_activities
+
+    with open(company_detail_main_keyword_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(all_main_keyword_dict))
+
+
+def get_selector_text_string(selector_text_list, index=0):
+    """
+    获取选择器text中字符串
+    :param selector_text_list: 选择出的text列表
+    :param index: 需要选择的索引
+    :return:
+    """
+    return str(selector_text_list[index]).strip() if len(selector_text_list) > index else 'none'
+
+
 def parse_all_company_detail():
     """
     解析所有的公司详情页
     :return:
     """
-
+    pass
 
 
 def start():
@@ -301,7 +432,8 @@ def start():
     # download_all_company_detail_htmls(while_times=5)
 
     # 3.解析公司详情页
-    parse_all_company_detail()
+    check_company_detail_keyword()
+    # parse_all_company_detail()
 
 
 if __name__ == '__main__':

@@ -30,6 +30,12 @@ all_products_json_path = os.path.join(data_home, 'all_products.json')
 html_files_dir_path = os.path.join(data_home, 'html_files')
 all_shop_info_dir_path = os.path.join(data_home, 'all_shop_info_dir')
 
+if not os.path.exists(html_files_dir_path):
+    os.mkdir(html_files_dir_path)
+
+if not os.path.exists(all_shop_info_dir_path):
+    os.mkdir(all_shop_info_dir_path)
+
 
 def download_types_html():
     """
@@ -152,9 +158,17 @@ def download_one_type_product_list(item_tuple):
 
         selector = etree.HTML(content_data)
 
-        next_page_button_list = selector.xpath('//a[@class="item -next"]')
+        next_page_button_list = selector.xpath('//a[@class="item -next nextPage"]')
+        this_page_text_list = selector.xpath('//a[@class="item -active currentPage"]/text()')
 
-        if len(next_page_button_list) == 0:
+        if len(this_page_text_list) > 0:
+            if len(next_page_button_list) == 0:
+                break
+            if this_page_text_list[0].strip() != str(page_index):
+                if os.path.exists(html_file_path):
+                    os.remove(html_file_path)
+                break
+        else:
             break
 
 
@@ -438,10 +452,10 @@ def merge_all_product_to_json():
 if __name__ == '__main__':
     # download_types_html()
     # parse_types_file_to_types_json()
-    # multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 10)
+    multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 100)
     # parse_all_type_product_list_files()
     # download_shop_info_files()
     # parse_shop_info_to_json()
     # print(len(read_shop_info_json()))
-    merge_all_product_to_json()
+    # merge_all_product_to_json()
 

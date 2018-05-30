@@ -9,6 +9,7 @@
 # 乐天
 from company_spider_6 import while_requests_get
 from company_spider_6 import multiprocessing_download_files
+from company_spider_9 import gevent_pool_requests
 import os
 from bs4 import BeautifulSoup
 from lxml import etree
@@ -193,7 +194,8 @@ def parse_all_type_product_list_files():
                         # content = fp.read()
                         selector = etree.HTML(fp.read())
 
-                    product_div_list = selector.xpath('//div[@class="dui-card"]')
+                    product_div_list = selector.xpath('//div[@class="dui-container searchresults"]/div[@class="dui-cards searchresultitems"]/div[@class="dui-card searchresultitem"]')
+                    # print(len(product_div_list))
 
                     for item_product_div in product_div_list:
                         try:
@@ -251,12 +253,16 @@ def parse_all_type_product_list_files():
                             with open(file_path, 'a', encoding='utf8') as fp:
                                 fp.write(json.dumps(temp_product_dict) + '\n')
 
+                            # print(temp_product_dict)
+                            # print(shop_href)
                             # break
                         except Exception as e:
-                            print('inner', e)
+                            print('***** inner', e)
+                            # raise e
                             continue
                 except Exception as e:
-                    print('outter', e)
+                    print('===== outter', e)
+                    # raise e
                     continue
                 # break
             # break
@@ -452,8 +458,9 @@ def merge_all_product_to_json():
 if __name__ == '__main__':
     # download_types_html()
     # parse_types_file_to_types_json()
-    multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 100)
-    # parse_all_type_product_list_files()
+    ## multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 100)
+    # gevent_pool_requests(download_one_type_product_list, get_download_every_type_product_list(), gevent_pool_size=100)
+    parse_all_type_product_list_files()
     # download_shop_info_files()
     # parse_shop_info_to_json()
     # print(len(read_shop_info_json()))

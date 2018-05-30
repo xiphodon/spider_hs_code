@@ -236,7 +236,9 @@ def parse_all_type_product_list_files():
                                                  'product_href': product_title_href,
                                                  'product_price': product_price,
                                                  'product_score': product_score_text,
-                                                 'product_legend': product_legend_text}
+                                                 'product_legend': product_legend_text,
+                                                 'product_type_first': type_first_dir,
+                                                 'product_type_second': type_second_dir}
 
                             shop_href_md5 = hashlib.md5(shop_href.encode('utf8')).hexdigest()
 

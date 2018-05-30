@@ -45,7 +45,7 @@ def while_requests_get(page_url):
             result = requests.get(page_url, headers=headers, timeout=5)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
-            if while_times < 100:
+            if while_times < 10000:
                 while_times += 1
                 print('**********', '尝试重新链接', while_times, '次:', page_url)
                 continue

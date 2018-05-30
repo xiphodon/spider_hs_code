@@ -171,14 +171,15 @@ def download_this_page_company_list(url):
             print('page:' + this_page_str + '-------- download OK')
 
 
-def gevent_pool_requests(func, urls):
+def gevent_pool_requests(func, urls, gevent_pool_size=pool_size):
     """
     多协程请求
     :param func:
     :param urls:
+    :param gevent_pool_size:
     :return:
     """
-    gevent_pool = pool.Pool(pool_size)
+    gevent_pool = pool.Pool(gevent_pool_size)
     result_list = gevent_pool.map(func, urls)
     return result_list
 

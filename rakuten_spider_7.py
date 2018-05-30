@@ -271,11 +271,63 @@ def parse_all_type_product_list_files():
         # break
 
 
-def download_shop_info_files():
+def get_shop_info_href_list():
     """
-    下载商家信息页面
+    通过shop_href获取shop_info_href 的列表
     :return:
     """
+    shop_info_href_list = list()
+    for shop_href_md5 in os.listdir(all_shop_info_dir_path):
+        # print(shop_href_md5)
+
+        shop_href_md5_path = os.path.join(all_shop_info_dir_path, shop_href_md5)
+
+        shop_info_html_path = os.path.join(shop_href_md5_path, 'shop_info.html')
+
+        shop_href_txt_path = os.path.join(shop_href_md5_path, 'shop_href.txt')
+
+        with open(shop_href_txt_path, 'r', encoding='utf8') as fp:
+            shop_href = fp.read().strip()
+
+        shop_info_href = shop_href + 'info.html'
+
+        temp_tuple = (shop_info_html_path, shop_info_href)
+
+        shop_info_href_list.append(temp_tuple)
+
+        print(temp_tuple)
+
+    print(shop_info_href_list[:10] if len(shop_info_href_list) > 10 else shop_info_href_list)
+    return shop_info_href_list
+
+
+def download_shop_info_file(shop_info_html_path_and_shop_info_href):
+    """
+    下载一个商家信息页面
+    :param shop_info_html_path_and_shop_info_href: 应存储地址 + 详情页请求地址
+    :return:
+    """
+    # shop_info_html_path: 应存储地址
+    # shop_info_href: 详情页请求地址
+    shop_info_html_path, shop_info_href = shop_info_html_path_and_shop_info_href
+
+    if os.path.exists(shop_info_html_path):
+        return
+
+    info_result = while_requests_get(shop_info_href)
+
+    with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
+        fp.write(info_result.content.decode('EUC-JP'))
+
+    print(shop_info_html_path, 'save OK')
+
+
+def download_shop_info_files():
+    """
+    下载所有商家信息页面
+    :return:
+    """
+    error_count = 0
     for shop_href_md5 in os.listdir(all_shop_info_dir_path):
         try:
             shop_href_md5_path = os.path.join(all_shop_info_dir_path, shop_href_md5)
@@ -290,26 +342,36 @@ def download_shop_info_files():
             with open(shop_href_txt_path, 'r', encoding='utf8') as fp:
                 shop_href = fp.read().strip()
 
-            result = while_requests_get(shop_href)
+            # result = while_requests_get(shop_href)
+            #
+            # selector = etree.HTML(result.text)
+            # # <meta property="og:url" content="https://www.rakuten.co.jp/mono-b/"/>
+            # shop_info_href_list = selector.xpath('//meta[@property="og:url"]/@content')
+            #
+            # if len(shop_info_href_list) > 0:
+            #     shop_info_href = shop_info_href_list[0] + 'info.html'
+            #     # print(shop_info_href)
+            #     info_result = while_requests_get(shop_info_href)
+            #
+            #     with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
+            #         fp.write(info_result.content.decode('EUC-JP'))
+            #
+            #     print(shop_href_md5, 'save OK')
 
-            selector = etree.HTML(result.text)
-            # <meta property="og:url" content="https://www.rakuten.co.jp/mono-b/"/>
-            shop_info_href_list = selector.xpath('//meta[@property="og:url"]/@content')
+            shop_info_href = shop_href + 'info.html'
+            info_result = while_requests_get(shop_info_href)
 
-            if len(shop_info_href_list) > 0:
-                shop_info_href = shop_info_href_list[0] + 'info.html'
-                # print(shop_info_href)
-                info_result = while_requests_get(shop_info_href)
+            with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
+                fp.write(info_result.content.decode('EUC-JP'))
 
-                with open(shop_info_html_path, 'w', encoding='EUC-JP') as fp:
-                    fp.write(info_result.content.decode('EUC-JP'))
-
-                print(shop_href_md5, 'save OK')
-
+            print(shop_href_md5, 'save OK')
             print()
         except Exception as e:
             print(e)
+            error_count += 1
+            print(error_count)
         # break
+    print(error_count)
 
 
 def parse_shop_info_to_json():
@@ -460,10 +522,11 @@ def merge_all_product_to_json():
 if __name__ == '__main__':
     # download_types_html()
     # parse_types_file_to_types_json()
-    ## multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 100)
+    ## multiprocessing_download_files(download_one_type_product_list, get_download_every_type_product_list(), 100) # 废弃
     # gevent_pool_requests(download_one_type_product_list, get_download_every_type_product_list(), gevent_pool_size=100)
-    parse_all_type_product_list_files()
-    # download_shop_info_files()
+    # parse_all_type_product_list_files()
+    ## download_shop_info_files() # 废弃
+    gevent_pool_requests(download_shop_info_file, get_shop_info_href_list(), gevent_pool_size=100)
     # parse_shop_info_to_json()
     # print(len(read_shop_info_json()))
     # merge_all_product_to_json()

@@ -42,7 +42,7 @@ def while_requests_get(page_url):
     while_times = 0
     while True:
         try:
-            result = requests.get(page_url, headers=headers, timeout=5)
+            result = requests.get(page_url, headers=headers, timeout=30)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
             if while_times < 10000:

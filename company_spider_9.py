@@ -375,7 +375,7 @@ def check_company_detail_keyword():
             if temp_key not in all_company_presentation:
                 all_company_presentation[temp_key] = temp_value
 
-        for temp_key, temp_value  in temp_company_keynumbers.items():
+        for temp_key, temp_value in temp_company_keynumbers.items():
             if temp_key not in all_company_keynumbers:
                 all_company_keynumbers[temp_key] = temp_value
 
@@ -383,7 +383,7 @@ def check_company_detail_keyword():
             if temp_key not in all_company_executives:
                 all_company_executives[temp_key] = temp_value
 
-        for temp_key, temp_value  in temp_company_activities.items():
+        for temp_key, temp_value in temp_company_activities.items():
             if temp_key not in all_company_activities:
                 all_company_activities[temp_key] = temp_value
 

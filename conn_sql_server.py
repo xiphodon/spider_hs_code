@@ -37,6 +37,8 @@ def save_to_sql_server():
 
     if not cur:
         raise (NameError, "数据库连接失败")
+    else:
+        print('数据库连接成功')
 
     # save_spider_3_data_to_db(conn, cur)
     # save_spider_4_data_to_db(conn, cur)
@@ -44,6 +46,7 @@ def save_to_sql_server():
     # save_spider_6_data_to_db(conn, cur)
 
     # save_spider_all_data_to_db(conn, cur)
+
     # save_rakuten_spider_shop_info_to_db(conn, cur)
     save_rakuten_spider_products_info_to_db(conn, cur)
 
@@ -60,7 +63,7 @@ def save_rakuten_spider_shop_info_to_db(conn, cur):
     data = rakuten_spider_7.read_shop_info_json()
     print('data', 'OK')
 
-    cur.execute("select top 1 company_md5 from rakuten_company order by id desc")
+    cur.execute("select top 1 company_md5 from rakuten_company_2018_05 order by id desc")
     server_company_md5 = cur.fetchone()
     print(server_company_md5)
 
@@ -83,22 +86,23 @@ def save_rakuten_spider_shop_info_to_db(conn, cur):
             else:
                 continue
 
+        company_href = item_dict.get('company_href', '').replace("'", "''")
         company_name = item_dict.get('company_name', '').replace("'", "''")
         company_address = item_dict.get('company_address', '').replace("'", "''")
         company_tel = item_dict.get('company_tel', '').replace("'", "''")
         company_fax = item_dict.get('company_fax', '').replace("'", "''")
         company_representative = item_dict.get('company_representative', '').replace("'", "''")
         company_operator = item_dict.get('company_operator', '').replace("'", "''")
-        company_shopowner = item_dict.get('company_shopowner', '').replace("'", "''")
+        company_security_officer = item_dict.get('company_security_officer', '').replace("'", "''")
         company_email = item_dict.get('company_email', '').replace("'", "''")
 
         sql_str = None
         try:
-            sql_str = "insert into rakuten_company(company_md5,company_name,company_address,company_tel,company_fax," \
-                      "company_representative,company_operator,company_shopowner,company_email)" \
-                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
-                      % (company_md5, company_name, company_address, company_tel, company_fax, company_representative,
-                         company_operator, company_shopowner, company_email)
+            sql_str = "insert into rakuten_company_2018_05(company_md5,company_href,company_name,company_address,company_tel,company_fax," \
+                      "company_representative,company_operator,company_security_officer,company_email)" \
+                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      % (company_md5, company_href, company_name, company_address, company_tel, company_fax, company_representative,
+                         company_operator, company_security_officer, company_email)
             cur.execute(sql_str.encode('utf8'))
             conn.commit()
             count += 1
@@ -110,13 +114,14 @@ def save_rakuten_spider_shop_info_to_db(conn, cur):
             print(sql_str)
 
             print(len(company_md5))
+            print(len(company_href))
             print(len(company_name))
             print(len(company_address))
             print(len(company_tel))
             print(len(company_fax))
             print(len(company_representative))
             print(len(company_operator))
-            print(len(company_shopowner))
+            print(len(company_security_officer))
             print(len(company_email))
             # raise e
         # break
@@ -134,12 +139,12 @@ def save_rakuten_spider_products_info_to_db(conn, cur):
     data = rakuten_spider_7.read_products_json()
     print('data', 'OK')
 
-    cur.execute("select top 1 shop_md5 from rakuten_product order by id desc")
-    server_shop_md5 = cur.fetchone()
-    print(server_shop_md5)
+    cur.execute("select top 1 product_href from rakuten_product_2018_05 order by id desc")
+    server_product_href = cur.fetchone()
+    print(server_product_href)
 
     is_find = False
-    if server_shop_md5 is None:
+    if server_product_href is None:
         is_find = True
 
     error_count = 0
@@ -147,39 +152,42 @@ def save_rakuten_spider_products_info_to_db(conn, cur):
 
     for item_dict in data:
 
-        shop_md5 = item_dict.get('shop_md5', '').replace("'", "''")
+        product_href = item_dict.get('product_href', '').replace("'", "''")
 
         if not is_find:
-            if shop_md5 == server_shop_md5[0]:
+            if product_href == server_product_href[0]:
                 # print(company_md5)
                 is_find = True
                 continue
             else:
                 continue
 
+        shop_md5 = item_dict.get('shop_md5', '').replace("'", "''")
         shop_name = item_dict.get('shop_name', '').replace("'", "''")
         shop_href = item_dict.get('shop_href', '').replace("'", "''")
         product_title = item_dict.get('product_title', '').replace("'", "''")
-        product_href = item_dict.get('product_href', '').replace("'", "''")
+
         product_price = item_dict.get('product_price', '').replace("'", "''")
         product_score = item_dict.get('product_score', '').replace("'", "''")
         product_legend = item_dict.get('product_legend', '').replace("'", "''")
+        product_type_first = item_dict.get('product_type_first', '').replace("'", "''")
+        product_type_second = item_dict.get('product_type_second', '').replace("'", "''")
 
         sql_str = None
         try:
-            sql_str = "insert into rakuten_product(shop_name,shop_href,product_title,product_href,product_price," \
-                      "product_score,product_legend,shop_md5)" \
-                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+            sql_str = "insert into rakuten_product_2018_05(shop_name,shop_href,product_title,product_href,product_price," \
+                      "product_score,product_legend,product_type_first,product_type_second,shop_md5)" \
+                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
                       % (shop_name, shop_href, product_title, product_href, product_price, product_score,
-                         product_legend, shop_md5)
+                         product_legend, product_type_first, product_type_second, shop_md5)
             cur.execute(sql_str.encode('utf8'))
             conn.commit()
             count += 1
-            print(shop_md5, 'OK', ',当前 count:', count, ', error_count:', error_count)
+            print(product_href, 'OK', ',当前 count:', count, ', error_count:', error_count)
             # time.sleep(0.005)
         except Exception as e:
             error_count += 1
-            print(e, error_count, shop_md5, '===================')
+            print(e, error_count, product_href, '===================')
             print(sql_str)
 
             print(len(shop_name))
@@ -189,8 +197,11 @@ def save_rakuten_spider_products_info_to_db(conn, cur):
             print(len(product_price))
             print(len(product_score))
             print(len(product_legend))
+            print(len(product_type_first))
+            print(len(product_type_second))
             print(len(shop_md5))
             # raise e
+
         # break
     # conn.commit()
     print('count:', count, ', error_count:', error_count)

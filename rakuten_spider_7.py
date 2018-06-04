@@ -28,6 +28,8 @@ all_shop_info_json_path = os.path.join(data_home, 'all_shop_info.json')
 shop_href_mapping_json_path = os.path.join(data_home, 'shop_href_mapping.json')
 shop_info_json_path = os.path.join(data_home, 'shop_info.json')
 all_products_json_path = os.path.join(data_home, 'all_products.json')
+finally_shop_info_json_path = os.path.join(data_home, 'finally_shop_info.json')
+
 
 html_files_dir_path = os.path.join(data_home, 'html_files')
 all_shop_info_dir_path = os.path.join(data_home, 'all_shop_info_dir')
@@ -542,6 +544,138 @@ def merge_all_product_to_json():
         fw.write(']')
 
 
+def merge_all_product_to_company_json():
+    """
+    合并产品到公司json
+    :return:
+    """
+    shop_info_json = list()
+    for shop_info_md5 in os.listdir(all_shop_info_dir_path):
+        try:
+            print(shop_info_md5)
+            temp_company_dict = dict()
+
+            shop_info_md5_path = os.path.join(all_shop_info_dir_path, shop_info_md5)
+
+            # 获取产品关键字
+            products_txt_path = os.path.join(shop_info_md5_path, 'products.txt')
+
+            with open(products_txt_path, 'r', encoding='utf8') as fp:
+                product_title_set = set()
+                product_type_list = list()
+                for line in fp.readlines():
+                    line_str = line.strip('\n')
+                    line_dict = json.loads(line_str)
+
+                    product_title_set = product_title_set | set(str(line_dict['product_title']).split())
+
+                    product_type_list.append(line_dict['product_type_first'] + ' ' + line_dict['product_type_second'])
+
+                    # print(line_dict)
+                temp_company_dict['company_product_desc'] = ','.join(product_title_set)
+                temp_company_dict['company_product_type'] = ','.join(set(product_type_list))
+
+            # print(temp_company_dict)
+            # break
+
+            # 解析公司详情页
+            shop_info_html_path = os.path.join(shop_info_md5_path, 'shop_info.html')
+            if os.path.exists(shop_info_html_path):
+                with open(shop_info_html_path, 'r', encoding='EUC-JP') as fp:
+                    content = fp.read()
+                # print(content)
+
+                soup = BeautifulSoup(content, 'lxml')
+
+                # shop_info_list = selector.xpath('//tr/td[@valign="top"]/font/dl/dt/text()')
+                shop_info_dl_list = soup.select('td[valign="top"] > font > dl')
+
+                if len(shop_info_dl_list) > 0:
+                    shop_info_dl = shop_info_dl_list[0]
+
+                    shop_info_dl_dt_list = shop_info_dl.select('dt')
+                    shop_info_dl_dd_list = shop_info_dl.select('dd')
+
+                    if len(shop_info_dl_dt_list) >= 2 and len(shop_info_dl_dd_list) >= 1:
+                        company_name = shop_info_dl.select('dt')[1].text.strip()
+                        shop_info_dl_dd = shop_info_dl.select('dd')[0].text.strip()
+
+                        # print(company_name)
+                        # print(shop_info_dl_dd)
+
+                        shop_info_list = [x.strip() for x in shop_info_dl_dd.split('\n')]
+
+                        if len(shop_info_list) != 6:
+                            continue
+
+                        company_tel_and_fax = shop_info_list[1]
+                        company_tel_index = company_tel_and_fax.find('TEL')
+                        company_fax_index = company_tel_and_fax.find('FAX')
+
+                        if company_tel_index >= 0 and company_fax_index >= 0:
+                            # 有tel 且 有fax
+                            company_tel = company_tel_and_fax.split('  ')[0].split(':')[-1]
+                            company_fax = company_tel_and_fax.split('  ')[1].split(':')[-1]
+                        elif company_tel_index == -1 and company_fax_index >= 0:
+                            # 有fax 且 没有tel
+                            company_tel = ''
+                            company_fax = company_tel_and_fax.split(':')[-1]
+                        elif company_tel_index >= 0 and company_fax_index == -1:
+                            # 有tel 且 没有fax
+                            company_tel = company_tel_and_fax.split(':')[-1]
+                            company_fax = ''
+
+                        # print(shop_info_list)
+                        company_address = shop_info_list[0]
+
+                        company_info_001 = shop_info_list[2].split(':')
+                        company_info_002 = shop_info_list[3].split(':')
+                        company_info_003 = shop_info_list[4].split(':')
+                        company_info_004 = shop_info_list[5].split(':')
+
+                        shop_href_txt_path = os.path.join(shop_info_md5_path, 'shop_href.txt')
+                        with open(shop_href_txt_path, 'r', encoding='utf8') as fp:
+                            shop_href = fp.read().strip()
+
+                        # temp_dict = {
+                        #     'company_name': check_str(company_name),
+                        #     'company_href': shop_href,
+                        #     'company_address': check_str(company_address),
+                        #     'company_tel': check_str(company_tel),
+                        #     'company_fax': check_str(company_fax),
+                        #     'company_representative': check_str(company_info_001[1]),
+                        #     'company_operator': check_str(company_info_002[1]),
+                        #     'company_security_officer': check_str(company_info_003[1]),
+                        #     'company_email': check_str(company_info_004[1]),
+                        # }
+
+                        temp_company_dict['company_name'] = check_str(company_name)
+                        temp_company_dict['company_address'] = check_str(company_address)
+                        temp_company_dict['company_website'] = shop_href
+                        temp_company_dict['company_tel'] = check_str(company_tel)
+                        temp_company_dict['company_fax'] = check_str(company_fax)
+                        temp_company_dict['company_representative'] = check_str(company_info_001[1])
+                        temp_company_dict['company_operator'] = check_str(company_info_002[1])
+                        temp_company_dict['company_security_officer'] = check_str(company_info_003[1])
+                        temp_company_dict['company_email'] = check_str(company_info_004[1])
+
+                        shop_info_json.append(temp_company_dict)
+
+                        print(temp_company_dict)
+        except Exception as e:
+            print(e)
+            print(shop_info_md5)
+            print(traceback.format_exc())
+            # raise e
+
+        # if len(shop_info_json) > 3:
+        #     break
+
+    with open(finally_shop_info_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(shop_info_json))
+
+
+
 if __name__ == '__main__':
     # download_types_html()
     # parse_types_file_to_types_json()
@@ -550,7 +684,8 @@ if __name__ == '__main__':
     # parse_all_type_product_list_files()
     ## download_shop_info_files() # 废弃
     # gevent_pool_requests(download_shop_info_file, get_shop_info_href_list(), gevent_pool_size=100)
-    parse_shop_info_to_json()
+    # parse_shop_info_to_json()
     # print(len(read_shop_info_json()))
     # merge_all_product_to_json()
+    merge_all_product_to_company_json()
 

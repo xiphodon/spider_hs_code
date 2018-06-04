@@ -48,7 +48,9 @@ def save_to_sql_server():
     # save_spider_all_data_to_db(conn, cur)
 
     # save_rakuten_spider_shop_info_to_db(conn, cur)
-    save_rakuten_spider_products_info_to_db(conn, cur)
+    # save_rakuten_spider_products_info_to_db(conn, cur)
+
+    save_rakuten_spider_finally_shop_to_db(conn, cur)
 
     conn.close()
 
@@ -202,6 +204,88 @@ def save_rakuten_spider_products_info_to_db(conn, cur):
             print(len(shop_md5))
             # raise e
 
+        # break
+    # conn.commit()
+    print('count:', count, ', error_count:', error_count)
+
+
+def save_rakuten_spider_finally_shop_to_db(conn, cur):
+    """
+    乐天数据整合商店公司库至数据库
+    :param conn:
+    :param cur:
+    :return:
+    """
+    data = rakuten_spider_7.read_finally_shop_info_json()
+
+    print('data', 'OK')
+
+    cur.execute("select top 1 company_website from ffd_cbec_company where data_origin_id='1' order by id desc")
+    server_company_website = cur.fetchone()
+    print(server_company_website)
+
+    is_find = False
+    if server_company_website is None:
+        is_find = True
+
+    error_count = 0
+    count = 0
+
+    for item_dict in data:
+
+        company_website = item_dict.get('company_website', '').replace("'", "''")
+
+        if not is_find:
+            if company_website == server_company_website[0]:
+                # print(company_md5)
+                is_find = True
+                continue
+            else:
+                continue
+
+        data_origin_id = '1'
+        company_product_desc = item_dict.get('company_product_desc', '').replace("'", "''")
+        company_product_type = item_dict.get('company_product_type', '').replace("'", "''")
+        company_name = item_dict.get('company_name', '').replace("'", "''")
+        company_address = item_dict.get('company_address', '').replace("'", "''")
+        company_tel = item_dict.get('company_tel', '').replace("'", "''")
+        company_fax = item_dict.get('company_fax', '').replace("'", "''")
+        company_representative = item_dict.get('company_representative', '').replace("'", "''")
+        company_operator = item_dict.get('company_operator', '').replace("'", "''")
+        company_security_officer = item_dict.get('company_security_officer', '').replace("'", "''")
+        company_email = item_dict.get('company_email', '').replace("'", "''")
+
+        sql_str = None
+        try:
+            sql_str = "insert into ffd_cbec_company(data_origin_id,company_website,company_product_desc, " \
+                      "company_product_type, company_name, company_address, company_tel, company_fax," \
+                      "company_representative, company_operator, company_security_officer, company_email)" \
+                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      % (data_origin_id, company_website, company_product_desc, company_product_type, company_name, company_address,
+                         company_tel, company_fax, company_representative, company_operator,
+                         company_security_officer, company_email)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            count += 1
+            print(company_website, 'OK', ',当前 count:', count, ', error_count:', error_count)
+            # time.sleep(0.005)
+        except Exception as e:
+            error_count += 1
+            print(e, error_count, company_website, '===================')
+            print(sql_str)
+
+            print(len(company_website))
+            print(len(company_product_desc))
+            print(len(company_product_type))
+            print(len(company_name))
+            print(len(company_address))
+            print(len(company_tel))
+            print(len(company_fax))
+            print(len(company_representative))
+            print(len(company_operator))
+            print(len(company_security_officer))
+            print(len(company_email))
+            # raise e
         # break
     # conn.commit()
     print('count:', count, ', error_count:', error_count)

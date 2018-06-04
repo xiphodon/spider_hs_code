@@ -675,6 +675,15 @@ def merge_all_product_to_company_json():
         fp.write(json.dumps(shop_info_json))
 
 
+def read_finally_shop_info_json():
+    """
+    获取最终店家信息数据
+    :return:
+    """
+    with open(finally_shop_info_json_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    return json.loads(data)
+
 
 if __name__ == '__main__':
     # download_types_html()
@@ -687,5 +696,5 @@ if __name__ == '__main__':
     # parse_shop_info_to_json()
     # print(len(read_shop_info_json()))
     # merge_all_product_to_json()
-    merge_all_product_to_company_json()
-
+    # merge_all_product_to_company_json()
+    print(read_finally_shop_info_json()[:1])

@@ -14,6 +14,7 @@ from lxml import etree
 import settings
 import json
 import time
+import traceback
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -21,7 +22,7 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric', 'glass']
-search_text = 'fabric'
+search_text = search_text_list[0]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -414,7 +415,188 @@ def parse_all_company_detail():
     解析所有的公司详情页
     :return:
     """
-    pass
+    for file_name in os.listdir(company_detail_product_dir_path):
+        try:
+            _file_name = file_name.replace('.html', '')
+            _company_id_str = file_name.split('_')[0]
+
+            file_path = os.path.join(company_detail_product_dir_path, file_name)
+
+            ## 测试代码
+            file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/fabric/ae203629_new-medical-centre-trading-llc_c.html'
+            ##
+
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+
+            # 公司head信息
+            company_name = selector.xpath('//div[@class="headerDetailsCompany"]//h1[@itemprop="name"]/text()')
+            _company_name = get_selector_text_string(company_name)
+
+            company_is_premium = selector.xpath('//div[@class="headerDetailsCompany"]/a/span/text()')
+            _company_is_premium = True if get_selector_text_string(company_is_premium) != 'none' else False
+
+            company_street_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+                                                    '//div[@class="addressCoordinates"]/p'
+                                                    '/span[@itemprop="streetAddress"]/text()')
+            _company_street_address = get_selector_text_string(company_street_address)
+
+            company_city_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+                                                  '//div[@class="addressCoordinates"]/p/text()')
+            _company_city_address = get_selector_text_string(company_city_address, index=1)
+
+            company_country_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+                                                     '//div[@class="addressCoordinates"]/p'
+                                                     '/span[@itemprop="addressCountry"]/text()')
+            _company_country_address = get_selector_text_string(company_country_address)
+
+            company_phone = selector.xpath('//div[@class="headerDetailsCompany"]'
+                                           '//div[@class="contactButton"]/a/input/@value')
+            _company_phone = get_selector_text_string(company_phone)
+
+            # 其他联系信息
+            company_website = selector.xpath('//div[@class="headerDetailsCompany"]'
+                                             '//div[@class="headerRowCoordinates"]'
+                                             '//div[@class="coordinate-item"]/a[@id="website"]/@href')
+
+            _company_website = get_selector_text_string(company_website)
+
+            #
+            # 公司内部信息
+
+            company_presentation = selector.xpath('//div[@class="tab-content"]/div[@id="presentation"]'
+                                                  '/div[contains(@class,"item")]/div')
+
+            company_keynumbers = selector.xpath('//div[@class="tab-content"]/div[@id="keynumbers"]'
+                                                '/div[contains(@class,"item")]/div')
+
+            # company_executives = selector.xpath('//div[@class="tab-content"]/div[@id="executives"]'
+            #                                     '/div[@class="TabContacts"]/div[contains(@class,"item")]'
+            #                                     '/div')
+            company_executives = selector.xpath('//div[@class="tab-content"]/div[@id="executives"]'
+                                                '/div[@class="TabContacts"]/div')
+
+            # company_activities = selector.xpath('//div[@class="tab-content"]/div[@id="activities"]'
+            #                                     '/div[@class="TabProducts"]/div[contains(@class,"item")]')
+            company_activities = selector.xpath('//div[@class="tab-content"]/div[@id="activities"]'
+                                                '/div[@class="TabProducts"]/div')
+
+            print('===========================')
+
+            print(_file_name)
+            print(_company_id_str)
+            print(_company_name)
+            print(_company_is_premium)
+            print(_company_street_address)
+            print(_company_city_address)
+            print(_company_country_address)
+            print(_company_phone)
+            print(_company_website)
+
+            print('---------------------------')
+
+            temp_company_presentation = dict([('Company Summary' if str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip().startswith('Company Summary') else str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_presentation])
+            temp_company_keynumbers = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_keynumbers])
+            temp_company_executives = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_executives])
+            temp_company_activities = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_activities])
+
+            # print(temp_company_presentation)
+            # print(temp_company_keynumbers)
+            # print(temp_company_executives)
+            # print(temp_company_activities)
+            #
+            # print('-----------------------------')
+
+            print('------- presentation --------')
+            for _key, _value in temp_company_presentation.items():
+                print('$--$--$--$')
+                print(_key, ':', _value)
+                print(parse_item_div(_key, _value[0]))
+
+            print('------- keynumbers --------')
+            for _key, _value in temp_company_keynumbers.items():
+                print(_key, ':', _value)
+
+            print('------- executives -------')
+            for _key, _value in temp_company_executives.items():
+                print(_key, ':', _value)
+
+            print('------- activities -------')
+            for _key, _value in temp_company_activities.items():
+                print(_key, ':', _value)
+
+            print('-----------------------------')
+
+        except Exception:
+            print(traceback.format_exc())
+
+        break
+
+
+def parse_item_div(tag, item_div):
+    """
+    解析单条目div的路由
+    :param tag: 当前html节点的标记
+    :param item_div: 当前html节点
+    :return:
+    """
+    # presentation
+    if tag == 'Company Summary':
+        return {'company_summary': (item_div.xpath('./span')[0].xpath('string()') if len(item_div.xpath('./span')) > 0 else 'none')}
+    elif tag == 'General Information':
+        td_list = item_div.xpath('.//tr/td')
+        td_text_list = [','.join(td_node.xpath('./text()')) if len(list(td_node)) == 0 else ','.join(td_node.xpath('./a/text()')) for td_node in td_list]
+        td_text_list = [str(i).strip() for i in td_text_list]
+        key_list = [td_text_item for idx, td_text_item in enumerate(td_text_list) if idx & 1 == 0]
+        value_list = [td_text_item for idx, td_text_item in enumerate(td_text_list) if idx & 1 == 1]
+        temp_dict = dict()
+        for _k, _v in zip(key_list, value_list):
+            temp_dict[_k] = _v
+        return {'company_general_info': temp_dict}
+    elif tag == 'Banks':
+        li_list = item_div.xpath('./ul/li')
+        li_text_list = [str(li.xpath('string()')).strip() for li in li_list]
+        return {'Banks': li_text_list}
+    elif tag == 'Export':
+        pass
+    elif tag == 'Import':
+        pass
+    elif tag == 'Certifications':
+        pass
+    elif tag == 'Brands':
+        pass
+    elif tag == 'Associations':
+        pass
+    elif tag == 'Products':
+        pass
+    elif tag == 'Company catalogues':
+        pass
+
+    # keynumbers
+    elif tag == 'Employees':
+        pass
+    elif tag == 'Turnover':
+        pass
+
+    # executives
+    elif tag == 'Executive information':
+        pass
+
+    # activities
+    elif tag == 'Activities':
+        pass
+    elif tag == 'Main activities':
+        pass
+    elif tag == 'Secondary activities':
+        pass
+    elif tag == 'Other classifications (for some countries)':
+        pass
+
+    # [other]
+    else:
+        return None
 
 
 def start():
@@ -433,8 +615,8 @@ def start():
     # download_all_company_detail_htmls(while_times=5)
 
     # 3.解析公司详情页
-    check_company_detail_keyword()
-    # parse_all_company_detail()
+    # check_company_detail_keyword()
+    parse_all_company_detail()
 
 
 if __name__ == '__main__':

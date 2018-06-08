@@ -15,6 +15,8 @@ import settings
 import json
 import time
 import traceback
+import re
+import pprint
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -37,6 +39,7 @@ home_path = r'E:\work_all\topease\company_spider_9'
 
 json_dir_path = os.path.join(home_path, 'json_dir')
 company_detail_main_keyword_json_path = os.path.join(json_dir_path, 'main_keyword.json')
+company_list_json_path = os.path.join(json_dir_path, search_text + '_company_list.json')
 
 company_list_pages_dir_path = os.path.join(home_path, 'company_list_dir')
 company_list_pages_product_dir_path = os.path.join(company_list_pages_dir_path, search_text)
@@ -415,6 +418,7 @@ def parse_all_company_detail():
     解析所有的公司详情页
     :return:
     """
+    company_list = list()
     for file_name in os.listdir(company_detail_product_dir_path):
         try:
             _file_name = file_name.replace('.html', '')
@@ -422,9 +426,10 @@ def parse_all_company_detail():
 
             file_path = os.path.join(company_detail_product_dir_path, file_name)
 
-            ## 测试代码
-            file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/fabric/ae203629_new-medical-centre-trading-llc_c.html'
-            ##
+            # ## 测试代码
+            # file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/pump/' \
+            #             r'ae200013_al-sagar-engineering-company-llc_c.html'
+            # ##
 
             with open(file_path, 'r', encoding='utf8') as fp:
                 content = fp.read()
@@ -436,12 +441,18 @@ def parse_all_company_detail():
             _company_name = get_selector_text_string(company_name)
 
             company_is_premium = selector.xpath('//div[@class="headerDetailsCompany"]/a/span/text()')
-            _company_is_premium = True if get_selector_text_string(company_is_premium) != 'none' else False
+            _company_is_premium = 1 if get_selector_text_string(company_is_premium) != 'none' else 0
+
+            company_all_address = selector.xpath('//div[@class="headerDetailsCompany"]'
+                                                 '//div[@class="addressCoordinates"]/p')
+            _company_all_address_node = company_all_address[0] if len(company_all_address) > 0 else None
+            _company_all_address = clean_spaces(_company_all_address_node.xpath('string()')) if _company_all_address_node is not None else ''
 
             company_street_address = selector.xpath('//div[@class="headerDetailsCompany"]'
                                                     '//div[@class="addressCoordinates"]/p'
-                                                    '/span[@itemprop="streetAddress"]/text()')
-            _company_street_address = get_selector_text_string(company_street_address)
+                                                    '/span[@itemprop="streetAddress"]')
+            _company_street_address_node = company_street_address[0] if len(company_street_address) > 0 else None
+            _company_street_address = clean_spaces(_company_street_address_node.xpath('string()')) if _company_street_address_node is not None else ''
 
             company_city_address = selector.xpath('//div[@class="headerDetailsCompany"]'
                                                   '//div[@class="addressCoordinates"]/p/text()')
@@ -486,53 +497,85 @@ def parse_all_company_detail():
             print('===========================')
 
             print(_file_name)
-            print(_company_id_str)
-            print(_company_name)
-            print(_company_is_premium)
-            print(_company_street_address)
-            print(_company_city_address)
-            print(_company_country_address)
-            print(_company_phone)
-            print(_company_website)
-
-            print('---------------------------')
+            # print(_company_id_str)
+            # print(_company_name)
+            # print(_company_is_premium)
+            # print(_company_all_address)
+            # print(_company_street_address)
+            # print(_company_city_address)
+            # print(_company_country_address)
+            # print(_company_phone)
+            # print(_company_website)
 
             temp_company_presentation = dict([('Company Summary' if str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip().startswith('Company Summary') else str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_presentation])
             temp_company_keynumbers = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_keynumbers])
-            temp_company_executives = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_executives])
+            temp_company_executives = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div[@class="presentation"]')[0], file_name]) for item in company_executives])
             temp_company_activities = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_activities])
 
             # print(temp_company_presentation)
             # print(temp_company_keynumbers)
             # print(temp_company_executives)
             # print(temp_company_activities)
-            #
-            # print('-----------------------------')
 
-            print('------- presentation --------')
+            # print('------- presentation --------')
+            presentation_dict = dict()
             for _key, _value in temp_company_presentation.items():
-                print('$--$--$--$')
-                print(_key, ':', _value)
-                print(parse_item_div(_key, _value[0]))
+                # print(_key, ':', _value)
+                presentation_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+            # print(presentation_dict)
 
-            print('------- keynumbers --------')
+            # print('------- keynumbers --------')
+            keynumbers_dict = dict()
             for _key, _value in temp_company_keynumbers.items():
-                print(_key, ':', _value)
+                # print(_key, ':', _value)
+                keynumbers_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+            # print(keynumbers_dict)
 
-            print('------- executives -------')
+            # print('------- executives -------')
+            executives_dict = dict()
             for _key, _value in temp_company_executives.items():
-                print(_key, ':', _value)
+                # print(_key, ':', _value)
+                executives_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+            # print(executives_dict)
 
-            print('------- activities -------')
+            # print('------- activities -------')
+            activities_dict = dict()
             for _key, _value in temp_company_activities.items():
-                print(_key, ':', _value)
+                # print(_key, ':', _value)
+                activities_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+            # print(activities_dict)
 
-            print('-----------------------------')
+            company_dict = {
+                'file_name': _file_name,
+                'company_id_str': _company_id_str,
+                'company_name': _company_name,
+                'company_is_premium': _company_is_premium,
+                'company_all_address': _company_all_address,
+                'company_street_address': _company_street_address,
+                'company_city_address': _company_city_address,
+                'company_country_address': _company_country_address,
+                'company_phone': _company_phone,
+                'company_website': _company_website,
+                'company_presentation': presentation_dict,
+                'company_keynumbers': keynumbers_dict,
+                'company_executives': executives_dict,
+                'company_activities': activities_dict
+            }
 
-        except Exception:
+            company_list.append(company_dict)
+
+            print(json.dumps(company_dict))
+
+        except Exception as e:
             print(traceback.format_exc())
+            raise e
 
-        break
+        # break
+
+    print(len(company_list))
+
+    with open(company_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_list))
 
 
 def parse_item_div(tag, item_div):
@@ -544,59 +587,185 @@ def parse_item_div(tag, item_div):
     """
     # presentation
     if tag == 'Company Summary':
-        return {'company_summary': (item_div.xpath('./span')[0].xpath('string()') if len(item_div.xpath('./span')) > 0 else 'none')}
+        return 'company_summary', clean_wrong_charter(clean_spaces(item_div.xpath('./span')[0].xpath('string()') if len(item_div.xpath('./span')) > 0 else 'none', '\n'))
+
     elif tag == 'General Information':
         td_list = item_div.xpath('.//tr/td')
         td_text_list = [','.join(td_node.xpath('./text()')) if len(list(td_node)) == 0 else ','.join(td_node.xpath('./a/text()')) for td_node in td_list]
         td_text_list = [str(i).strip() for i in td_text_list]
         key_list = [td_text_item for idx, td_text_item in enumerate(td_text_list) if idx & 1 == 0]
         value_list = [td_text_item for idx, td_text_item in enumerate(td_text_list) if idx & 1 == 1]
+
+        if len(key_list) != len(value_list):
+            raise Exception(tag + ': len(key_list) != len(value_list)')
+
         temp_dict = dict()
         for _k, _v in zip(key_list, value_list):
-            temp_dict[_k] = _v
-        return {'company_general_info': temp_dict}
+            _k = clean_spaces(clean_wrong_charter(_k))
+            _v = clean_spaces(clean_wrong_charter(_v))
+            temp_dict[_k] = (temp_dict.get(_k, '') + ',' + _v) if temp_dict.get(_k, '') != '' else _v
+        return 'company_general_info', temp_dict
+
     elif tag == 'Banks':
         li_list = item_div.xpath('./ul/li')
         li_text_list = [str(li.xpath('string()')).strip() for li in li_list]
-        return {'Banks': li_text_list}
-    elif tag == 'Export':
-        pass
-    elif tag == 'Import':
-        pass
+        return 'Banks', li_text_list
+
+    elif tag == 'Export' or tag == 'Import':
+        span_list = item_div.xpath('./div/span')
+        span_text_list = [str(span.xpath('string()')).strip() for span in span_list]
+        key_list = [span_text_item.rstrip(' :') for idx, span_text_item in enumerate(span_text_list) if idx & 1 == 0]
+        value_list = [span_text_item for idx, span_text_item in enumerate(span_text_list) if idx & 1 == 1]
+
+        if len(key_list) != len(value_list):
+            raise Exception(tag + ': len(key_list) != len(value_list)')
+
+        temp_dict = dict()
+        for _k, _v in zip(key_list, value_list):
+            _k = clean_spaces(clean_wrong_charter(_k))
+            _v = clean_spaces(clean_wrong_charter(_v))
+            temp_dict[_k] = (temp_dict.get(_k, '') + ',' + _v) if temp_dict.get(_k, '') != '' else _v
+        return tag, temp_dict
+
     elif tag == 'Certifications':
-        pass
+        p_list = item_div.xpath('./ul/li/p')
+        p_text_list = [str(p.xpath('string()')).strip() for p in p_list]
+        key_list = [p_text_item for idx, p_text_item in enumerate(p_text_list) if idx & 1 == 0]
+        value_list = [p_text_item for idx, p_text_item in enumerate(p_text_list) if idx & 1 == 1]
+
+        if len(key_list) != len(value_list):
+            raise Exception(tag + ': len(key_list) != len(value_list)')
+
+        temp_list = list()
+        for _k, _v in zip(key_list, value_list):
+            _k = clean_spaces(clean_wrong_charter(_k))
+            _v = clean_spaces(clean_wrong_charter(_v))
+            if _k != '':
+                temp_dict = dict()
+                temp_dict[_k] = _v
+                temp_list.append(temp_dict)
+
+        return 'Certifications', temp_list
+
     elif tag == 'Brands':
-        pass
+        li_list = item_div.xpath('./ul/li')
+        li_text_list = [clean_spaces(li.xpath('string()')) for li in li_list]
+        return 'Brands', li_text_list
+
     elif tag == 'Associations':
-        pass
+        strong_text_list = item_div.xpath('./ul/li')
+        strong_text_list = [str(li.xpath('string()')).strip() for li in strong_text_list]
+        return 'Associations', strong_text_list
+
     elif tag == 'Products':
-        pass
+        a_list = item_div.xpath('./div[contains(@class,"products")]/div/div[contains(@class,"product")]/ul/li/div[contains(@class,"product_content")]/a')
+        temp_list = list()
+        for a_node in a_list:
+            product_desc = ','.join(a_node.xpath('./p/@title'))
+            temp_list.append(product_desc)
+        return 'Products', temp_list
+
     elif tag == 'Company catalogues':
-        pass
+        catalog_href_list = item_div.xpath('.//ul/li/a/@href')
+        return 'Company catalogues', catalog_href_list
 
     # keynumbers
-    elif tag == 'Employees':
-        pass
-    elif tag == 'Turnover':
-        pass
+    elif tag == 'Employees' or tag == 'Turnover':
+        p_list = item_div.xpath('./ul/li/p')
+        p_text_list = [str(p.xpath('string()')).strip() for p in p_list]
+        key_list = [p_text_item for idx, p_text_item in enumerate(p_text_list) if idx & 1 == 0]
+        value_list = [p_text_item for idx, p_text_item in enumerate(p_text_list) if idx & 1 == 1]
+
+        if len(key_list) != len(value_list):
+            raise Exception(tag + ': len(key_list) != len(value_list)')
+
+        temp_list = list()
+        for _k, _v in zip(key_list, value_list):
+            _k = clean_spaces(clean_wrong_charter(_k))
+            _v = clean_spaces(clean_wrong_charter(_v))
+            if _k != '':
+                temp_dict = dict()
+                temp_dict[_k] = _v
+                temp_list.append(temp_dict)
+
+        return tag, temp_list
 
     # executives
     elif tag == 'Executive information':
-        pass
+        li_div_list = item_div.xpath('./ul/li/div')
+        temp_list = list()
+        for li_div_node in li_div_list:
+            p_list = li_div_node.xpath('./div/p')
+            p_text_list = [str(p.xpath('string()')).strip() for p in p_list]
+            if len(p_text_list) == 2:
+                name = clean_wrong_charter(clean_spaces(p_text_list[0]))
+                job = clean_wrong_charter(clean_spaces(p_text_list[1]))
+                temp_dict = {
+                    'name': name,
+                    'job': job
+                }
+                temp_list.append(temp_dict)
+        return 'Executive information', temp_list
 
     # activities
-    elif tag == 'Activities':
-        pass
-    elif tag == 'Main activities':
-        pass
-    elif tag == 'Secondary activities':
-        pass
+    elif tag == 'Activities' or tag == 'Main activities' or tag == 'Secondary activities':
+        li_list = item_div.xpath('./div[@class="jstree-classic"]/ul/li')
+        temp_list = list()
+        for item_li in li_list:
+            li_a_text_list = item_li.xpath('./a/text()')
+            li_a_text = clean_wrong_charter(clean_spaces(''.join(li_a_text_list)))
+
+            li_ul_li_a_text_list = item_li.xpath('./ul/li/a/text()')
+            li_ul_li_a_text_list = [clean_wrong_charter(clean_spaces(i)) for i in li_ul_li_a_text_list]
+
+            temp_dict = {
+                li_a_text: li_ul_li_a_text_list
+            }
+            temp_list.append(temp_dict)
+
+        tag = 'Main activities' if tag == 'Activities' else tag
+        return tag, temp_list
+
     elif tag == 'Other classifications (for some countries)':
-        pass
+        p_list = item_div.xpath('./div/p')
+        if len(p_list) > 0:
+            p_node = p_list[0]
+            key_list = p_node.xpath('./strong/text()')
+            value_list = p_node.xpath('./span/text()')
+
+            temp_list = list()
+            for _k, _v in zip(key_list, value_list):
+                _k = clean_spaces(clean_wrong_charter(str(_k).rstrip(' :')))
+                _v = clean_spaces(clean_wrong_charter(_v))
+                if _k != '':
+                    temp_dict = dict()
+                    temp_dict[_k] = _v
+                    temp_list.append(temp_dict)
+        return 'Other classifications', temp_list
 
     # [other]
     else:
-        return None
+        print('this key is no exists : ', tag)
+        return None, tag
+
+
+def clean_spaces(str_text, replace_str=' '):
+    """
+    清楚字符串中连续的空格
+    :param str_text:
+    :param replace_str:
+    :return:
+    """
+    return re.sub(r'\s{2,}', replace_str, str(str_text)).strip()
+
+
+def clean_wrong_charter(str_text):
+    """
+    清楚错误字符
+    :param str_text:
+    :return:
+    """
+    return str(str_text).replace('\xa0', ' ').strip()
 
 
 def start():
@@ -614,7 +783,7 @@ def start():
     # 2.下载公司详情页
     # download_all_company_detail_htmls(while_times=5)
 
-    # 3.解析公司详情页
+    # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
     parse_all_company_detail()
 

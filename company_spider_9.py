@@ -16,7 +16,6 @@ import json
 import time
 import traceback
 import re
-import pprint
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -24,7 +23,7 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric', 'glass']
-search_text = search_text_list[0]
+search_text = search_text_list[-1]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -38,7 +37,7 @@ search_url = home_url + r'/searchCompanies?' \
 home_path = r'E:\work_all\topease\company_spider_9'
 
 json_dir_path = os.path.join(home_path, 'json_dir')
-company_detail_main_keyword_json_path = os.path.join(json_dir_path, 'main_keyword.json')
+company_detail_main_keyword_json_path = os.path.join(json_dir_path, search_text + '_main_keyword.json')
 company_list_json_path = os.path.join(json_dir_path, search_text + '_company_list.json')
 
 company_list_pages_dir_path = os.path.join(home_path, 'company_list_dir')
@@ -418,18 +417,22 @@ def parse_all_company_detail():
     解析所有的公司详情页
     :return:
     """
+    debug = False
+    debug_size = 100
+
     company_list = list()
     for file_name in os.listdir(company_detail_product_dir_path):
+        print('\r' + file_name, end='')
         try:
             _file_name = file_name.replace('.html', '')
             _company_id_str = file_name.split('_')[0]
 
             file_path = os.path.join(company_detail_product_dir_path, file_name)
 
-            # ## 测试代码
-            # file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/pump/' \
-            #             r'ae200013_al-sagar-engineering-company-llc_c.html'
-            # ##
+            # 测试代码
+            if debug:
+                file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/pump/' \
+                            r'ae200013_al-sagar-engineering-company-llc_c.html'
 
             with open(file_path, 'r', encoding='utf8') as fp:
                 content = fp.read()
@@ -494,9 +497,9 @@ def parse_all_company_detail():
             company_activities = selector.xpath('//div[@class="tab-content"]/div[@id="activities"]'
                                                 '/div[@class="TabProducts"]/div')
 
-            print('===========================')
+            # print('===========================')
 
-            print(_file_name)
+            # print(_file_name)
             # print(_company_id_str)
             # print(_company_name)
             # print(_company_is_premium)
@@ -520,29 +523,33 @@ def parse_all_company_detail():
             # print('------- presentation --------')
             presentation_dict = dict()
             for _key, _value in temp_company_presentation.items():
-                # print(_key, ':', _value)
-                presentation_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+                tag, v = parse_item_div(_key, _value[0])
+                if tag is not None:
+                    presentation_dict[tag] = v
             # print(presentation_dict)
 
             # print('------- keynumbers --------')
             keynumbers_dict = dict()
             for _key, _value in temp_company_keynumbers.items():
-                # print(_key, ':', _value)
-                keynumbers_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+                tag, v = parse_item_div(_key, _value[0])
+                if tag is not None:
+                    keynumbers_dict[tag] = v
             # print(keynumbers_dict)
 
             # print('------- executives -------')
             executives_dict = dict()
             for _key, _value in temp_company_executives.items():
-                # print(_key, ':', _value)
-                executives_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+                tag, v = parse_item_div(_key, _value[0])
+                if tag is not None:
+                    executives_dict[tag] = v
             # print(executives_dict)
 
             # print('------- activities -------')
             activities_dict = dict()
             for _key, _value in temp_company_activities.items():
-                # print(_key, ':', _value)
-                activities_dict[parse_item_div(_key, _value[0])[0]] = parse_item_div(_key, _value[0])[1]
+                tag, v = parse_item_div(_key, _value[0])
+                if tag is not None:
+                    activities_dict[tag] = v
             # print(activities_dict)
 
             company_dict = {
@@ -564,13 +571,16 @@ def parse_all_company_detail():
 
             company_list.append(company_dict)
 
-            print(json.dumps(company_dict))
+            # print(json.dumps(company_dict))
 
         except Exception as e:
             print(traceback.format_exc())
-            raise e
+            if debug:
+                raise e
 
-        # break
+        if debug:
+            if len(company_list) > debug_size:
+                break
 
     print(len(company_list))
 
@@ -745,7 +755,9 @@ def parse_item_div(tag, item_div):
 
     # [other]
     else:
+        print()
         print('this key is no exists : ', tag)
+        print('-----------------------------')
         return None, tag
 
 
@@ -768,6 +780,27 @@ def clean_wrong_charter(str_text):
     return str(str_text).replace('\xa0', ' ').strip()
 
 
+def read_product_company_list_json():
+    """
+    读取产品json
+    :return:
+    """
+    with open(company_list_json_path, 'r', encoding='utf8') as fp:
+        data = fp.read()
+    return json.loads(data)
+
+
+def get_company_list_json():
+    """
+    获取公司列表json
+    :return:
+    """
+    data_json = read_product_company_list_json()
+    data_json_len = len(data_json)
+    print(data_json_len)
+    print(data_json[:20] if data_json_len > 20 else data_json[:data_json_len])
+
+
 def start():
     """
     开始采集
@@ -786,6 +819,9 @@ def start():
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
     parse_all_company_detail()
+
+    # 4.读取该产品的公司列表json
+    # get_company_list_json()
 
 
 if __name__ == '__main__':

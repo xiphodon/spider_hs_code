@@ -23,7 +23,7 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric', 'glass']
-search_text = search_text_list[-1]
+search_text = search_text_list[0]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -818,10 +818,10 @@ def start():
 
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
-    parse_all_company_detail()
+    # parse_all_company_detail()
 
     # 4.读取该产品的公司列表json
-    # get_company_list_json()
+    get_company_list_json()
 
 
 if __name__ == '__main__':

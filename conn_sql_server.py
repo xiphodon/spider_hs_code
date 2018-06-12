@@ -16,6 +16,7 @@ import company_spider_6
 import json
 import merge_all_spider_dada
 import rakuten_spider_7
+import company_spider_9
 
 
 # # settings.py 文件
@@ -50,7 +51,9 @@ def save_to_sql_server():
     # save_rakuten_spider_shop_info_to_db(conn, cur)
     # save_rakuten_spider_products_info_to_db(conn, cur)
 
-    save_rakuten_spider_finally_shop_to_db(conn, cur)
+    # save_rakuten_spider_finally_shop_to_db(conn, cur)
+
+    save_kompass_company_spider_to_db(conn, cur)
 
     conn.close()
 
@@ -782,6 +785,69 @@ def check_problem_data():
             print(item_dict)
             print(check_dict(item_dict))
             break
+
+
+def check_kompass_company_is_exists(conn, cur, company_id_str):
+    """
+    检查kompass该公司是否存在
+    :return:
+    """
+    sql = "SELECT TOP 1 company_id_str FROM ffd_b2b_company WHERE company_id_str='{0}'".format(company_id_str,)
+
+    print(sql)
+
+    cur.execute(sql)
+    server_company_id_str = cur.fetchone()
+
+    if server_company_id_str is None:
+        return False
+
+    return True
+
+
+def save_kompass_company_spider_to_db(conn, cur):
+    """
+    kompass公司信息存储至sqlserver
+    :param conn:
+    :param cur:
+    :return:
+    """
+    data = company_spider_9.read_product_company_list_json()
+    # print(check_kompass_company_is_exists(conn, cur, 'us110'))
+
+    for i in data:
+        i = dict(i)
+        file_name = i.get('file_name', '')
+        company_id_str = i.get('company_id_str', '')
+        company_name = i.get('company_name', '')
+        company_is_premium = i.get('company_is_premium', 0)
+        company_all_address = i.get('company_all_address', '')
+        company_street_address = i.get('company_street_address', '')
+        company_city_address = i.get('company_city_address', '')
+        company_country_address = i.get('company_country_address', '')
+        company_phone = i.get('company_phone', '')
+
+        company_presentation = i.get('company_presentation', dict())
+        _company_website_1 = company_presentation.get('company_general_info', dict()).get('Website', '')
+        _company_website_2 = i.get('company_website', '')
+        company_website = _company_website_1 if _company_website_1 == _company_website_2 else ','.join([_company_website_1, _company_website_2]).strip(',')
+        company_summary = company_presentation.get('company_summary', '')
+        company_fax = company_presentation.get('company_general_info', dict()).get('company_fax', '')
+
+        company_keynumbers = i.get('company_keynumbers', dict())
+        company_executives = i.get('company_executives', dict())
+        company_activities = i.get('company_activities', dict())
+
+        ###
+
+        data_origin_id = 2
+        create_datetime = '2018-06-12 00:00:00'
+        update_datetime = '2018-06-12 00:00:00'
+        update_version = 1
+
+
+
+        break
 
 
 if __name__ == '__main__':

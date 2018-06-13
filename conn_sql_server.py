@@ -815,39 +815,93 @@ def save_kompass_company_spider_to_db(conn, cur):
     data = company_spider_9.read_product_company_list_json()
     # print(check_kompass_company_is_exists(conn, cur, 'us110'))
 
+    count = 0
+    error_count = 0
     for i in data:
         i = dict(i)
-        file_name = i.get('file_name', '')
-        company_id_str = i.get('company_id_str', '')
-        company_name = i.get('company_name', '')
+        company_id_str = i.get('company_id_str', '').replace("'", "''")
+
+        if check_kompass_company_is_exists(conn, cur, company_id_str):
+            continue
+
+        file_name = i.get('file_name', '').replace("'", "''")
+        company_name = i.get('company_name', '').replace("'", "''")
         company_is_premium = i.get('company_is_premium', 0)
-        company_all_address = i.get('company_all_address', '')
-        company_street_address = i.get('company_street_address', '')
-        company_city_address = i.get('company_city_address', '')
-        company_country_address = i.get('company_country_address', '')
-        company_phone = i.get('company_phone', '')
+        company_all_address = i.get('company_all_address', '').replace("'", "''")
+        company_street_address = i.get('company_street_address', '').replace("'", "''")
+        company_city_address = i.get('company_city_address', '').replace("'", "''")
+        company_country_address = i.get('company_country_address', '').replace("'", "''")
+        company_phone = i.get('company_phone', '').replace("'", "''")
 
         company_presentation = i.get('company_presentation', dict())
-        _company_website_1 = company_presentation.get('company_general_info', dict()).get('Website', '')
-        _company_website_2 = i.get('company_website', '')
+        _company_website_1 = company_presentation.get('company_general_info', dict()).get('Website', '').replace("'", "''")
+        _company_website_2 = i.get('company_website', '').replace("'", "''")
         company_website = _company_website_1 if _company_website_1 == _company_website_2 else ','.join([_company_website_1, _company_website_2]).strip(',')
-        company_summary = company_presentation.get('company_summary', '')
-        company_fax = company_presentation.get('company_general_info', dict()).get('company_fax', '')
+        company_summary = company_presentation.get('company_summary', '').replace("'", "''")
+        company_fax = company_presentation.get('company_general_info', dict()).get('company_fax', '').replace("'", "''")
 
+        company_presentation.pop('company_summary', '')
         company_keynumbers = i.get('company_keynumbers', dict())
         company_executives = i.get('company_executives', dict())
         company_activities = i.get('company_activities', dict())
 
+        company_presentation = json.dumps(company_presentation).replace("'", "''")
+        company_keynumbers = json.dumps(company_keynumbers).replace("'", "''")
+        company_executives = json.dumps(company_executives).replace("'", "''")
+        company_activities = json.dumps(company_activities).replace("'", "''")
+
         ###
 
         data_origin_id = 2
-        create_datetime = '2018-06-12 00:00:00'
-        update_datetime = '2018-06-12 00:00:00'
+        create_datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        update_datetime = create_datetime
         update_version = 1
 
+        # print(data_origin_id)
+        # print(file_name)
+        # print(company_id_str)
+        # print(company_name)
+        # print(company_is_premium)
+        # print(company_all_address)
+        # print(company_street_address)
+        # print(company_city_address)
+        # print(company_country_address)
+        # print(company_phone)
+        # print(company_website)
+        # print(company_summary)
+        # print(company_fax)
+        # print(company_presentation)
+        # print(company_keynumbers)
+        # print(company_executives)
+        # print(company_activities)
+        # print(create_datetime)
+        # print(update_datetime)
+        # print(update_version)
 
+        try:
+            sql_str = "insert into ffd_b2b_company(data_origin_id,file_name,company_id_str,company_name," \
+                      "company_is_premium,company_all_address,company_street_address,company_city_address," \
+                      "company_country_address,company_phone,company_website,company_summary,company_fax," \
+                      "company_presentation,company_keynumbers,company_executives,company_activities," \
+                      "create_datetime,update_datetime,update_version) " \
+                      "values(N'%d',N'%s',N'%s',N'%s',N'%d',N'%s',N'%s',N'%s',N'%s',N'%s'," \
+                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%d')"\
+                      % (data_origin_id, file_name, company_id_str, company_name
+                         , company_is_premium, company_all_address, company_street_address, company_city_address
+                         , company_country_address, company_phone, company_website, company_summary, company_fax
+                         , company_presentation, company_keynumbers, company_executives, company_activities
+                         , create_datetime, update_datetime, update_version)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            count += 1
+            print(company_id_str, 'OK', ',当前 count:', count, ', error_count:', error_count)
 
-        break
+        except Exception as e:
+            error_count += 1
+            print(e, error_count, company_id_str, '===================')
+            # raise e
+
+        # break
 
 
 if __name__ == '__main__':

@@ -23,7 +23,7 @@ headers = {
 }
 
 search_text_list = ['pump', 'fabric', 'glass']
-search_text = search_text_list[0]
+search_text = search_text_list[2]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -313,7 +313,7 @@ def check_company_detail_keyword():
         # _company_name = get_selector_text_string(company_name)
         #
         # company_is_premium = selector.xpath('//div[@class="headerDetailsCompany"]/a/span/text()')
-        # _company_is_premium = True if get_selector_text_string(company_is_premium) != 'none' else False
+        # _company_is_premium = True if get_selector_text_string(company_is_premium) != '' else False
         #
         # company_street_address = selector.xpath('//div[@class="headerDetailsCompany"]'
         #                                         '//div[@class="addressCoordinates"]/p'
@@ -409,7 +409,7 @@ def get_selector_text_string(selector_text_list, index=0):
     :param index: 需要选择的索引
     :return:
     """
-    return str(selector_text_list[index]).strip() if len(selector_text_list) > index else 'none'
+    return str(selector_text_list[index]).strip() if len(selector_text_list) > index else ''
 
 
 def parse_all_company_detail():
@@ -444,7 +444,7 @@ def parse_all_company_detail():
             _company_name = get_selector_text_string(company_name)
 
             company_is_premium = selector.xpath('//div[@class="headerDetailsCompany"]/a/span/text()')
-            _company_is_premium = 1 if get_selector_text_string(company_is_premium) != 'none' else 0
+            _company_is_premium = 1 if get_selector_text_string(company_is_premium) != '' else 0
 
             company_all_address = selector.xpath('//div[@class="headerDetailsCompany"]'
                                                  '//div[@class="addressCoordinates"]/p')
@@ -597,7 +597,7 @@ def parse_item_div(tag, item_div):
     """
     # presentation
     if tag == 'Company Summary':
-        return 'company_summary', clean_wrong_charter(clean_spaces(item_div.xpath('./span')[0].xpath('string()') if len(item_div.xpath('./span')) > 0 else 'none', '\n'))
+        return 'company_summary', clean_wrong_charter(clean_spaces(item_div.xpath('./span')[0].xpath('string()') if len(item_div.xpath('./span')) > 0 else '', '\n'))
 
     elif tag == 'General Information':
         td_list = item_div.xpath('.//tr/td')

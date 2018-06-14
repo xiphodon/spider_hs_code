@@ -793,9 +793,7 @@ def check_kompass_company_is_exists(conn, cur, company_id_str):
     :return:
     """
     sql = "SELECT TOP 1 company_id_str FROM ffd_b2b_company WHERE company_id_str='{0}'".format(company_id_str,)
-
-    print(sql)
-
+    # print(sql)
     cur.execute(sql)
     server_company_id_str = cur.fetchone()
 
@@ -813,15 +811,18 @@ def save_kompass_company_spider_to_db(conn, cur):
     :return:
     """
     data = company_spider_9.read_product_company_list_json()
-    # print(check_kompass_company_is_exists(conn, cur, 'us110'))
+    print('len(data)=', len(data))
 
     count = 0
     error_count = 0
+    error_id_list = list()
+    exists_id_list = list()
     for i in data:
         i = dict(i)
         company_id_str = i.get('company_id_str', '').replace("'", "''")
 
         if check_kompass_company_is_exists(conn, cur, company_id_str):
+            exists_id_list.append(company_id_str)
             continue
 
         file_name = i.get('file_name', '').replace("'", "''")
@@ -834,11 +835,10 @@ def save_kompass_company_spider_to_db(conn, cur):
         company_phone = i.get('company_phone', '').replace("'", "''")
 
         company_presentation = i.get('company_presentation', dict())
-        _company_website_1 = company_presentation.get('company_general_info', dict()).get('Website', '').replace("'", "''")
+        company_website = company_presentation.get('company_general_info', dict()).get('Website', '').replace("'", "''")
         _company_website_2 = i.get('company_website', '').replace("'", "''")
-        company_website = _company_website_1 if _company_website_1 == _company_website_2 else ','.join([_company_website_1, _company_website_2]).strip(',')
         company_summary = company_presentation.get('company_summary', '').replace("'", "''")
-        company_fax = company_presentation.get('company_general_info', dict()).get('company_fax', '').replace("'", "''")
+        company_fax = company_presentation.get('company_general_info', dict()).get('Fax', '').replace("'", "''")
 
         company_presentation.pop('company_summary', '')
         company_keynumbers = i.get('company_keynumbers', dict())
@@ -856,6 +856,7 @@ def save_kompass_company_spider_to_db(conn, cur):
         create_datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         update_datetime = create_datetime
         update_version = 1
+        create_tag = company_spider_9.search_text
 
         # print(data_origin_id)
         # print(file_name)
@@ -877,31 +878,36 @@ def save_kompass_company_spider_to_db(conn, cur):
         # print(create_datetime)
         # print(update_datetime)
         # print(update_version)
+        # print(create_tag)
 
         try:
             sql_str = "insert into ffd_b2b_company(data_origin_id,file_name,company_id_str,company_name," \
                       "company_is_premium,company_all_address,company_street_address,company_city_address," \
                       "company_country_address,company_phone,company_website,company_summary,company_fax," \
                       "company_presentation,company_keynumbers,company_executives,company_activities," \
-                      "create_datetime,update_datetime,update_version) " \
+                      "create_datetime,update_datetime,update_version,create_tag) " \
                       "values(N'%d',N'%s',N'%s',N'%s',N'%d',N'%s',N'%s',N'%s',N'%s',N'%s'," \
-                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%d')"\
+                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%d', N'%s')"\
                       % (data_origin_id, file_name, company_id_str, company_name
                          , company_is_premium, company_all_address, company_street_address, company_city_address
                          , company_country_address, company_phone, company_website, company_summary, company_fax
                          , company_presentation, company_keynumbers, company_executives, company_activities
-                         , create_datetime, update_datetime, update_version)
+                         , create_datetime, update_datetime, update_version, create_tag)
             cur.execute(sql_str.encode('utf8'))
             conn.commit()
             count += 1
-            print(company_id_str, 'OK', ',当前 count:', count, ', error_count:', error_count)
+            print(company_id_str, create_tag, 'OK', ',当前 count:', count, ', error_count:', error_count)
 
         except Exception as e:
             error_count += 1
-            print(e, error_count, company_id_str, '===================')
+            print(e, error_count, company_id_str, create_tag, '===================')
+            error_id_list.append(company_id_str)
             # raise e
 
-        # break
+        # if count > 20:
+        #     break
+    print('异常数据id列表：', error_id_list)
+    print('已存在数据id列表：', exists_id_list)
 
 
 if __name__ == '__main__':

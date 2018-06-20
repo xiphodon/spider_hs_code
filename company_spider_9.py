@@ -22,8 +22,8 @@ headers = {
     'Connection': 'keep-alive'
 }
 
-search_text_list = ['pump', 'fabric', 'glass']
-search_text = search_text_list[2]
+search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery']
+search_text = search_text_list[-1]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -215,19 +215,21 @@ def download_this_page_company_detail(url):
         company_detail_path = os.path.join(company_detail_product_dir_path, company_detail_name)
 
         min_file_size = 106 * 1024
+        error_file_size = 5 * 1024
         if os.path.exists(company_detail_path) and os.path.getsize(company_detail_path) > min_file_size:
             print('page:' + company_detail_name + '-------- exists')
         else:
             result = while_session_get(url)
 
-            with open(company_detail_path, 'w', encoding='utf8') as fp:
-                fp.write(result.text)
+            if len(result.text) > error_file_size:
+                with open(company_detail_path, 'w', encoding='utf8') as fp:
+                    fp.write(result.text)
 
-            if os.path.getsize(company_detail_path) < min_file_size:
-                print('page:' + company_detail_name + '-------- this page html size < ' + str(min_file_size/1024)
-                      + 'k  !!!!!!!!!!')
-            else:
-                print('page:' + company_detail_name + '-------- download OK')
+                if os.path.getsize(company_detail_path) < min_file_size:
+                    print('page:' + company_detail_name + '-------- this page html size < ' + str(min_file_size/1024)
+                          + 'k  !!!!!!!!!!')
+                else:
+                    print('page:' + company_detail_name + '-------- download OK')
     except Exception as e:
         print(e)
 
@@ -811,17 +813,17 @@ def start():
     # download_frist_html()
     # parse_first_html()
     # # download_company_list_pages() # 废弃
-    # download_all_company_list_htmls(while_times=5)
+    # download_all_company_list_htmls(while_times=50)
 
     # 2.下载公司详情页
-    # download_all_company_detail_htmls(while_times=5)
+    download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
     # parse_all_company_detail()
 
     # 4.读取该产品的公司列表json
-    get_company_list_json()
+    # get_company_list_json()
 
 
 if __name__ == '__main__':

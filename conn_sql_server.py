@@ -833,6 +833,9 @@ def save_kompass_company_spider_to_db(conn, cur):
         company_city_address = i.get('company_city_address', '').replace("'", "''")
         company_country_address = i.get('company_country_address', '').replace("'", "''")
         company_phone = i.get('company_phone', '').replace("'", "''")
+        company_country_short = i.get('company_country_short', '').replace("'", "''")
+        company_latitude = i.get('company_latitude', '').replace("'", "''")
+        company_longitude = i.get('company_longitude', '').replace("'", "''")
 
         company_presentation = i.get('company_presentation', dict())
         company_website = company_presentation.get('company_general_info', dict()).get('Website', '').replace("'", "''")
@@ -852,7 +855,7 @@ def save_kompass_company_spider_to_db(conn, cur):
 
         ###
 
-        data_origin_id = 2
+        data_origin_id = 2  # kompass
         create_datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         update_datetime = create_datetime
         update_version = 1
@@ -885,14 +888,17 @@ def save_kompass_company_spider_to_db(conn, cur):
                       "company_is_premium,company_all_address,company_street_address,company_city_address," \
                       "company_country_address,company_phone,company_website,company_summary,company_fax," \
                       "company_presentation,company_keynumbers,company_executives,company_activities," \
-                      "create_datetime,update_datetime,update_version,create_tag) " \
+                      "create_datetime,update_datetime,update_version,create_tag,company_country_short," \
+                      "company_latitude,company_longitude) " \
                       "values(N'%d',N'%s',N'%s',N'%s',N'%d',N'%s',N'%s',N'%s',N'%s',N'%s'," \
-                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%d', N'%s')"\
+                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%d', N'%s'," \
+                      "N'%s', N'%s', N'%s')"\
                       % (data_origin_id, file_name, company_id_str, company_name
                          , company_is_premium, company_all_address, company_street_address, company_city_address
                          , company_country_address, company_phone, company_website, company_summary, company_fax
                          , company_presentation, company_keynumbers, company_executives, company_activities
-                         , create_datetime, update_datetime, update_version, create_tag)
+                         , create_datetime, update_datetime, update_version, create_tag, company_country_short
+                         , company_latitude, company_longitude)
             cur.execute(sql_str.encode('utf8'))
             conn.commit()
             count += 1

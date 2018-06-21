@@ -17,6 +17,7 @@ import time
 import traceback
 import re
 
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
     'Connection': 'keep-alive'
@@ -49,7 +50,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
-pool_size = 1500
+pool_size = 3500
 page_total = -1
 overwrite = False
 
@@ -441,6 +442,16 @@ def parse_all_company_detail():
 
             selector = etree.HTML(content)
 
+            # 公司国家缩写、公司定位信息
+            company_country_short = selector.xpath('//input[@id="company-country"]/@value')
+            _company_country_short = get_selector_text_string(company_country_short)
+
+            company_latitude = selector.xpath('//input[@id="company-latitude"]/@value')
+            _company_latitude = get_selector_text_string(company_latitude)
+
+            company_longitude = selector.xpath('//input[@id="company-longitude"]/@value')
+            _company_longitude = get_selector_text_string(company_longitude)
+
             # 公司head信息
             company_name = selector.xpath('//div[@class="headerDetailsCompany"]//h1[@itemprop="name"]/text()')
             _company_name = get_selector_text_string(company_name)
@@ -511,6 +522,9 @@ def parse_all_company_detail():
             # print(_company_country_address)
             # print(_company_phone)
             # print(_company_website)
+            # print(_company_country_short)
+            # print(_company_latitude)
+            # print(_company_longitude)
 
             temp_company_presentation = dict([('Company Summary' if str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip().startswith('Company Summary') else str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_presentation])
             temp_company_keynumbers = dict([(str(item.xpath('./h3/text()')[0]).replace('\xa0', ' ').strip(), [item.xpath('./div')[0], file_name]) for item in company_keynumbers])
@@ -559,6 +573,9 @@ def parse_all_company_detail():
                 'company_id_str': _company_id_str,
                 'company_name': _company_name,
                 'company_is_premium': _company_is_premium,
+                'company_country_short': _company_country_short,
+                'company_latitude': _company_latitude,
+                'company_longitude': _company_longitude,
                 'company_all_address': _company_all_address,
                 'company_street_address': _company_street_address,
                 'company_city_address': _company_city_address,

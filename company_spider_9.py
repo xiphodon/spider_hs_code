@@ -209,6 +209,10 @@ def download_this_page_company_detail(url):
     """
     try:
         # print(url)
+        if url is None:
+            print('url is None')
+            return
+
         url_split_list = str(url).split(r'/')
         company_id_str = url_split_list[-2]
         company_name_str = url_split_list[-3]
@@ -217,8 +221,18 @@ def download_this_page_company_detail(url):
 
         min_file_size = 106 * 1024
         error_file_size = 5 * 1024
-        if os.path.exists(company_detail_path) and os.path.getsize(company_detail_path) > min_file_size:
-            print('page:' + company_detail_name + '-------- exists')
+        # min_file_size = error_file_size  # 5k以下才请求数据（按需放开条件）
+
+        file_is_exists = os.path.exists(company_detail_path)
+
+        if file_is_exists and os.path.getsize(company_detail_path) > min_file_size:
+            # print('page:' + company_detail_name + '-------- exists')
+            print('file exists -- big file')
+
+        elif file_is_exists and detail_page_is_success(company_detail_path):
+            # print('page:' + company_detail_name + '-------- exists')
+            print('file exists -- small file')
+
         else:
             result = while_session_get(url)
 
@@ -227,10 +241,14 @@ def download_this_page_company_detail(url):
                     fp.write(result.text)
 
                 if os.path.getsize(company_detail_path) < min_file_size:
-                    print('page:' + company_detail_name + '-------- this page html size < ' + str(min_file_size/1024)
-                          + 'k  !!!!!!!!!!')
+                    # print('page:' + company_detail_name + '-------- this page html size < ' + str(min_file_size/1024)
+                    #       + 'k  !!!!!!!!!!')
+                    if not detail_page_is_success(company_detail_path):
+                        return url
                 else:
                     print('page:' + company_detail_name + '-------- download OK')
+            else:
+                return url
     except Exception as e:
         print(e)
 
@@ -263,9 +281,24 @@ def download_all_company_detail_htmls(while_times=3):
 
     print('\n', pages, count)
 
+    retry_urls_list = list()
     for i in range(while_times):
-        print('第' + str(i + 1) + '轮爬取')
-        gevent_pool_requests(download_this_page_company_detail, all_company_detail_urls_list)
+        print('第' + str(i + 1) + '轮爬取, len(urls) = ' + str(len(retry_urls_list)))
+        if i == 0:
+            retry_urls_list = all_company_detail_urls_list
+        retry_urls_list = gevent_pool_requests(download_this_page_company_detail, retry_urls_list)
+        retry_urls_list = [i for i in retry_urls_list if i]
+
+
+def detail_page_is_success(company_detail_path):
+    """
+    详情页是否为成功页
+    :return:
+    """
+    return get_selector_text_string(
+                etree.HTML(open(company_detail_path, 'r', encoding='utf8').read())
+                     .xpath('//div[@class="headerDetailsCompany"]//h1[@itemprop="name"]/text()')
+            ) != ''
 
 
 def get_company_detail_urls_by_company_list_page(company_list_page_path):
@@ -817,7 +850,7 @@ def get_company_list_json():
     data_json = read_product_company_list_json()
     data_json_len = len(data_json)
     print(data_json_len)
-    print(data_json[:20] if data_json_len > 20 else data_json[:data_json_len])
+    print(data_json[:20] if data_json_len > 20 else data_json)
 
 
 def start():
@@ -839,7 +872,7 @@ def start():
     # check_company_detail_keyword()
     # parse_all_company_detail()
 
-    # 4.读取该产品的公司列表json
+    # 4.读取该产品的公司列表json（查看）
     # get_company_list_json()
 
 

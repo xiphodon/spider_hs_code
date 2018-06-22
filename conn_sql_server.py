@@ -817,6 +817,7 @@ def save_kompass_company_spider_to_db(conn, cur):
     error_count = 0
     error_id_list = list()
     exists_id_list = list()
+    none_name_list = list()
     for i in data:
         i = dict(i)
         company_id_str = i.get('company_id_str', '').replace("'", "''")
@@ -827,6 +828,11 @@ def save_kompass_company_spider_to_db(conn, cur):
 
         file_name = i.get('file_name', '').replace("'", "''")
         company_name = i.get('company_name', '').replace("'", "''")
+
+        if company_name == '':
+            none_name_list.append(company_id_str)
+            continue
+
         company_is_premium = i.get('company_is_premium', 0)
         company_all_address = i.get('company_all_address', '').replace("'", "''")
         company_street_address = i.get('company_street_address', '').replace("'", "''")
@@ -914,6 +920,7 @@ def save_kompass_company_spider_to_db(conn, cur):
         #     break
     print('异常数据id列表：', error_id_list)
     print('已存在数据id列表：', exists_id_list)
+    print('公司名空的id列表：', none_name_list)
 
 
 if __name__ == '__main__':

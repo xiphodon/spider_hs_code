@@ -243,7 +243,9 @@ def download_this_page_company_detail(url):
                 if os.path.getsize(company_detail_path) < min_file_size:
                     # print('page:' + company_detail_name + '-------- this page html size < ' + str(min_file_size/1024)
                     #       + 'k  !!!!!!!!!!')
-                    if not detail_page_is_success(company_detail_path):
+                    if detail_page_is_success(company_detail_path):
+                        print('page:' + company_detail_name + '-------- download OK')
+                    else:
                         return url
                 else:
                     print('page:' + company_detail_name + '-------- download OK')

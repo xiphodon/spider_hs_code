@@ -820,19 +820,19 @@ def save_kompass_company_spider_to_db(conn, cur):
     none_name_list = list()
     for i in data:
         i = dict(i)
+
         company_id_str = i.get('company_id_str', '').replace("'", "''")
-
-        if check_kompass_company_is_exists(conn, cur, company_id_str):
-            exists_id_list.append(company_id_str)
-            continue
-
-        file_name = i.get('file_name', '').replace("'", "''")
         company_name = i.get('company_name', '').replace("'", "''")
 
         if company_name == '':
             none_name_list.append(company_id_str)
             continue
 
+        if check_kompass_company_is_exists(conn, cur, company_id_str):
+            exists_id_list.append(company_id_str)
+            continue
+
+        file_name = i.get('file_name', '').replace("'", "''")
         company_is_premium = i.get('company_is_premium', 0)
         company_all_address = i.get('company_all_address', '').replace("'", "''")
         company_street_address = i.get('company_street_address', '').replace("'", "''")
@@ -898,7 +898,7 @@ def save_kompass_company_spider_to_db(conn, cur):
                       "company_latitude,company_longitude) " \
                       "values(N'%d',N'%s',N'%s',N'%s',N'%d',N'%s',N'%s',N'%s',N'%s',N'%s'," \
                       "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%d', N'%s'," \
-                      "N'%s', N'%s', N'%s')"\
+                      "N'%s', N'%s', N'%s')" \
                       % (data_origin_id, file_name, company_id_str, company_name
                          , company_is_premium, company_all_address, company_street_address, company_city_address
                          , company_country_address, company_phone, company_website, company_summary, company_fax
@@ -916,11 +916,12 @@ def save_kompass_company_spider_to_db(conn, cur):
             error_id_list.append(company_id_str)
             # raise e
 
-        # if count > 20:
-        #     break
-    print('异常数据id列表：', error_id_list)
-    print('已存在数据id列表：', exists_id_list)
-    print('公司名空的id列表：', none_name_list)
+            # if count > 20:
+            #     break
+        # break
+    print('异常数据id列表：', len(error_id_list), error_id_list)
+    print('已存在数据id列表：', len(exists_id_list), exists_id_list)
+    print('公司名空的id列表：', len(none_name_list), none_name_list)
 
 
 if __name__ == '__main__':

@@ -6,8 +6,7 @@
 # @File    : company_spider_9.py
 # @Software: PyCharm
 
-from gevent import pool, monkey
-monkey.patch_all()
+from gevent import pool, monkey; monkey.patch_all()
 import requests
 import os
 from lxml import etree
@@ -16,15 +15,16 @@ import json
 import time
 import traceback
 import re
+import random
 
+
+search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard']
+search_text = search_text_list[7]
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
     'Connection': 'keep-alive'
 }
-
-search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery']
-search_text = search_text_list[-1]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -40,6 +40,7 @@ home_path = r'E:\work_all\topease\company_spider_9'
 json_dir_path = os.path.join(home_path, 'json_dir')
 company_detail_main_keyword_json_path = os.path.join(json_dir_path, search_text + '_main_keyword.json')
 company_list_json_path = os.path.join(json_dir_path, search_text + '_company_list.json')
+company_urls_list_json_path = os.path.join(json_dir_path, search_text + '_company_urls_list.json')
 
 company_list_pages_dir_path = os.path.join(home_path, 'company_list_dir')
 company_list_pages_product_dir_path = os.path.join(company_list_pages_dir_path, search_text)
@@ -50,7 +51,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
-pool_size = 3500
+pool_size = 1
 page_total = -1
 overwrite = False
 
@@ -62,8 +63,11 @@ if not os.path.exists(company_list_pages_product_dir_path):
 if not os.path.exists(company_detail_product_dir_path):
     os.mkdir(company_detail_product_dir_path)
 
+if not os.path.exists(json_dir_path):
+    os.mkdir(json_dir_path)
 
-def while_session_get(page_url, times=5000):
+
+def while_session_get(page_url, times=5000, sleep_time=0.2):
     """
     循环请求
     :return:
@@ -71,7 +75,8 @@ def while_session_get(page_url, times=5000):
     while_times = 0
     while True:
         try:
-            result = sess.get(page_url, headers=headers, timeout=30)
+            time.sleep(random.randint(1, 10) * sleep_time)
+            result = sess.get(page_url, headers=headers, timeout=25)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
             if while_times < times:
@@ -89,7 +94,13 @@ def download_frist_html():
     下载首次请求的html页面
     :return:
     """
-    result = while_session_get(search_url)
+    while True:
+        result = while_session_get(search_url)
+
+        if len(result.content) < 5 * 1024:
+            continue
+        else:
+            break
 
     with open(first_html_path, 'w', encoding='utf8') as fp:
         fp.write(result.text)
@@ -261,33 +272,43 @@ def download_all_company_detail_htmls(while_times=3):
     while_times：采集轮次数
     :return:
     """
-    count = 0
-    pages = 0
+
     all_company_detail_urls_list = list()
-    for item_file_name in os.listdir(company_list_pages_product_dir_path):
-        # 单个公司列表页面
 
-        file_path = os.path.join(company_list_pages_product_dir_path, item_file_name)
+    if os.path.exists(company_urls_list_json_path):
+        with open(company_urls_list_json_path, 'r', encoding='utf8') as fp:
+            all_company_detail_urls_list = json.loads(fp.read())
+    else:
+        count = 0
+        pages = 0
 
-        if file_path == first_html_path:
-            print('跳过页码页：', file_path)
-            continue
+        for item_file_name in os.listdir(company_list_pages_product_dir_path):
+            # 单个公司列表页面
 
-        company_detail_urls = get_company_detail_urls_by_company_list_page(file_path)
+            file_path = os.path.join(company_list_pages_product_dir_path, item_file_name)
 
-        pages += 1
-        count += len(company_detail_urls)
+            if file_path == first_html_path:
+                print('跳过页码页：', file_path)
+                continue
 
-        all_company_detail_urls_list.extend(company_detail_urls)
-        print('\r正在收集公司详情页url,pages:' + str(pages) + ',count:' + str(count), end='')
+            company_detail_urls = get_company_detail_urls_by_company_list_page(file_path)
 
-    print('\n', pages, count)
+            pages += 1
+            count += len(company_detail_urls)
+
+            all_company_detail_urls_list.extend(company_detail_urls)
+            print('\r正在收集公司详情页url,pages:' + str(pages) + ',count:' + str(count), end='')
+
+        print('\n', pages, count)
+
+        with open(company_urls_list_json_path, 'w', encoding='utf8') as fp:
+            fp.write(json.dumps(all_company_detail_urls_list))
 
     retry_urls_list = list()
     for i in range(while_times):
-        print('第' + str(i + 1) + '轮爬取, len(urls) = ' + str(len(retry_urls_list)))
         if i == 0:
             retry_urls_list = all_company_detail_urls_list
+        print('第' + str(i + 1) + '轮爬取, len(urls) = ' + str(len(retry_urls_list)))
         retry_urls_list = gevent_pool_requests(download_this_page_company_detail, retry_urls_list)
         retry_urls_list = [i for i in retry_urls_list if i]
 
@@ -297,10 +318,13 @@ def detail_page_is_success(company_detail_path):
     详情页是否为成功页
     :return:
     """
-    return get_selector_text_string(
-                etree.HTML(open(company_detail_path, 'r', encoding='utf8').read())
-                     .xpath('//div[@class="headerDetailsCompany"]//h1[@itemprop="name"]/text()')
-            ) != ''
+    with open(company_detail_path, 'r', encoding='utf8') as fp:
+        content = fp.read()
+
+    seletor = etree.HTML(content)
+    company_name_text = seletor.xpath('//div[@class="headerDetailsCompany"]//h1[@itemprop="name"]/text()')
+    company_name = get_selector_text_string(company_name_text)
+    return company_name != ''
 
 
 def get_company_detail_urls_by_company_list_page(company_list_page_path):
@@ -456,7 +480,7 @@ def parse_all_company_detail():
     :return:
     """
     debug = False
-    debug_size = 100
+    debug_size = 10
 
     company_list = list()
     for file_name in os.listdir(company_detail_product_dir_path):
@@ -467,10 +491,10 @@ def parse_all_company_detail():
 
             file_path = os.path.join(company_detail_product_dir_path, file_name)
 
-            # 测试代码
-            if debug:
-                file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/pump/' \
-                            r'ae200013_al-sagar-engineering-company-llc_c.html'
+            # # 测试代码
+            # if debug:
+            #     file_path = r'E:/work_all/topease/company_spider_9/company_detail_dir/pump/' \
+            #                 r'ae200013_al-sagar-engineering-company-llc_c.html'
 
             with open(file_path, 'r', encoding='utf8') as fp:
                 content = fp.read()
@@ -636,6 +660,7 @@ def parse_all_company_detail():
             if len(company_list) > debug_size:
                 break
 
+    print()
     print(len(company_list))
 
     with open(company_list_json_path, 'w', encoding='utf8') as fp:
@@ -650,7 +675,7 @@ def parse_item_div(tag, item_div):
     :return:
     """
     # presentation
-    if tag == 'Company Summary':
+    if tag == 'Company Summary' or tag == 'Presentation':
         return 'company_summary', clean_wrong_charter(clean_spaces(item_div.xpath('./span')[0].xpath('string()') if len(item_div.xpath('./span')) > 0 else '', '\n'))
 
     elif tag == 'General Information':
@@ -868,11 +893,11 @@ def start():
     # download_all_company_list_htmls(while_times=50)
 
     # 2.下载公司详情页
-    download_all_company_detail_htmls(while_times=50)
+    # download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
-    # parse_all_company_detail()
+    parse_all_company_detail()
 
     # 4.读取该产品的公司列表json（查看）
     # get_company_list_json()

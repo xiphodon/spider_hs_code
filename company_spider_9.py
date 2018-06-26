@@ -18,8 +18,9 @@ import re
 import random
 
 
-search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard']
-search_text = search_text_list[7]
+search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
+                    , 'furniture']
+search_text = search_text_list[-1]
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -75,7 +76,7 @@ def while_session_get(page_url, times=5000, sleep_time=0.2):
     while_times = 0
     while True:
         try:
-            time.sleep(random.randint(1, 10) * sleep_time)
+            time.sleep(random.randint(4, 8) * sleep_time)
             result = sess.get(page_url, headers=headers, timeout=25)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
@@ -887,17 +888,17 @@ def start():
     """
 
     # # 1.下载公司列表页
-    # download_frist_html()
-    # parse_first_html()
-    # # download_company_list_pages() # 废弃
-    # download_all_company_list_htmls(while_times=50)
+    download_frist_html()
+    parse_first_html()
+    # download_company_list_pages() # 废弃
+    download_all_company_list_htmls(while_times=50)
 
     # 2.下载公司详情页
     # download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
-    parse_all_company_detail()
+    # parse_all_company_detail()
 
     # 4.读取该产品的公司列表json（查看）
     # get_company_list_json()

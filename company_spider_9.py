@@ -52,7 +52,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
-pool_size = 1
+pool_size = 5000
 page_total = -1
 overwrite = False
 
@@ -174,7 +174,16 @@ def download_this_page_company_list(url):
     if os.path.exists(this_page_html_path) and os.path.getsize(this_page_html_path) >= 125 * 1024:
         print('page:' + this_page_str + '-------- exists')
     else:
-        result = while_session_get(url)
+
+        while True:
+            result = while_session_get(url)
+
+            if len(result.content) < 5 * 1024:
+                continue
+            else:
+                break
+
+        # result = while_session_get(url)
 
         with open(this_page_html_path, 'w', encoding='utf8') as fp:
             fp.write(result.text)
@@ -888,13 +897,13 @@ def start():
     """
 
     # # 1.下载公司列表页
-    download_frist_html()
-    parse_first_html()
-    # download_company_list_pages() # 废弃
-    download_all_company_list_htmls(while_times=50)
+    # download_frist_html()
+    # parse_first_html()
+    # # download_company_list_pages() # 废弃
+    # download_all_company_list_htmls(while_times=50)
 
     # 2.下载公司详情页
-    # download_all_company_detail_htmls(while_times=50)
+    download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()

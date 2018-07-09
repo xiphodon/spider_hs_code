@@ -13,7 +13,7 @@ import datetime
 from lxml import etree
 
 # 睡眠时间
-sleep_time = 5
+sleep_time = 10
 
 used_ip_dict = dict()
 last_used_ip = ''
@@ -112,16 +112,16 @@ def format_print(_ip_str, _collect_ip_dict):
         oftener_used_ip_dict = dict()
         oftenest_used_ip_dict = dict()
         for key, value in _collect_ip_dict.items():
-            if value > 10:
+            if value > 50:
                 oftenest_used_ip_dict[key] = value
-            if value > 5:
+            if value > 10:
                 oftener_used_ip_dict[key] = value
             if value > 1:
                 often_used_ip_dict[key] = value
 
         print('\t重复使用过的ip数(>1)：' + str(len(often_used_ip_dict)))
-        print('\t多次使用过的ip数(>5)：' + str(len(often_used_ip_dict)))
-        print('\t高频使用过的ip数(>10)：' + str(len(often_used_ip_dict)))
+        print('\t多次使用过的ip数(>10)：' + str(len(often_used_ip_dict)))
+        print('\t高频使用过的ip数(>50)：' + str(len(often_used_ip_dict)))
         # print('\t', often_used_ip_dict)
 
 

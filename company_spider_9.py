@@ -52,7 +52,7 @@ company_detail_product_dir_path = os.path.join(company_detail_dir_path, search_t
 first_html_path = os.path.join(company_list_pages_product_dir_path, search_text + r'_' + search_type + r'_0.html')
 
 
-pool_size = 5000
+pool_size = 5
 page_total = -1
 overwrite = False
 
@@ -68,7 +68,7 @@ if not os.path.exists(json_dir_path):
     os.mkdir(json_dir_path)
 
 
-def while_session_get(page_url, times=5000, sleep_time=0.2):
+def while_session_get(page_url, times=5000, sleep_time=0.3, new_sess=False):
     """
     循环请求
     :return:
@@ -76,8 +76,12 @@ def while_session_get(page_url, times=5000, sleep_time=0.2):
     while_times = 0
     while True:
         try:
-            time.sleep(random.randint(4, 8) * sleep_time)
-            result = sess.get(page_url, headers=headers, timeout=25)
+            if new_sess:
+                global sess
+                sess = requests.session()
+
+            time.sleep(random.randint(5, 8) * sleep_time)
+            result = sess.get(page_url, headers=headers, timeout=5)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
             if while_times < times:
@@ -255,7 +259,7 @@ def download_this_page_company_detail(url):
             print('file exists -- small file')
 
         else:
-            result = while_session_get(url)
+            result = while_session_get(url, new_sess=True)
 
             if len(result.text) > error_file_size:
                 with open(company_detail_path, 'w', encoding='utf8') as fp:

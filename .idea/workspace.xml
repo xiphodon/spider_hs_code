@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b023779e-ab5d-4247-a80f-6cbfeb512bbf" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/company_vape_uk.py" />
+    <list default="true" id="b023779e-ab5d-4247-a80f-6cbfeb512bbf" name="Default" comment="代码优化">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/company_spider_6.py" afterPath="$PROJECT_DIR$/company_spider_6.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/company_spider_9.py" afterPath="$PROJECT_DIR$/company_spider_9.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/conn_sql_server.py" afterPath="$PROJECT_DIR$/conn_sql_server.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rakuten_spider_7.py" afterPath="$PROJECT_DIR$/rakuten_spider_7.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,37 +13,56 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/hs_code_spider$rakuten_spider_7.coverage" NAME="rakuten_spider_7 Coverage Results" MODIFIED="1527749606529" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hs_code_spider$my_book_spider.coverage" NAME="my_book_spider Coverage Results" MODIFIED="1528706836282" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hs_code_spider$rakuten_spider_7.coverage" NAME="rakuten_spider_7 Coverage Results" MODIFIED="1528090229155" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hs_code_spider$company_spider.coverage" NAME="company_spider Coverage Results" MODIFIED="1507772807619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hs_code_spider$company_spider_2.coverage" NAME="company_spider_2 Coverage Results" MODIFIED="1507778101919" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hs_code_spider$gevent_demo.coverage" NAME="gevent_demo Coverage Results" MODIFIED="1521527098674" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/hs_code_spider$check_my_ip.coverage" NAME="check_my_ip Coverage Results" MODIFIED="1526955724832" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hs_code_spider$check_my_ip.coverage" NAME="check_my_ip Coverage Results" MODIFIED="1530842687486" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hs_code_spider$hs_spider.coverage" NAME="hs_spider Coverage Results" MODIFIED="1507693241690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/hs_code_spider$conn_sql_server.coverage" NAME="conn_sql_server Coverage Results" MODIFIED="1527755119194" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hs_code_spider$company_vape_uk.coverage" NAME="company_vape_uk Coverage Results" MODIFIED="1527845588141" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hs_code_spider$conn_sql_server.coverage" NAME="conn_sql_server Coverage Results" MODIFIED="1530760523176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/hs_code_spider$yuguo_spider_8.coverage" NAME="yuguo_spider_8 Coverage Results" MODIFIED="1521515110266" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/hs_code_spider$company_spider_9.coverage" NAME="company_spider_9 Coverage Results" MODIFIED="1527587060167" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/hs_code_spider$company_spider_9.coverage" NAME="company_spider_9 Coverage Results" MODIFIED="1531392846471" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_TABLE_DETAILS" value="true" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <expand />
+    <select />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file leaf-file-name="yuguo_spider_8.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/yuguo_spider_8.py">
+      <file leaf-file-name="company_spider_9.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/company_spider_9.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="283" column="4" lean-forward="false" selection-start-line="283" selection-start-column="4" selection-end-line="283" selection-end-column="4" />
-              <folding>
-                <element signature="e#210#232#0" expanded="true" />
-                <marker date="1521627150831" expanded="true" signature="3527:3785" ph="insert into news... " />
-              </folding>
+            <state relative-caret-position="208">
+              <caret line="102" column="12" lean-forward="true" selection-start-line="102" selection-start-column="12" selection-end-line="102" selection-end-column="12" />
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="company_spider_9.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/company_spider_9.py">
+      <file leaf-file-name="check_my_ip.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/check_my_ip.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="387">
-              <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+            <state relative-caret-position="3120">
+              <caret line="123" column="29" lean-forward="false" selection-start-line="123" selection-start-column="29" selection-end-line="123" selection-end-column="29" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="settings.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/settings.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="520">
+              <caret line="20" column="0" lean-forward="false" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -56,23 +71,9 @@
       <file leaf-file-name="rakuten_spider_7.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rakuten_spider_7.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="311">
-              <caret line="234" column="71" lean-forward="false" selection-start-line="234" selection-start-column="62" selection-end-line="234" selection-end-column="71" />
-              <folding>
-                <element signature="e#199#246#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="company_vape_uk.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/company_vape_uk.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="201">
-              <caret line="78" column="70" lean-forward="true" selection-start-line="78" selection-start-column="70" selection-end-line="78" selection-end-column="70" />
-              <folding>
-                <element signature="e#206#229#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="14612">
+              <caret line="571" column="118" lean-forward="false" selection-start-line="571" selection-start-column="118" selection-end-line="571" selection-end-column="118" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -80,45 +81,41 @@
       <file leaf-file-name="conn_sql_server.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/conn_sql_server.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="200" column="43" lean-forward="true" selection-start-line="200" selection-start-column="43" selection-end-line="200" selection-end-column="43" />
+            <state relative-caret-position="23634">
+              <caret line="919" column="23" lean-forward="false" selection-start-line="919" selection-start-column="23" selection-end-line="919" selection-end-column="23" />
               <folding>
                 <element signature="e#193#207#0" expanded="true" />
-                <marker date="1527822074088" expanded="true" signature="1469:1539" ph="select top 1... rakuten_company" />
-                <marker date="1527822074088" expanded="true" signature="2844:3159" ph="insert into rakuten_company... " />
-                <marker date="1527822074088" expanded="true" signature="4503:4574" ph="select top 1... rakuten_product" />
-                <marker date="1527822074088" expanded="true" signature="5847:6143" ph="insert into rakuten_product... " />
-                <marker date="1527822074088" expanded="true" signature="7445:7499" ph="select top 1... Company3" />
-                <marker date="1527822074088" expanded="true" signature="10983:11979" ph="insert into Company3... " />
-                <marker date="1527822074088" expanded="true" signature="13420:13474" ph="select top 1... Company0" />
-                <marker date="1527822074088" expanded="true" signature="14846:15047" ph="insert into Company0... " />
-                <marker date="1527822074088" expanded="true" signature="15887:15941" ph="select top 1... Company0" />
-                <marker date="1527822074088" expanded="true" signature="19164:20002" ph="insert into Company0... " />
-                <marker date="1527822074088" expanded="true" signature="21346:21400" ph="SELECT TOP 1... Company0" />
-                <marker date="1527822074088" expanded="true" signature="23245:23623" ph="insert into Company0... " />
-                <marker date="1527822074088" expanded="true" signature="24621:24675" ph="SELECT TOP 1... Company0" />
-                <marker date="1527822074088" expanded="true" signature="27102:27400" ph="insert into Company0... " />
+                <marker date="1530760516161" expanded="true" signature="1602:1672" ph="select top 1... rakuten_company" />
+                <marker date="1530760516161" expanded="true" signature="2977:3292" ph="insert into rakuten_company... " />
+                <marker date="1530760516161" expanded="true" signature="4636:4707" ph="select top 1... rakuten_product" />
+                <marker date="1530760516161" expanded="true" signature="5980:6276" ph="insert into rakuten_product... " />
+                <marker date="1530760516161" expanded="true" signature="7591:7683" ph="select top 1... ffd_cbec_company" />
+                <marker date="1530760516161" expanded="true" signature="9153:9234" ph="insert into rakuten_company_2018_05... " />
+                <marker date="1530760516161" expanded="true" signature="9153:9283" ph="insert into rakuten_company_2018_05... " />
+                <marker date="1530760516161" expanded="true" signature="9153:9314" ph="insert into rakuten_company_2018_05... " />
+                <marker date="1530760516161" expanded="true" signature="9153:9556" ph="insert into rakuten_company_2018_05... " />
+                <marker date="1530760516161" expanded="true" signature="11033:11087" ph="select top 1... Company3" />
+                <marker date="1530760516161" expanded="true" signature="14571:15567" ph="insert into Company3... " />
+                <marker date="1530760516161" expanded="true" signature="17008:17062" ph="select top 1... Company0" />
+                <marker date="1530760516161" expanded="true" signature="18434:18635" ph="insert into Company0... " />
+                <marker date="1530760516161" expanded="true" signature="19475:19529" ph="select top 1... Company0" />
+                <marker date="1530760516161" expanded="true" signature="22752:23590" ph="insert into Company0... " />
+                <marker date="1530760516161" expanded="true" signature="24934:24988" ph="SELECT TOP 1... Company0" />
+                <marker date="1530760516161" expanded="true" signature="26833:27211" ph="insert into Company0... " />
+                <marker date="1530760516161" expanded="true" signature="28209:28263" ph="SELECT TOP 1... Company0" />
+                <marker date="1530760516161" expanded="true" signature="30690:30988" ph="insert into Company0... " />
+                <marker date="1530760516161" expanded="true" signature="32949:33020" ph="SELECT TOP 1... ffd_b2b_company" />
+                <marker date="1530760516161" expanded="true" signature="32949:33024" ph="SELECT TOP 1... ffd_b2b_company" />
+                <marker date="1530760516161" expanded="true" signature="36813:36894" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37004" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37113" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37218" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37325" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37387" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37482" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37576" ph="insert into ffd_b2b_company... " />
+                <marker date="1530760516161" expanded="true" signature="36813:37623" ph="insert into ffd_b2b_company... " />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="settings.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/settings.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="78">
-              <caret line="6" column="20" lean-forward="true" selection-start-line="6" selection-start-column="20" selection-end-line="6" selection-end-column="20" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="company_spider_3.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/company_spider_3.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-27">
-              <caret line="580" column="44" lean-forward="true" selection-start-line="580" selection-start-column="44" selection-end-line="580" selection-end-column="44" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -139,6 +136,7 @@
       <find>t</find>
       <find>try</find>
       <find>上海</find>
+      <find>none</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -158,13 +156,14 @@
         <option value="$PROJECT_DIR$/gevent_demo.py" />
         <option value="$PROJECT_DIR$/yuguo_spider_8.py" />
         <option value="$PROJECT_DIR$/company_spider_7.py" />
-        <option value="$PROJECT_DIR$/check_my_ip.py" />
-        <option value="$PROJECT_DIR$/company_spider_9.py" />
         <option value="$PROJECT_DIR$/settings.py" />
-        <option value="$PROJECT_DIR$/rakuten_spider_7.py" />
-        <option value="$PROJECT_DIR$/conn_sql_server.py" />
         <option value="$PROJECT_DIR$/company_spider_6.py" />
         <option value="$PROJECT_DIR$/company_vape_uk.py" />
+        <option value="$PROJECT_DIR$/rakuten_spider_7.py" />
+        <option value="$PROJECT_DIR$/my_book_spider.py" />
+        <option value="$PROJECT_DIR$/conn_sql_server.py" />
+        <option value="$PROJECT_DIR$/check_my_ip.py" />
+        <option value="$PROJECT_DIR$/company_spider_9.py" />
       </list>
     </option>
   </component>
@@ -175,10 +174,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="59" />
-    <option name="y" value="31" />
-    <option name="width" value="1693" />
-    <option name="height" value="1000" />
+    <option name="x" value="522" />
+    <option name="y" value="17" />
+    <option name="width" value="1268" />
+    <option name="height" value="1050" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -196,6 +195,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -207,12 +207,11 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="DefaultHtmlFileTemplate" value="HTML File" />
   </component>
@@ -233,7 +232,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.company_vape_uk">
+  <component name="RunManager" selected="Python.company_spider_9">
     <configuration name="check_my_ip" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -270,24 +269,6 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
     </configuration>
-    <configuration name="company_vape_uk" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="hs_code_spider" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/company_vape_uk.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-    </configuration>
     <configuration name="conn_sql_server" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -302,6 +283,24 @@
       <module name="hs_code_spider" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/conn_sql_server.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+    </configuration>
+    <configuration name="my_book_spider" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="hs_code_spider" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/my_book_spider.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -326,18 +325,18 @@
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.company_spider_9" />
-      <item index="1" class="java.lang.String" itemvalue="Python.check_my_ip" />
-      <item index="2" class="java.lang.String" itemvalue="Python.rakuten_spider_7" />
-      <item index="3" class="java.lang.String" itemvalue="Python.conn_sql_server" />
-      <item index="4" class="java.lang.String" itemvalue="Python.company_vape_uk" />
+      <item index="1" class="java.lang.String" itemvalue="Python.rakuten_spider_7" />
+      <item index="2" class="java.lang.String" itemvalue="Python.conn_sql_server" />
+      <item index="3" class="java.lang.String" itemvalue="Python.my_book_spider" />
+      <item index="4" class="java.lang.String" itemvalue="Python.check_my_ip" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.company_vape_uk" />
-        <item index="1" class="java.lang.String" itemvalue="Python.conn_sql_server" />
-        <item index="2" class="java.lang.String" itemvalue="Python.rakuten_spider_7" />
-        <item index="3" class="java.lang.String" itemvalue="Python.company_spider_9" />
-        <item index="4" class="java.lang.String" itemvalue="Python.check_my_ip" />
+        <item index="0" class="java.lang.String" itemvalue="Python.company_spider_9" />
+        <item index="1" class="java.lang.String" itemvalue="Python.check_my_ip" />
+        <item index="2" class="java.lang.String" itemvalue="Python.conn_sql_server" />
+        <item index="3" class="java.lang.String" itemvalue="Python.my_book_spider" />
+        <item index="4" class="java.lang.String" itemvalue="Python.rakuten_spider_7" />
       </list>
     </recent_temporary>
   </component>
@@ -502,7 +501,126 @@
       <option name="project" value="LOCAL" />
       <updated>1527678929815</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="乐天数据入库，采集英国政府vape相关数据">
+      <created>1527854407643</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1527854407643</updated>
+    </task>
+    <task id="LOCAL-00023" summary="压缩乐天产品数据，整合至乐天公司json中">
+      <created>1528084018168</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1528084018169</updated>
+    </task>
+    <task id="LOCAL-00024" summary="压缩乐天产品数据，整合至乐天公司json中，入库">
+      <created>1528097370001</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1528097370001</updated>
+    </task>
+    <task id="LOCAL-00025" summary="解析Kompass公司详情页（部分字段）">
+      <created>1528367730559</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1528367730559</updated>
+    </task>
+    <task id="LOCAL-00026" summary="解析Kompass公司详情页">
+      <created>1528453736029</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1528453736029</updated>
+    </task>
+    <task id="LOCAL-00027" summary="下载盘龙英文电子书">
+      <created>1528710928422</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1528710928422</updated>
+    </task>
+    <task id="LOCAL-00028" summary="kompass json解析入库（部分）">
+      <created>1528803694052</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1528803694052</updated>
+    </task>
+    <task id="LOCAL-00029" summary="kompass json解析入库">
+      <created>1528853950804</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1528853950804</updated>
+    </task>
+    <task id="LOCAL-00030" summary="kompass json解析入库">
+      <created>1528942418099</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1528942418099</updated>
+    </task>
+    <task id="LOCAL-00031" summary="代码微调">
+      <created>1529480525379</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1529480525379</updated>
+    </task>
+    <task id="LOCAL-00032" summary="代码微调">
+      <created>1529583151848</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1529583151848</updated>
+    </task>
+    <task id="LOCAL-00033" summary="代码优化">
+      <created>1529635959715</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1529635959715</updated>
+    </task>
+    <task id="LOCAL-00034" summary="代码优化">
+      <created>1529638515077</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1529638515077</updated>
+    </task>
+    <task id="LOCAL-00035" summary="代码优化">
+      <created>1529896151903</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1529896151903</updated>
+    </task>
+    <task id="LOCAL-00036" summary="代码优化">
+      <created>1530010155457</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1530010155457</updated>
+    </task>
+    <task id="LOCAL-00037" summary="代码优化">
+      <created>1530585086599</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1530585086599</updated>
+    </task>
+    <task id="LOCAL-00038" summary="代码优化">
+      <created>1531100142145</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1531100142145</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="TodoView">
@@ -517,18 +635,18 @@
   <component name="ToolWindowManager">
     <frame x="-9" y="-9" width="1938" height="1060" extended-state="6" />
     <layout>
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17596567" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1137339" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32921347" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3299356" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32921347" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30674157" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.40898877" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.50898874" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3280899" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3299356" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -573,11 +691,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="all_hs_code_html_parse" />
-    <MESSAGE value="all_hs_code_html_parse OK" />
-    <MESSAGE value="parse data to json" />
-    <MESSAGE value="split json and check it" />
-    <MESSAGE value="遗漏字段补充" />
     <MESSAGE value="all_hs_code简单统计信息" />
     <MESSAGE value="yuguo_spider" />
     <MESSAGE value="copy data from mongodb to sqlserver" />
@@ -593,11 +706,21 @@
     <MESSAGE value="跟进乐天商品页面变动" />
     <MESSAGE value="跟进乐天商品页面变动，增加商品所属类别" />
     <MESSAGE value="修改采集店铺逻辑" />
-    <option name="LAST_COMMIT_MESSAGE" value="修改采集店铺逻辑" />
+    <MESSAGE value="乐天数据入库，采集英国政府vape相关数据" />
+    <MESSAGE value="压缩乐天产品数据，整合至乐天公司json中" />
+    <MESSAGE value="压缩乐天产品数据，整合至乐天公司json中，入库" />
+    <MESSAGE value="解析Kompass公司详情页（部分字段）" />
+    <MESSAGE value="解析Kompass公司详情页" />
+    <MESSAGE value="下载盘龙英文电子书" />
+    <MESSAGE value="kompass json解析入库（部分）" />
+    <MESSAGE value="kompass json解析入库" />
+    <MESSAGE value="代码微调" />
+    <MESSAGE value="代码优化" />
+    <option name="LAST_COMMIT_MESSAGE" value="代码优化" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <option name="time" value="2" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -614,36 +737,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#210#232#0" expanded="true" />
-            <marker date="1521627150831" expanded="true" signature="3527:3785" ph="insert into news... " />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/conn_sql_server.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1976">
-          <caret line="85" column="75" lean-forward="false" selection-start-line="85" selection-start-column="75" selection-end-line="85" selection-end-column="75" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="364">
-          <caret line="14" column="16" lean-forward="false" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/yuguo_spider_8.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#210#232#0" expanded="true" />
-            <marker date="1521627150831" expanded="true" signature="3527:3785" ph="insert into news... " />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -708,7 +801,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="189">
           <caret line="60" column="4" lean-forward="false" selection-start-line="60" selection-start-column="4" selection-end-line="60" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -743,13 +835,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/qqq.html" />
-    <entry file="file://$PROJECT_DIR$/check_all_spider_keys.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4634">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://D:/Program Files/Anaconda3/Lib/multiprocessing/managers.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-468">
@@ -768,7 +853,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
           <caret line="254" column="8" lean-forward="false" selection-start-line="254" selection-start-column="8" selection-end-line="254" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -783,13 +867,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="145">
           <caret line="661" column="69" lean-forward="true" selection-start-line="661" selection-start-column="69" selection-end-line="661" selection-end-column="69" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/company_spider_5.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1170">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -821,20 +898,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/BeautifulSoup_antherDemo.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://D:/Program Files/Anaconda3/Lib/site-packages/requests/sessions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
           <caret line="530" column="49" lean-forward="true" selection-start-line="530" selection-start-column="49" selection-end-line="530" selection-end-column="49" />
-          <folding>
-            <element signature="e#179#188#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -856,7 +923,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="47" column="4" lean-forward="false" selection-start-line="47" selection-start-column="4" selection-end-line="47" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -874,114 +940,160 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/check_my_ip.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2676">
-          <caret line="16" column="0" lean-forward="true" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/yuguo_spider_8.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
+        <state relative-caret-position="7072">
           <caret line="283" column="4" lean-forward="false" selection-start-line="283" selection-start-column="4" selection-end-line="283" selection-end-column="4" />
-          <folding>
-            <element signature="e#210#232#0" expanded="true" />
-            <marker date="1521627150831" expanded="true" signature="3527:3785" ph="insert into news... " />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/RegistResponse.java" />
-    <entry file="file://$USER_HOME$/.PyCharm2017.2/system/python_stubs/-952285868/lxml/etree/_Element.py">
+    <entry file="file://$PROJECT_DIR$/company_spider_3.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="168" column="17" lean-forward="false" selection-start-line="168" selection-start-column="8" selection-end-line="168" selection-end-column="17" />
-          <folding />
+        <state relative-caret-position="14872">
+          <caret line="580" column="44" lean-forward="false" selection-start-line="580" selection-start-column="44" selection-end-line="580" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/company_vape_uk.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="87" column="0" lean-forward="true" selection-start-line="87" selection-start-column="0" selection-end-line="87" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/Program Files/Anaconda3/pkgs/openpyxl-2.4.7-py36_0/Lib/site-packages/openpyxl/worksheet/table.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1505">
+          <caret line="88" column="13" lean-forward="false" selection-start-line="88" selection-start-column="13" selection-end-line="88" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2017.2/system/python_stubs/-952285868/lxml/etree/__init__/_ElementTree.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1186">
+          <caret line="257" column="8" lean-forward="false" selection-start-line="257" selection-start-column="8" selection-end-line="257" selection-end-column="8" />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/.PyCharm2017.2/system/python_stubs/-952285868/lxml/etree/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="533" column="27" lean-forward="false" selection-start-line="533" selection-start-column="27" selection-end-line="533" selection-end-column="27" />
-          <folding />
+        <state relative-caret-position="13858">
+          <caret line="533" column="28" lean-forward="false" selection-start-line="533" selection-start-column="28" selection-end-line="533" selection-end-column="28" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/company_spider_3.py">
+    <entry file="file://$PROJECT_DIR$/check_all_spider_keys.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-27">
-          <caret line="580" column="44" lean-forward="true" selection-start-line="580" selection-start-column="44" selection-end-line="580" selection-end-column="44" />
-          <folding />
+        <state relative-caret-position="-4826">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/settings.py">
+    <entry file="file://$PROJECT_DIR$/company_spider_6.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="78">
-          <caret line="6" column="20" lean-forward="true" selection-start-line="6" selection-start-column="20" selection-end-line="6" selection-end-column="20" />
+        <state relative-caret-position="-9818">
+          <caret line="36" column="4" lean-forward="false" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/company_spider_5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-11274">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2017.2/system/python_stubs/-952285868/lxml/etree/_Element.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3458">
+          <caret line="135" column="68" lean-forward="false" selection-start-line="135" selection-start-column="68" selection-end-line="135" selection-end-column="68" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/my_book_spider.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-242">
+          <caret line="116" column="40" lean-forward="true" selection-start-line="116" selection-start-column="40" selection-end-line="116" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/BeautifulSoup_antherDemo.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-155">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rakuten_spider_7.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="14612">
+          <caret line="571" column="118" lean-forward="false" selection-start-line="571" selection-start-column="118" selection-end-line="571" selection-end-column="118" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/conn_sql_server.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="200" column="43" lean-forward="true" selection-start-line="200" selection-start-column="43" selection-end-line="200" selection-end-column="43" />
+        <state relative-caret-position="23634">
+          <caret line="919" column="23" lean-forward="false" selection-start-line="919" selection-start-column="23" selection-end-line="919" selection-end-column="23" />
           <folding>
             <element signature="e#193#207#0" expanded="true" />
-            <marker date="1527822074088" expanded="true" signature="1469:1539" ph="select top 1... rakuten_company" />
-            <marker date="1527822074088" expanded="true" signature="2844:3159" ph="insert into rakuten_company... " />
-            <marker date="1527822074088" expanded="true" signature="4503:4574" ph="select top 1... rakuten_product" />
-            <marker date="1527822074088" expanded="true" signature="5847:6143" ph="insert into rakuten_product... " />
-            <marker date="1527822074088" expanded="true" signature="7445:7499" ph="select top 1... Company3" />
-            <marker date="1527822074088" expanded="true" signature="10983:11979" ph="insert into Company3... " />
-            <marker date="1527822074088" expanded="true" signature="13420:13474" ph="select top 1... Company0" />
-            <marker date="1527822074088" expanded="true" signature="14846:15047" ph="insert into Company0... " />
-            <marker date="1527822074088" expanded="true" signature="15887:15941" ph="select top 1... Company0" />
-            <marker date="1527822074088" expanded="true" signature="19164:20002" ph="insert into Company0... " />
-            <marker date="1527822074088" expanded="true" signature="21346:21400" ph="SELECT TOP 1... Company0" />
-            <marker date="1527822074088" expanded="true" signature="23245:23623" ph="insert into Company0... " />
-            <marker date="1527822074088" expanded="true" signature="24621:24675" ph="SELECT TOP 1... Company0" />
-            <marker date="1527822074088" expanded="true" signature="27102:27400" ph="insert into Company0... " />
+            <marker date="1530760516161" expanded="true" signature="1602:1672" ph="select top 1... rakuten_company" />
+            <marker date="1530760516161" expanded="true" signature="2977:3292" ph="insert into rakuten_company... " />
+            <marker date="1530760516161" expanded="true" signature="4636:4707" ph="select top 1... rakuten_product" />
+            <marker date="1530760516161" expanded="true" signature="5980:6276" ph="insert into rakuten_product... " />
+            <marker date="1530760516161" expanded="true" signature="7591:7683" ph="select top 1... ffd_cbec_company" />
+            <marker date="1530760516161" expanded="true" signature="9153:9234" ph="insert into rakuten_company_2018_05... " />
+            <marker date="1530760516161" expanded="true" signature="9153:9283" ph="insert into rakuten_company_2018_05... " />
+            <marker date="1530760516161" expanded="true" signature="9153:9314" ph="insert into rakuten_company_2018_05... " />
+            <marker date="1530760516161" expanded="true" signature="9153:9556" ph="insert into rakuten_company_2018_05... " />
+            <marker date="1530760516161" expanded="true" signature="11033:11087" ph="select top 1... Company3" />
+            <marker date="1530760516161" expanded="true" signature="14571:15567" ph="insert into Company3... " />
+            <marker date="1530760516161" expanded="true" signature="17008:17062" ph="select top 1... Company0" />
+            <marker date="1530760516161" expanded="true" signature="18434:18635" ph="insert into Company0... " />
+            <marker date="1530760516161" expanded="true" signature="19475:19529" ph="select top 1... Company0" />
+            <marker date="1530760516161" expanded="true" signature="22752:23590" ph="insert into Company0... " />
+            <marker date="1530760516161" expanded="true" signature="24934:24988" ph="SELECT TOP 1... Company0" />
+            <marker date="1530760516161" expanded="true" signature="26833:27211" ph="insert into Company0... " />
+            <marker date="1530760516161" expanded="true" signature="28209:28263" ph="SELECT TOP 1... Company0" />
+            <marker date="1530760516161" expanded="true" signature="30690:30988" ph="insert into Company0... " />
+            <marker date="1530760516161" expanded="true" signature="32949:33020" ph="SELECT TOP 1... ffd_b2b_company" />
+            <marker date="1530760516161" expanded="true" signature="32949:33024" ph="SELECT TOP 1... ffd_b2b_company" />
+            <marker date="1530760516161" expanded="true" signature="36813:36894" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37004" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37113" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37218" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37325" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37387" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37482" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37576" ph="insert into ffd_b2b_company... " />
+            <marker date="1530760516161" expanded="true" signature="36813:37623" ph="insert into ffd_b2b_company... " />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/company_spider_6.py">
+    <entry file="file://$PROJECT_DIR$/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-259">
-          <caret line="36" column="4" lean-forward="false" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
+        <state relative-caret-position="520">
+          <caret line="20" column="0" lean-forward="false" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/rakuten_spider_7.py">
+    <entry file="file://$PROJECT_DIR$/check_my_ip.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="234" column="71" lean-forward="false" selection-start-line="234" selection-start-column="62" selection-end-line="234" selection-end-column="71" />
-          <folding>
-            <element signature="e#199#246#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="3120">
+          <caret line="123" column="29" lean-forward="false" selection-start-line="123" selection-start-column="29" selection-end-line="123" selection-end-column="29" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/company_spider_9.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="387">
-          <caret line="21" column="0" lean-forward="false" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+        <state relative-caret-position="208">
+          <caret line="102" column="12" lean-forward="true" selection-start-line="102" selection-start-column="12" selection-end-line="102" selection-end-column="12" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/company_vape_uk.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
-          <caret line="78" column="70" lean-forward="true" selection-start-line="78" selection-start-column="70" selection-end-line="78" selection-end-column="70" />
-          <folding>
-            <element signature="e#206#229#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>

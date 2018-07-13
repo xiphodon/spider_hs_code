@@ -2,8 +2,37 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b023779e-ab5d-4247-a80f-6cbfeb512bbf" name="Default" comment="代码优化">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.gitignore" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/hs_code_spider.iml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/BeautifulSoup_antherDemo.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/check_all_spider_keys.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/check_country_flag.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/check_my_ip.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider_2.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider_3.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider_4.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider_5.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider_6.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_spider_9.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/company_vape_uk.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/conn_sql_server.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/count_files.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/find_email.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/gevent_demo.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/hs_code_json_to_xml.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/hs_spider.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/merge_all_spider_dada.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/my_book_spider.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/ocr_img_to_str.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/rakuten_spider_7.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/settings.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/yuguo_spider_8.py" afterPath="" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -38,11 +67,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file leaf-file-name="company_spider_9.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="company_spider_9.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/company_spider_9.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="676">
-              <caret line="102" column="12" lean-forward="false" selection-start-line="102" selection-start-column="12" selection-end-line="102" selection-end-column="12" />
+            <state relative-caret-position="390">
+              <caret line="91" column="37" lean-forward="true" selection-start-line="91" selection-start-column="37" selection-end-line="91" selection-end-column="37" />
               <folding />
             </state>
           </provider>
@@ -63,6 +92,16 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="520">
               <caret line="20" column="0" lean-forward="false" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="26">
+              <caret line="1" column="5" lean-forward="true" selection-start-line="1" selection-start-column="5" selection-end-line="1" selection-end-column="5" />
               <folding />
             </state>
           </provider>
@@ -1067,14 +1106,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="520">
-          <caret line="20" column="0" lean-forward="false" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/check_my_ip.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3120">
@@ -1083,18 +1114,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
+    <entry file="file://$PROJECT_DIR$/company_spider_9.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="11" lean-forward="false" selection-start-line="0" selection-start-column="11" selection-end-line="0" selection-end-column="11" />
+        <state relative-caret-position="390">
+          <caret line="91" column="37" lean-forward="true" selection-start-line="91" selection-start-column="37" selection-end-line="91" selection-end-column="37" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/company_spider_9.py">
+    <entry file="file://$PROJECT_DIR$/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="676">
-          <caret line="102" column="12" lean-forward="false" selection-start-line="102" selection-start-column="12" selection-end-line="102" selection-end-column="12" />
+        <state relative-caret-position="520">
+          <caret line="20" column="0" lean-forward="false" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="26">
+          <caret line="1" column="5" lean-forward="true" selection-start-line="1" selection-start-column="5" selection-end-line="1" selection-end-column="5" />
           <folding />
         </state>
       </provider>

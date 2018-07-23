@@ -19,7 +19,7 @@ import random
 
 
 search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
-                    , 'furniture']
+                    , 'furniture', 'textile+-clothing']
 search_text = search_text_list[-1]
 
 search_type_dict = {'product': 'PRODUCT',
@@ -77,7 +77,7 @@ headers_list = \
      'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0'
      ]
 
-pool_size = 10
+pool_size = 20
 page_total = -1
 overwrite = False
 

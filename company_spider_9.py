@@ -7,6 +7,7 @@
 # @Software: PyCharm
 
 from gevent import pool, monkey; monkey.patch_all()
+from gevent import sleep as gevent_sleep
 import requests
 import os
 from lxml import etree
@@ -20,7 +21,7 @@ import random
 
 search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
                     , 'furniture', 'textile+-clothing']
-search_text = search_text_list[-1]
+search_text = search_text_list[-2]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -77,7 +78,7 @@ headers_list = \
      'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0'
      ]
 
-pool_size = 20
+pool_size = 10
 page_total = -1
 overwrite = False
 
@@ -105,7 +106,7 @@ def while_session_get(page_url, times=5000, sleep_time=0.2, new_sess=False):
                 global sess
                 sess = requests.session()
 
-            time.sleep(random.randint(5, 8) * sleep_time)
+            gevent_sleep(random.randint(5, 8) * sleep_time)
             result = sess.get(page_url, headers=get_header(), timeout=5)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:

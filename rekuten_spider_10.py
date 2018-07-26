@@ -9,16 +9,12 @@
 # 乐天 定向采集
 
 from gevent import pool, monkey; monkey.patch_all()
-from gevent import sleep as gevent_sleep
 import requests
 import os
 from lxml import etree
-import settings
 import json
 import time
-import traceback
 import re
-import random
 
 
 class RekutenSpiderSettings:
@@ -52,10 +48,12 @@ class RekutenSpiderSettings:
         self.home_path = r'E:\work_all\topease\takuten_spider_key'
         self.key_dir_path = os.path.join(self.home_path, self.key_word_str)
         self.key_html_path = os.path.join(self.key_dir_path, 'html_dir')
+        self.key_json_path = os.path.join(self.key_dir_path, 'json_dir')
 
         self.make_dir(self.home_path)
         self.make_dir(self.key_dir_path)
         self.make_dir(self.key_html_path)
+        self.make_dir(self.key_json_path)
 
     @staticmethod
     def make_dir(dir_path):

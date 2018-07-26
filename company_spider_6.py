@@ -34,7 +34,7 @@ headers = {
 }
 
 
-def while_requests_get(page_url):
+def while_requests_get(page_url, request_times=10000):
     """
     循环请求
     :return:
@@ -42,10 +42,10 @@ def while_requests_get(page_url):
     while_times = 0
     while True:
         try:
-            result = requests.get(page_url, headers=headers, timeout=30)
+            result = requests.get(page_url, headers=headers, timeout=10)
             # result = requests.get(page_url, headers=headers, proxies=proxies, timeout=5)
         except Exception as e:
-            if while_times < 10000:
+            if while_times < request_times:
                 while_times += 1
                 print('**********', '尝试重新链接', while_times, '次:', page_url)
                 continue

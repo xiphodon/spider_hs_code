@@ -233,7 +233,7 @@ class RekutenSpiderKey:
         return file_name
 
     @staticmethod
-    def gevent_pool_requests(func, task_list, gevent_pool_size=100):
+    def gevent_pool_requests(func, task_list, gevent_pool_size=30):
         """
         多协程请求
         :param func:

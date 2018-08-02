@@ -21,7 +21,7 @@ import random
 
 search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
                     , 'furniture', 'textile+-clothing']
-search_text = search_text_list[-2]
+search_text = search_text_list[-1]
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -944,14 +944,14 @@ def start():
     # download_all_company_list_htmls(while_times=50)
 
     # 2.下载公司详情页
-    download_all_company_detail_htmls(while_times=50)
+    # download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
     # check_company_detail_keyword()
     # parse_all_company_detail()
 
     # 4.读取该产品的公司列表json（查看）
-    # get_company_list_json()
+    get_company_list_json()
 
 
 if __name__ == '__main__':

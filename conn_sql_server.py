@@ -103,7 +103,8 @@ def save_rakuten_spider_shop_info_to_db(conn, cur):
 
         sql_str = None
         try:
-            sql_str = "insert into rakuten_company_2018_05(company_md5,company_href,company_name,company_address,company_tel,company_fax," \
+            sql_str = "insert into rakuten_company_2018_05(company_md5,company_href,company_name," \
+                      "company_address,company_tel,company_fax," \
                       "company_representative,company_operator,company_security_officer,company_email)" \
                       " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
                       % (company_md5, company_href, company_name, company_address, company_tel, company_fax, company_representative,
@@ -180,7 +181,8 @@ def save_rakuten_spider_products_info_to_db(conn, cur):
 
         sql_str = None
         try:
-            sql_str = "insert into rakuten_product_2018_05(shop_name,shop_href,product_title,product_href,product_price," \
+            sql_str = "insert into rakuten_product_2018_05(shop_name,shop_href,product_title," \
+                      "product_href,product_price," \
                       "product_score,product_legend,product_type_first,product_type_second,shop_md5)" \
                       " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
                       % (shop_name, shop_href, product_title, product_href, product_price, product_score,
@@ -264,7 +266,8 @@ def save_rakuten_spider_finally_shop_to_db(conn, cur):
                       "company_product_type, company_name, company_address, company_tel, company_fax," \
                       "company_representative, company_operator, company_security_officer, company_email)" \
                       " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
-                      % (data_origin_id, company_website, company_product_desc, company_product_type, company_name, company_address,
+                      % (data_origin_id, company_website, company_product_desc, company_product_type,
+                         company_name, company_address,
                          company_tel, company_fax, company_representative, company_operator,
                          company_security_officer, company_email)
             cur.execute(sql_str.encode('utf8'))
@@ -545,8 +548,10 @@ def save_spider_4_data_to_db(conn, cur):
                       "YearStartExporting,ContactPerson,JobTitle,OfficeAddress_Detail,Department,TradeCapacity," \
                       "ProductionCapacity,AverageLeadTime,ContractManufacturing,RegisteredCapital,RDCapacity," \
                       "LegalRepresentative,QCStaff,QualityControl,YearEstablished,Certificates,Revenue," \
-                      "NumberOfEmployess,Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s', \
-                      N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s', \
+                      "NumberOfEmployess,Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s'," \
+                      "N'%s',N'%s',N'%s',N'%s', \
+                      N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s'," \
+                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s', \
                       N'%s',N'%s',N'%s')" \
                       % (company_id, Name, Description, Country, City, Address, Website, MainProduct, Fax, Telephone,
                          CustomerPhone, SalesVolume, MainMarkets, PostCode, BusinessType, YearStartExporting,
@@ -629,8 +634,8 @@ def save_spider_5_data_to_db(conn, cur):
         try:
             sql_str = "insert into Company0(company_id,Industry,Name,Introduction,Description,Description_cn," \
                       "Country,Country_cn,Address,Website,Email,Fax,Telephone,PostCode,ContactPerson," \
-                      "NumberOfEmployess,Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s'," \
-                      "N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      "NumberOfEmployess,Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s'," \
+                      "N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
                       % (company_id, Industry, Name, Introduction, Description, Description_cn, Country, Country_cn,
                          Address, Website, Email, Fax, Telephone, PostCode, ContactPerson, NumberOfEmployess, Type)
             cur.execute(sql_str.encode('utf8'))
@@ -719,7 +724,8 @@ def save_spider_6_data_to_db(conn, cur):
         try:
             sql_str = "insert into Company0(company_id,Industry,Name,Description,Description_cn," \
                       "Country,Address,Website,Email,Fax,Telephone,ContactPerson,PurchaseProduct," \
-                      "Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      "Type) values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s'," \
+                      "N'%s',N'%s',N'%s',N'%s')" \
                       % (company_id, Industry, Name, Description, Description_cn, Country,
                          Address, Website, Email, Fax, Telephone, ContactPerson, PurchaseProduct, Type)
             cur.execute(sql_str.encode('utf8'))

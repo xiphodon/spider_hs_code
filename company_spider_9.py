@@ -17,11 +17,16 @@ import time
 import traceback
 import re
 import random
+import urllib
 
 
 search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
-                    , 'furniture', 'textile+-clothing']
-search_text = search_text_list[-1]
+                    , 'furniture', 'textile+-clothing', 'Communications+satellite+operators'
+                    , 'satellite+communications+ship', 'Aerials+satellite+communications', 'VSAT+satellite']
+
+search_text_origin = search_text_list[-1]
+
+search_text = urllib.parse.quote(search_text_origin) if '"' in search_text_origin else search_text_origin
 
 search_type_dict = {'product': 'PRODUCT',
                     'supplier': 'SUPPLIER'}
@@ -947,8 +952,8 @@ def start():
     # download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
-    # check_company_detail_keyword()
-    # parse_all_company_detail()
+    check_company_detail_keyword()
+    parse_all_company_detail()
 
     # 4.读取该产品的公司列表json（查看）
     get_company_list_json()

@@ -22,7 +22,8 @@ import urllib
 
 search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
                     , 'furniture', 'textile+-clothing', 'Communications+satellite+operators'
-                    , 'satellite+communications+ship', 'Aerials+satellite+communications', 'VSAT+satellite']
+                    , 'satellite+communications+ship', 'Aerials+satellite+communications', 'VSAT+satellite'
+                    , '"Fishing+boats"', 'machine+tool+Manufacture', 'rotary switch']
 
 search_text_origin = search_text_list[-1]
 

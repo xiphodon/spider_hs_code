@@ -19,6 +19,7 @@ import re
 import random
 import urllib
 import pymongo
+import xlwt
 
 home_url = settings.company_home_url_russia
 
@@ -211,13 +212,58 @@ def get_mongodb_collection():
     return collection
 
 
+def create_excel_file(new_excel_name):
+    """
+    生成excel文件
+    :param new_excel_name
+    :return:
+    """
+    wbk = xlwt.Workbook()
+    sheet = wbk.add_sheet('sheet 1')
+
+    collection = get_mongodb_collection()
+    res = collection.find({})
+
+    create_row(sheet, 0, ['company_name', 'company_url', 'company_address', 'company_phone', 'create_tag'])
+
+    for i, res_item in enumerate(res):
+        create_row(sheet, i+1, [res_item['company_name'],
+                                res_item['company_url'],
+                                res_item['company_address'],
+                                res_item['company_phone'],
+                                res_item['create_tag']])
+
+    wbk.save(rf'C:\Users\topeasecpb\Desktop\{new_excel_name}.xls')
+
+
+def create_row(sheet, row_index, data_list):
+    """
+    excel文件创建一行数据
+    :param sheet: sheet表
+    :param data_list: 一行数据
+    :param row_index: 行索引
+    :return:
+    """
+    for i in range(len(data_list)):
+        sheet.write(row_index, i, data_list[i])
+
+
+def get_russia_company_data():
+    """
+    获取俄罗斯数据
+    :return:
+    """
+    request_what()
+    get_keyword_list()
+
+
 def start():
     """
     执行入口
     :return:
     """
-    request_what()
-    get_keyword_list()
+    # get_russia_company_data()
+    create_excel_file('russia_shoes_shop')
 
 
 if __name__ == '__main__':

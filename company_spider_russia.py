@@ -18,6 +18,7 @@ import traceback
 import re
 import random
 import urllib
+import pymongo
 
 home_url = settings.company_home_url_russia
 
@@ -90,6 +91,8 @@ def get_keyword_list():
     """
     next_page_href = '/list/magaziny_obuv/'
 
+    collection = get_mongodb_collection()
+
     has_next_page = True
 
     while has_next_page:
@@ -97,7 +100,7 @@ def get_keyword_list():
         print(f'current page number: {current_page_number_str}')
 
         result = sess.get(f'{home_url}{next_page_href}', headers=get_header(), timeout=5)
-        time.sleep(random.randint(1, 5) * 0.1)
+        time.sleep(random.randint(1, 3) * 0.1)
 
         selector = etree.HTML(result.text)
 
@@ -116,14 +119,24 @@ def get_keyword_list():
         # print(next_page_href_list)
         if len(next_page_href_list) > 0:
             next_page_href = next_page_href_list[0]
-            # has_next_page = True
-            has_next_page = False  # 临时中断
+            has_next_page = True
+            # has_next_page = False  # 临时中断
         else:
             has_next_page = False
 
         # 获取数据列表
         data_div_list = selector.xpath('//div[@id="search_items_wrapper"]/div[@reccode]')
         for data_div in data_div_list:
+
+            # 数据id(reccode)
+            company_id_list = data_div.xpath('./@reccode')
+            company_id = str(company_id_list[0]).strip() if len(company_id_list) > 0 else '-1'
+            print(company_id)
+
+            db_result = collection.find_one({'company_id': company_id})
+            if db_result is not None:
+                continue
+
             data_info_div_list = data_div.xpath('./div[@class="text_info"]')
             if len(data_info_div_list) > 0:
                 data_info_div = data_info_div_list[0]
@@ -138,10 +151,42 @@ def get_keyword_list():
                 company_address = ''.join(company_address_list).replace(r'\r\n', '').strip() \
                     if len(company_address_list) > 0 else ''
 
-                print(company_name)
-                print(company_url)
-                print(company_address)
+                company_phone_a_list = data_info_div.xpath('./a[contains(@class,"company_phone")]/@data-uiajaxdata')
+                company_phone_id_text = company_phone_a_list[0] if len(company_phone_a_list) > 0 else ''
+                if company_phone_id_text.startswith('contact_id='):
+                    company_phone_id = company_phone_id_text.split('=')[-1]
+                    company_phone = get_phone_by_phone_id(company_phone_id)
+                else:
+                    company_phone = ''
+
+                temp_dict = {
+                    'company_id': company_id,
+                    'company_name': company_name,
+                    'company_url': company_url,
+                    'company_address': company_address,
+                    'company_phone': company_phone,
+                    'create_time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+                    'create_tag': search_text
+                }
+
+                print(temp_dict)
+                db_result = collection.insert_one(temp_dict)
+                print(db_result.inserted_id)
                 print('===================')
+
+
+def get_phone_by_phone_id(company_phone_id):
+    """
+    通过phoneId获取phone number
+    :param company_phone_id:
+    :return:
+    """
+    data = {
+        'contact_id': company_phone_id
+    }
+    result = sess.post(f'{home_url}/ajax/GetPhoneByContactId', headers=get_header(), data=data, timeout=5)
+    time.sleep(random.randint(1, 3) * 0.1)
+    return result.text
 
 
 def get_current_page_number(next_page_href: str):
@@ -153,6 +198,17 @@ def get_current_page_number(next_page_href: str):
         return next_page_href.split('/')[-2]
     else:
         return '1'
+
+
+def get_mongodb_collection():
+    """
+    获取MongoDB
+    :return:
+    """
+    client = pymongo.MongoClient(host='localhost', port=27017)
+    db = client.fastfishdata
+    collection = db.yp_russia
+    return collection
 
 
 def start():

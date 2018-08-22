@@ -226,6 +226,7 @@ def create_excel_file(new_excel_name, is_ignore_no_url=True):
     """
     生成excel文件
     :param new_excel_name
+    :param is_ignore_no_url
     :return:
     """
     wbk = xlwt.Workbook()

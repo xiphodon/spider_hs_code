@@ -21,7 +21,13 @@ import urllib
 import pymongo
 import xlwt
 
-home_url = settings.company_home_url_russia
+area_and_region_list = [('www', 'spb'), ('msk', 'msk')]
+
+choice_area_url_and_region = area_and_region_list[-1]
+
+home_url = settings.company_home_url_russia.replace('*', choice_area_url_and_region[0])
+
+print(home_url)
 
 search_text_list = ['Магазины - обувь']
 
@@ -30,7 +36,7 @@ search_text = search_text_list[-1]
 sess = requests.session()
 
 
-def while_session_get(page_url, times=5000, sleep_time=0.2, new_sess=False, method_get=True, data=None):
+def while_session_request(page_url, times=5000, sleep_time=0.2, new_sess=False, method_get=True, data=None):
     """
     循环请求
     :return:
@@ -67,9 +73,9 @@ def get_header():
     return {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:6.0) Gecko/20100101 Firefox/6.0',
             'Connection': 'keep-alive',
-            'Host': 'www.yp.ru',
-            # 'Origin': 'https://www.yp.ru',
-            'Referer': 'https://www.yp.ru/'
+            'Host': f'{choice_area_url_and_region[0]}.yp.ru',
+            # 'Origin': f'https://{choice_area_url_and_region[0]}.yp.ru',
+            'Referer': f'https://{choice_area_url_and_region[0]}.yp.ru/'
             }
 
 
@@ -80,9 +86,10 @@ def request_what():
     """
     data = {
         'text': 'Магазины - обувь',
-        'region': 'spb'
+        'region': choice_area_url_and_region[-1]
     }
-    sess.post(f'{home_url}/autocomplete/what/', headers=get_header(), data=data, timeout=5)
+    # sess.post(f'{home_url}/autocomplete/what/', headers=get_header(), data=data, timeout=10)
+    while_session_request(f'{home_url}/autocomplete/what/', data=data, sleep_time=0, method_get=False)
 
 
 def get_keyword_list():
@@ -100,7 +107,8 @@ def get_keyword_list():
         current_page_number_str = get_current_page_number(next_page_href)
         print(f'current page number: {current_page_number_str}')
 
-        result = sess.get(f'{home_url}{next_page_href}', headers=get_header(), timeout=5)
+        # result = sess.get(f'{home_url}{next_page_href}', headers=get_header(), timeout=10)
+        result = while_session_request(f'{home_url}{next_page_href}', sleep_time=0)
         time.sleep(random.randint(1, 3) * 0.1)
 
         selector = etree.HTML(result.text)
@@ -112,7 +120,8 @@ def get_keyword_list():
             if len(total_data_size_text_list) > 0:
                 total_data_size_text = total_data_size_text_list[0]
                 # print(total_data_size_text)
-                re_result = re.search(r'\d+', total_data_size_text).group()
+                re_result = re.search(r'\d+\s*\d*', total_data_size_text).group()
+                re_result = re_result.replace(' ', '').strip()
                 print(f'total data size: {re_result}')
 
         # 获取下一页href
@@ -185,8 +194,9 @@ def get_phone_by_phone_id(company_phone_id):
     data = {
         'contact_id': company_phone_id
     }
-    result = sess.post(f'{home_url}/ajax/GetPhoneByContactId', headers=get_header(), data=data, timeout=5)
-    time.sleep(random.randint(1, 3) * 0.1)
+    # result = sess.post(f'{home_url}/ajax/GetPhoneByContactId', headers=get_header(), data=data, timeout=10)
+    result = while_session_request(f'{home_url}/ajax/GetPhoneByContactId', sleep_time=0.03, data=data, method_get=False)
+    # time.sleep(random.randint(1, 3) * 0.1)
     return result.text
 
 
@@ -212,7 +222,7 @@ def get_mongodb_collection():
     return collection
 
 
-def create_excel_file(new_excel_name):
+def create_excel_file(new_excel_name, is_ignore_no_url=True):
     """
     生成excel文件
     :param new_excel_name
@@ -226,12 +236,18 @@ def create_excel_file(new_excel_name):
 
     create_row(sheet, 0, ['company_name', 'company_url', 'company_address', 'company_phone', 'create_tag'])
 
+    data_index = 1
+
     for i, res_item in enumerate(res):
-        create_row(sheet, i+1, [res_item['company_name'],
-                                res_item['company_url'],
-                                res_item['company_address'],
-                                res_item['company_phone'],
-                                res_item['create_tag']])
+        if is_ignore_no_url:
+            if len(res_item['company_url'].strip()) == 0:
+                continue
+        create_row(sheet, data_index, [res_item['company_name'],
+                                       res_item['company_url'],
+                                       res_item['company_address'],
+                                       res_item['company_phone'],
+                                       res_item['create_tag']])
+        data_index += 1
 
     wbk.save(rf'C:\Users\topeasecpb\Desktop\{new_excel_name}.xls')
 
@@ -262,8 +278,8 @@ def start():
     执行入口
     :return:
     """
-    # get_russia_company_data()
-    create_excel_file('russia_shoes_shop')
+    get_russia_company_data()
+    create_excel_file(f'russia_{choice_area_url_and_region[0]}_shoes_shop')
 
 
 if __name__ == '__main__':

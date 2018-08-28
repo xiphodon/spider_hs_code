@@ -31,6 +31,8 @@ catalog_json_2 = os.path.join(home_data, r'spider_hs_code_2.json')
 catalog_json_3 = os.path.join(home_data, r'spider_hs_code_3.json')
 # 合并后的hs_code_json_path
 hs_code_json_path = os.path.join(home_data, r'merge_hs_code.json')
+# 标准化后的hs_code_json_path
+new_hs_code_json_path = os.path.join(home_data, r'all_hs_code.json')
 
 # 简单统计信息
 sample_stat_json_file_path = os.path.join(home_data, r'sample_stat.json')
@@ -39,6 +41,12 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
     'Connection': 'keep-alive'
 }
+
+if not os.path.exists(chapter_href_html_dir):
+    os.mkdir(chapter_href_html_dir)
+
+if not os.path.exists(all_hs_code_item_html_dir):
+    os.mkdir(all_hs_code_item_html_dir)
 
 
 def get_hs_code_catalog():
@@ -525,7 +533,7 @@ def parse_all_hs_code_desc_html():
 
             # print(json.dumps(temp_item_dict))
             # break
-
+        temp_item_dict = json.loads(json.dumps(temp_item_dict).replace('\xa0', ''))
         all_hs_code_desc_html_json.append(temp_item_dict)
 
     with open(catalog_json_3, 'w', encoding='utf8') as fp:
@@ -650,6 +658,42 @@ def get_all_chapter_hs_code_json_item_sample_data():
             yield item_sample_data
 
 
+def data_normalization():
+    """
+    数据标准化
+    :return:
+    """
+    with open(hs_code_json_path, 'r', encoding='utf8') as fp:
+        data = json.load(fp)
+
+    new_data_list = list()
+    for item in data:
+        item_str = str(json.dumps(item))
+        new_item_str = item_str.replace(r'\u00a0', '')  # 去除\xa0
+        if len(item_str) > len(new_item_str):
+            print(item_str)
+            print(new_item_str)
+            print('=' * 20)
+        new_data_list.append(json.loads(new_item_str))
+
+    with open(new_hs_code_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(new_data_list))
+
+
+def get_data_demo(head=20):
+    """
+    获取数据样本
+    :param head:
+    :return:
+    """
+    with open(new_hs_code_json_path, 'r', encoding='utf8') as fp:
+        data = json.load(fp)
+    show_len = min(head, len(data))
+    data_demo = data[:show_len] if show_len > 0 else None
+    print(data_demo)
+    return data_demo
+
+
 if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
@@ -660,4 +704,6 @@ if __name__ == "__main__":
     # split_all_hs_code_desc_json()
     # check_split_json_file()
     # sample_stat_json()
-    merge_hs_code_json()
+    # merge_hs_code_json()
+    data_normalization()
+    get_data_demo()

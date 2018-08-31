@@ -64,5 +64,18 @@ def start():
     conn.close()
 
 
+def json2xml():
+    """
+    json转xml
+    :return:
+    """
+    hs_code_json_dict = read_hs_code_json()
+    xml_str = str(dicttoxml.dicttoxml(hs_code_json_dict, attr_type=False, root=False), encoding='utf8')
+
+
+
+
+
 if __name__ == '__main__':
-    start()
+    # start()
+    json2xml()

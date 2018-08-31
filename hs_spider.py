@@ -12,6 +12,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import traceback
+import dicttoxml
 # import cgi
 
 catalog_url = r'https://www.365area.com/hscate'
@@ -33,6 +34,8 @@ catalog_json_3 = os.path.join(home_data, r'spider_hs_code_3.json')
 hs_code_json_path = os.path.join(home_data, r'merge_hs_code.json')
 # 标准化后的hs_code_json_path
 new_hs_code_json_path = os.path.join(home_data, r'all_hs_code.json')
+# xml格式path
+hs_code_xml_path = os.path.join(home_data, r'hs_code.xml')
 
 # 简单统计信息
 sample_stat_json_file_path = os.path.join(home_data, r'sample_stat.json')
@@ -533,7 +536,7 @@ def parse_all_hs_code_desc_html():
 
             # print(json.dumps(temp_item_dict))
             # break
-        temp_item_dict = json.loads(json.dumps(temp_item_dict).replace('\xa0', ''))
+        temp_item_dict = json.loads(json.dumps(temp_item_dict).replace(r'\u00a0', ''))
         all_hs_code_desc_html_json.append(temp_item_dict)
 
     with open(catalog_json_3, 'w', encoding='utf8') as fp:
@@ -694,6 +697,18 @@ def get_data_demo(head=20):
     return data_demo
 
 
+def json2xml():
+    """
+    json转xml
+    :return:
+    """
+    with open(hs_code_json_path, 'r', encoding='utf8') as fp:
+        hs_code_json_dict = json.loads(fp.read())
+    xml_str = str(dicttoxml.dicttoxml(hs_code_json_dict, attr_type=False, custom_root='hs_code_list'), encoding='utf8')
+    with open(hs_code_xml_path, 'w', encoding='utf8') as fp:
+        fp.write(xml_str)
+
+
 if __name__ == "__main__":
     # get_hs_code_catalog()
     # parse_catalog()
@@ -705,5 +720,6 @@ if __name__ == "__main__":
     # check_split_json_file()
     # sample_stat_json()
     # merge_hs_code_json()
-    data_normalization()
-    get_data_demo()
+    # data_normalization()
+    # get_data_demo()
+    json2xml()

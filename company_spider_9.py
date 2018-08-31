@@ -18,12 +18,14 @@ import traceback
 import re
 import random
 import urllib
+# import queue
 
 
 search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liquid', 'rayon', 'jacquard', 'toy'
                     , 'furniture', 'textile+-clothing', 'Communications+satellite+operators'
                     , 'satellite+communications+ship', 'Aerials+satellite+communications', 'VSAT+satellite'
-                    , '"Fishing+boats"', 'machine+tool+Manufacture', 'rotary switch', 'supermarket']
+                    , '"Fishing+boats"', 'machine+tool+Manufacture', 'rotary switch', 'supermarket'
+                    , 'motor']
 
 search_text_origin = search_text_list[-1]
 
@@ -539,6 +541,7 @@ def parse_all_company_detail():
     debug = False
     debug_size = 10
 
+    file_part = 0
     company_list = list()
     for file_name in os.listdir(company_detail_product_dir_path):
         print('\r' + file_name, end='')
@@ -708,6 +711,12 @@ def parse_all_company_detail():
 
             # print(json.dumps(company_dict))
 
+            if len(company_list) > 20 * 10000:
+                with open(company_list_json_path+f'.part{file_part}', 'w', encoding='utf8') as fp:
+                    fp.write(json.dumps(company_list))
+                file_part += 1
+                company_list = list()
+
         except Exception as e:
             print(traceback.format_exc())
             if debug:
@@ -720,7 +729,12 @@ def parse_all_company_detail():
     print()
     print(len(company_list))
 
-    with open(company_list_json_path, 'w', encoding='utf8') as fp:
+    if file_part > 0:
+        temp_path = company_list_json_path+f'.part{file_part}'
+    else:
+        temp_path = company_list_json_path
+
+    with open(temp_path, 'w', encoding='utf8') as fp:
         fp.write(json.dumps(company_list))
 
 
@@ -916,14 +930,118 @@ def clean_wrong_charter(str_text):
     return str(str_text).replace('\xa0', ' ').strip()
 
 
-def read_product_company_list_json():
+def read_product_company_list_json(part_interval=(0, 3)):
     """
     读取产品json
+    :param: part_interval part区间
+    :return:
+    """
+    data = list()
+    if os.path.exists(company_list_json_path):
+        if os.path.getsize(company_list_json_path) > 2 << 29:
+            # 文件大于512M
+            print('json文件大于512M')
+            item_border_index_list = get_item_border_index_list()
+            for start_idx, end_idx in item_border_index_list:
+                item_data_dict = get_item_data_from_big_json_file(start_idx, end_idx)
+                data.append(item_data_dict)
+        else:
+            # 文件小于512M
+            with open(company_list_json_path, 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+    else:
+        assert len(part_interval) == 2, 'part_interval must 2 parameters'
+        part_index = part_interval[0]
+        while True:
+            temp_path = company_list_json_path + f'.part{part_index}'
+            if os.path.exists(temp_path):
+                with open(temp_path, 'r', encoding='utf8') as fp:
+                    print(f'read {temp_path}')
+                    temp_data = json.load(fp)
+                    data.extend(temp_data)
+                if part_interval[-1] == 0:
+                    part_index += 1
+                else:
+                    part_index += 1
+                    if part_index == part_interval[-1]:
+                        break
+            else:
+                break
+    print(f'read data OK')
+    return data
+
+
+def get_item_border_index_list():
+    """
+    获取item的边界花括号索引列表
+    :return:
+    """
+    check_stack = list()
+    item_border_index_list = list()  # item的边界花括号索引列表
+    block_index = 0
+    block_size = 2 << 25  # 32M
+    with open(company_list_json_path, 'r', encoding='utf8') as fp:
+        while True:
+            block_data = fp.read(block_size)
+            if not block_data:
+                break
+            base_index = block_index * block_size
+
+            for idx, charter in enumerate(block_data):
+                charter_index = base_index + idx
+                if charter == '{':
+                    check_stack.append(('l', charter_index))  # 存入栈，(左/右花括号, 括号索引)
+                elif charter == '}':
+                    len_check_stack = len(check_stack)
+                    if len_check_stack > 0:
+                        if len_check_stack > 1:
+                            check_stack.pop(-1)
+                        elif len_check_stack == 1:
+                            left_bracket_index = check_stack.pop(-1)[-1]
+                            item_border_index_list.append((left_bracket_index, charter_index))
+                else:
+                    continue
+
+                # print(check_stack)
+            print(f'>>> {len(item_border_index_list)}')
+            block_index += 1
+            # if block_index > 5:
+            #     break
+        # print(item_border_index_list[:10])
+    return item_border_index_list
+
+
+def get_item_data_from_big_json_file(start_index, end_index):
+    """
+    从json大文件中获取单条的item数据
+    :param start_index: item起始索引位置
+    :param end_index: item末尾索引位置
     :return:
     """
     with open(company_list_json_path, 'r', encoding='utf8') as fp:
-        data = fp.read()
-    return json.loads(data)
+        fp.seek(start_index, 0)
+        item_data = fp.read(end_index+1-start_index)
+        print(item_data)
+        item_dict = json.loads(item_data)
+        print(item_dict)
+        print('==' * 20)
+        return item_dict
+
+
+def test_read_item_to_json_obj(start_index, end_index):
+    """
+    测试读取一个item数据并转换为json对象
+    [(1, 2325), (2328, 11496), (11499, 14130), (14133, 15982), (15985, 17666)]
+    :param start_index: item起始索引位置
+    :param end_index: item末尾索引位置
+    :return:
+    """
+    with open(company_list_json_path, 'r', encoding='utf8') as fp:
+        fp.seek(start_index, 0)
+        item_data = fp.read(end_index+1-start_index)
+        print(item_data)
+        item_dict = json.loads(item_data)
+        print(item_dict)
 
 
 def get_company_list_json():
@@ -953,11 +1071,14 @@ def start():
     # download_all_company_detail_htmls(while_times=50)
 
     # 3.解析公司详情页（先检查含有字段）
-    check_company_detail_keyword()
-    parse_all_company_detail()
+    # check_company_detail_keyword()
+    # parse_all_company_detail()
 
     # 4.读取该产品的公司列表json（查看）
     get_company_list_json()
+
+    # test_read_big_json()
+    # test_read_item_to_json_obj(2328, 11496)
 
 
 if __name__ == '__main__':

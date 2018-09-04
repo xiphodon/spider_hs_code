@@ -924,7 +924,7 @@ def save_kompass_company_spider_to_db(conn, cur):
 
             # if count > 20:
             #     break
-        break
+        # break
     print('异常数据id列表：', len(error_id_list), error_id_list)
     print('已存在数据id列表：', len(exists_id_list), exists_id_list)
     print('公司名空的id列表：', len(none_name_list), none_name_list)

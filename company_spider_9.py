@@ -930,7 +930,7 @@ def clean_wrong_charter(str_text):
     return str(str_text).replace('\xa0', ' ').strip()
 
 
-def read_product_company_list_json(part_interval=(0, 3)):
+def read_product_company_list_json(part_interval=(5, 6)):
     """
     读取产品json
     :param: part_interval part区间

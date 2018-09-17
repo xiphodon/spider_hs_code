@@ -73,9 +73,6 @@ def json2xml():
     xml_str = str(dicttoxml.dicttoxml(hs_code_json_dict, attr_type=False, root=False), encoding='utf8')
 
 
-
-
-
 if __name__ == '__main__':
-    # start()
-    json2xml()
+    start()
+    # json2xml()

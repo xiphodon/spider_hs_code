@@ -76,7 +76,8 @@ class WhileRequests:
     """
     def __init__(self):
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/68.0.3440.106 Safari/537.36',
             'Connection': 'keep-alive'
         }
 
@@ -90,7 +91,7 @@ class WhileRequests:
         while_times = 0
         while True:
             try:
-                result = requests.get(url, headers=self.headers, timeout=10)
+                result = requests.get(url, headers=self.headers, timeout=15)
                 # result = requests.get(url, headers=headers, proxies=proxies, timeout=5)
             except Exception as e:
                 if while_times < request_times:
@@ -109,7 +110,8 @@ class RekutenSpiderKey:
     """
 
     def __init__(self):
-        key_word_list = ['リキッド', '電子タバコ', 'vape']
+        # key_word_list = ['リキッド', '電子タバコ', 'vape']
+        key_word_list = ['モップ']
         self.settings = RekutenSpiderSettings(key_word_list)
         self.request = WhileRequests()
         self.html_page_number = -1

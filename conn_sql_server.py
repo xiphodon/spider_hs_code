@@ -52,8 +52,9 @@ def save_to_sql_server():
     # save_rakuten_spider_products_info_to_db(conn, cur)
 
     # save_rakuten_spider_finally_shop_to_db(conn, cur)
+    save_rakuten_spider_key_to_db(conn, cur)
 
-    save_kompass_company_spider_to_db(conn, cur)
+    # save_kompass_company_spider_to_db(conn, cur)
 
     conn.close()
 
@@ -212,6 +213,16 @@ def save_rakuten_spider_products_info_to_db(conn, cur):
         # break
     # conn.commit()
     print('count:', count, ', error_count:', error_count)
+
+
+def save_rakuten_spider_key_to_db(conn, cur):
+    """
+    乐天数据（根据关键字爬取）导入数据库
+    :param conn:
+    :param cur:
+    :return:
+    """
+    data = rakuten_spider_10
 
 
 def save_rakuten_spider_finally_shop_to_db(conn, cur):

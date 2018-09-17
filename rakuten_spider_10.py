@@ -3,7 +3,7 @@
 # @Time    : 2018/7/26 10:35
 # @Author  : GuoChang
 # @Site    : https://github.com/xiphodon
-# @File    : rekuten_spider_10.py
+# @File    : rakuten_spider_10.py
 # @Software: PyCharm
 
 # 乐天 定向采集
@@ -122,9 +122,128 @@ class RekutenSpiderKey:
         启动爬虫
         :return:
         """
-        self.check_and_download_page_htmls()
-        self.gevent_parse_page_htmls()
-        self.check_and_download_shop_info_htmls()
+        # self.check_and_download_page_htmls()
+        # self.gevent_parse_page_htmls()
+        # self.check_and_download_shop_info_htmls()
+        self.parse_shop_info_htmls_to_json()
+
+    def parse_shop_info_htmls_to_json(self):
+        """
+        解析商家详情页
+        并写成json文件
+        :return:
+        """
+        shop_info_json_list = list()
+        for item_file_name in os.listdir(self.settings.key_shop_info_html_dir_path):
+            item_path = os.path.join(self.settings.key_shop_info_html_dir_path, item_file_name)
+            print(item_path)
+
+            with open(item_path, 'r', encoding='EUC-JP') as fp:
+                content = fp.read()
+
+            # print(content)
+
+            selector = etree.HTML(content)
+
+            info_block_list = selector.xpath('//table/tr/td[@valign="top"]/font/dl')
+
+            if len(info_block_list) > 0:
+                info_block = info_block_list[0]
+
+                # 公司名
+                shop_name_list = info_block.xpath('.//dt/text()')
+                if len(shop_name_list) >= 2:
+                    shop_name = str(shop_name_list[1]).strip()
+                else:
+                    print('no shop name')
+                    continue
+
+                shop_info = info_block.xpath('string(.//dd)')
+                shop_info_lines = str(shop_info).strip().split('\n')
+
+                if len(shop_info_lines) == 6:
+                    company_address = shop_info_lines[0].strip()
+                    company_tel_and_fax = shop_info_lines[1].strip()
+                    company_representative_line = shop_info_lines[2].strip()
+                    company_operator_line = shop_info_lines[3].strip()
+                    company_security_officer_line = shop_info_lines[4].strip()
+                    company_email_line = shop_info_lines[5].strip()
+
+                    # 解析tel&fax
+                    company_tel_index = company_tel_and_fax.find('TEL')
+                    company_fax_index = company_tel_and_fax.find('FAX')
+                    if company_tel_index >= 0 and company_fax_index >= 0:
+                        # 有tel 且 有fax
+                        company_tel_and_fax_split_list = company_tel_and_fax.split('  ')
+                        company_tel = company_tel_and_fax_split_list[0].split(':')[-1]
+                        company_fax = company_tel_and_fax_split_list[-1].split(':')[-1]
+                    elif company_tel_index == -1 and company_fax_index >= 0:
+                        # 有fax 且 没有tel
+                        company_tel = ''
+                        company_fax = company_tel_and_fax.split(':')[-1]
+                    elif company_tel_index >= 0 and company_fax_index == -1:
+                        # 有tel 且 没有fax
+                        company_tel = company_tel_and_fax.split(':')[-1]
+                        company_fax = ''
+                    else:
+                        company_tel = ''
+                        company_fax = ''
+
+                    company_representative = self.get_colon_value(company_representative_line)
+                    company_operator = self.get_colon_value(company_operator_line)
+                    company_security_officer = self.get_colon_value(company_security_officer_line)
+                    company_email = self.get_colon_value(company_email_line)
+
+                    temp_dict = {
+                        'company_website': self.get_url_by_shop_info_html_file_name(item_file_name),
+                        'company_name': self.check_str(shop_name),
+                        'company_address': self.check_str(company_address),
+                        'company_tel': self.check_str(company_tel),
+                        'company_fax': self.check_str(company_fax),
+                        'company_representative': self.check_str(company_representative),
+                        'company_operator': self.check_str(company_operator),
+                        'company_security_officer': self.check_str(company_security_officer),
+                        'company_email': self.check_str(company_email),
+                    }
+                    shop_info_json_list.append(temp_dict)
+                else:
+                    print(f'shop info lines is {len(shop_info_lines)}')
+                    continue
+
+            # break
+        shop_info_json_path = os.path.join(self.settings.key_json_dir_path, 'shop_info_list.json')
+        with open(shop_info_json_path, 'w', encoding='utf8') as fp:
+            fp.write(json.dumps(shop_info_json_list))
+
+    @staticmethod
+    def get_colon_value(_str):
+        """
+        获取冒号后的取值
+        :param _str: 包含冒号的键值对 eg：代表者:西岡　康夫
+        :return: 冒号后面的取值 eg：西岡　康夫
+        """
+        _str_split_list = _str.split(':')
+        if len(_str_split_list) == 2:
+            _colon_value = _str_split_list[-1]
+        else:
+            _colon_value = ''
+        return _colon_value
+
+    @staticmethod
+    def check_str(_str):
+        """
+        检查字符串 \n, \xa0, \xc2, \u3000 等特殊字符
+        :param _str:
+        :return:
+        """
+        problem_str_list = ['\n', '\xa0', '\xc2', '\u3000', '<br />', '&nbsp;']
+        for item_problem in problem_str_list:
+            _str = _str.replace(item_problem, ' ')
+
+        strip_str_list = [',', ' ']
+        for item_strip in strip_str_list:
+            _str = _str.strip(item_strip)
+        return _str
 
     def check_and_download_page_htmls(self):
         """
@@ -225,7 +344,7 @@ class RekutenSpiderKey:
 
     def get_shop_info_html_file_name_by_url(self, url):
         """
-        通过商店详情页的url起名字
+        通过商店详情页的url起文件名字
         :param url:
         :return:
         """
@@ -233,6 +352,18 @@ class RekutenSpiderKey:
         url_shop_name = url_str.replace(self.settings.home_url_www, '').replace(r'/', '')
         file_name = f'{url_shop_name}_info.html'
         return file_name
+
+    def get_url_by_shop_info_html_file_name(self, file_name):
+        """
+        通过url起的文件名字，反推出url
+        :param file_name:
+        :return:
+        """
+        file_name = str(file_name)
+        url_shop_name = file_name.rstrip('_info.html')
+        url = f'{self.settings.home_url_www}{url_shop_name}/'
+        return url
+
 
     @staticmethod
     def gevent_pool_requests(func, task_list, gevent_pool_size=30):

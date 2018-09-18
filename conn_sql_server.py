@@ -17,6 +17,8 @@ import json
 import merge_all_spider_dada
 import rakuten_spider_7
 import company_spider_9
+import rakuten_spider_10
+import os
 
 
 # # settings.py 文件
@@ -222,7 +224,70 @@ def save_rakuten_spider_key_to_db(conn, cur):
     :param cur:
     :return:
     """
-    data = rakuten_spider_10
+    rakuten_spider = rakuten_spider_10.Main().spider
+    data_path = os.path.join(rakuten_spider.settings.key_json_dir_path, 'shop_info_list.json')
+    with open(data_path, 'r', encoding='utf8') as fp:
+        data = json.load(fp)
+
+    key_word_list = rakuten_spider.settings.key_word_list
+
+    error_count = 0
+    count = 0
+
+    for item_dict in data:
+        company_website = item_dict.get('company_href', '').replace("'", "''")
+
+        # 查这一家店是否已存储
+
+        # 已存储：读出，查询关键字列表是否出现在company_product_desc字段，
+        #        若有则什么也不做，若无则添加新关键字至该字段，并更新数据（更新时间）
+
+        # 未存储：直接插库
+
+        data_origin_id = '1'
+        company_product_desc = ''
+        company_product_type = ''
+        company_name = item_dict.get('company_name', '').replace("'", "''")
+        company_address = item_dict.get('company_address', '').replace("'", "''")
+        company_tel = item_dict.get('company_tel', '').replace("'", "''")
+        company_fax = item_dict.get('company_fax', '').replace("'", "''")
+        company_representative = item_dict.get('company_representative', '').replace("'", "''")
+        company_operator = item_dict.get('company_operator', '').replace("'", "''")
+        company_security_officer = item_dict.get('company_security_officer', '').replace("'", "''")
+        company_email = item_dict.get('company_email', '').replace("'", "''")
+
+        sql_str = None
+        try:
+            sql_str = "insert into ffd_cbec_company(data_origin_id,company_website,company_product_desc, " \
+                      "company_product_type, company_name, company_address, company_tel, company_fax," \
+                      "company_representative, company_operator, company_security_officer, company_email)" \
+                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
+                      % (data_origin_id, company_website, company_product_desc, company_product_type,
+                         company_name, company_address,
+                         company_tel, company_fax, company_representative, company_operator,
+                         company_security_officer, company_email)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            count += 1
+            print(company_website, 'OK', ',当前 count:', count, ', error_count:', error_count)
+            # time.sleep(0.005)
+        except Exception as e:
+            error_count += 1
+            print(e, error_count, company_website, '===================')
+            print(sql_str)
+
+            print(len(company_website))
+            print(len(company_product_desc))
+            print(len(company_product_type))
+            print(len(company_name))
+            print(len(company_address))
+            print(len(company_tel))
+            print(len(company_fax))
+            print(len(company_representative))
+            print(len(company_operator))
+            print(len(company_security_officer))
+            print(len(company_email))
+    print('count:', count, ', error_count:', error_count)
 
 
 def save_rakuten_spider_finally_shop_to_db(conn, cur):

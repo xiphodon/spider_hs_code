@@ -364,7 +364,6 @@ class RekutenSpiderKey:
         url = f'{self.settings.home_url_www}{url_shop_name}/'
         return url
 
-
     @staticmethod
     def gevent_pool_requests(func, task_list, gevent_pool_size=30):
         """

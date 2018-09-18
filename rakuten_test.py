@@ -3,7 +3,7 @@
 # @Time    : 2018/9/12 13:39
 # @Author  : GuoChang
 # @Site    : https://github.com/xiphodon
-# @File    : rekuten_test.py
+# @File    : rakuten_test.py
 # @Software: PyCharm
 
 import requests

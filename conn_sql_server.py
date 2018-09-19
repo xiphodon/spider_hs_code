@@ -14,7 +14,7 @@ import company_spider_4
 import company_spider_5
 import company_spider_6
 import json
-import merge_all_spider_dada
+import merge_all_spider_data
 import rakuten_spider_7
 import company_spider_9
 import rakuten_spider_10
@@ -231,21 +231,47 @@ def save_rakuten_spider_key_to_db(conn, cur):
 
     key_word_list = rakuten_spider.settings.key_word_list
 
-    error_count = 0
+    error_insert_count = 0
+    error_update_count = 0
+    insert_count = 0
+    update_count = 0
     count = 0
 
     for item_dict in data:
-        company_website = item_dict.get('company_href', '').replace("'", "''")
-
         # 查这一家店是否已存储
-
         # 已存储：读出，查询关键字列表是否出现在company_product_desc字段，
         #        若有则什么也不做，若无则添加新关键字至该字段，并更新数据（更新时间）
-
         # 未存储：直接插库
+        print('=' * 30)
 
-        data_origin_id = '1'
-        company_product_desc = ''
+        company_website = item_dict.get('company_href', '').replace("'", "''")
+
+        # [id], \
+        # [company_name], \
+        # [company_product_type], \
+        # [company_product_desc], \
+        # [company_address], \
+        # [company_website], \
+        # [company_tel], \
+        # [company_fax], \
+        # [company_email], \
+        # [company_representative], \
+        # [company_operator], \
+        # [company_security_officer], \
+        # [create_datetime], \
+        # [update_datetime], \
+        # [update_version]
+
+        cur.execute("select top 1 [id], [company_name], [company_product_type], "
+                    "[company_product_desc], [company_address], [company_website], [company_tel], "
+                    "[company_fax], [company_email], [company_representative], [company_operator], "
+                    "[company_security_officer], [create_datetime], [update_datetime], [update_version] "
+                    "from ffd_cbec_company where data_origin_id='1' and company_website=N'%s'"
+                    % (company_website,))
+        server_data = cur.fetchone()
+
+        company_country_id = 103
+        company_product_desc = ','.join(key_word_list)
         company_product_type = ''
         company_name = item_dict.get('company_name', '').replace("'", "''")
         company_address = item_dict.get('company_address', '').replace("'", "''")
@@ -256,38 +282,126 @@ def save_rakuten_spider_key_to_db(conn, cur):
         company_security_officer = item_dict.get('company_security_officer', '').replace("'", "''")
         company_email = item_dict.get('company_email', '').replace("'", "''")
 
-        sql_str = None
-        try:
-            sql_str = "insert into ffd_cbec_company(data_origin_id,company_website,company_product_desc, " \
-                      "company_product_type, company_name, company_address, company_tel, company_fax," \
-                      "company_representative, company_operator, company_security_officer, company_email)" \
-                      " values(N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s')" \
-                      % (data_origin_id, company_website, company_product_desc, company_product_type,
-                         company_name, company_address,
-                         company_tel, company_fax, company_representative, company_operator,
-                         company_security_officer, company_email)
-            cur.execute(sql_str.encode('utf8'))
-            conn.commit()
-            count += 1
-            print(company_website, 'OK', ',当前 count:', count, ', error_count:', error_count)
-            # time.sleep(0.005)
-        except Exception as e:
-            error_count += 1
-            print(e, error_count, company_website, '===================')
-            print(sql_str)
+        data_origin_id = 1  # rakuten
+        create_datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        update_datetime = create_datetime
+        update_version = 1
 
-            print(len(company_website))
-            print(len(company_product_desc))
-            print(len(company_product_type))
-            print(len(company_name))
-            print(len(company_address))
-            print(len(company_tel))
-            print(len(company_fax))
-            print(len(company_representative))
-            print(len(company_operator))
-            print(len(company_security_officer))
-            print(len(company_email))
-    print('count:', count, ', error_count:', error_count)
+        if server_data is None:
+            # 这一家数据库不存在
+            # 直接插库
+
+            # print(f'new data, server DB has not this data: {company_website}')
+
+            sql_str = None
+            try:
+                sql_str = "insert into ffd_cbec_company(data_origin_id,company_website,company_product_desc, " \
+                          "company_product_type, company_name, company_address, company_tel, company_fax," \
+                          "company_representative, company_operator, company_security_officer, company_email," \
+                          "create_datetime, update_datetime, update_version, company_country_id)" \
+                          " values(N'%d',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s',N'%s'," \
+                          "N'%s',N'%s',N'%s',N'%d')" \
+                          % (data_origin_id, company_website, company_product_desc, company_product_type,
+                             company_name, company_address, company_tel, company_fax, company_representative,
+                             company_operator, company_security_officer, company_email, create_datetime,
+                             update_datetime, update_version, company_country_id)
+                cur.execute(sql_str.encode('utf8'))
+                conn.commit()
+                insert_count += 1
+                count += 1
+                print(f'insert {company_website} OK, now insert_count:{insert_count}, '
+                      f'error_insert_count:{error_insert_count}')
+                # time.sleep(0.005)
+            except Exception as e:
+                error_insert_count += 1
+                print(e, error_insert_count, company_website, '++++++ insert error ++++++')
+                print(sql_str)
+            break
+        else:
+            # 这一家在数据库
+            # 查询关键字列表是否出现在company_product_desc字段，若有则什么也不做
+
+            # print(f'old data, server DB has this data: {company_website}')
+            server_company_product_desc = server_data[3]
+            is_server_company_product_desc_has_key_word = False
+            for item_key in key_word_list:
+                if str(server_company_product_desc).find(item_key) > 0:
+                    is_server_company_product_desc_has_key_word = True
+                    break
+            if is_server_company_product_desc_has_key_word:
+                # 服务器重复数据中已包含现关键词
+                print('pass')
+                # print(f'do nothing, server data has this key word')
+                continue
+            else:
+                # 服务器重复数据中不包含现关键词，添加新关键字至该字段，并更新数据（更新联系方式、时间）
+
+                server_id = server_data[0]
+                server_company_name = server_data[1]
+                server_company_product_type = server_data[2]
+                server_company_product_desc = server_data[3]
+                server_company_address = server_data[4]
+                server_company_website = server_data[5]
+                server_company_tel = server_data[6]
+                server_company_fax = server_data[7]
+                server_company_email = server_data[8]
+                server_company_representative = server_data[9]
+                server_company_operator = server_data[10]
+                server_company_security_officer = server_data[11]
+                # server_create_datetime = server_data[12]
+                # server_update_datetime = server_data[13]
+                server_update_version = server_data[14]
+
+                # 更新旧数据字段
+                company_name = comparison_between_old_and_new_data(server_company_name, company_name)
+                company_product_type = comparison_between_old_and_new_data(server_company_product_type,
+                                                                           company_product_type)
+                company_product_desc = f'{server_company_product_desc},{company_product_desc}'.strip(',')
+                company_address = comparison_between_old_and_new_data(server_company_address, company_address)
+                company_website = comparison_between_old_and_new_data(server_company_website, company_website)
+                company_tel = comparison_between_old_and_new_data(server_company_tel, company_tel)
+                company_fax = comparison_between_old_and_new_data(server_company_fax, company_fax)
+                company_email = rakuten_merge_email(server_company_email, company_email)
+                company_representative = comparison_between_old_and_new_data(server_company_representative,
+                                                                             company_representative)
+                company_operator = comparison_between_old_and_new_data(server_company_operator, company_operator)
+                company_security_officer = comparison_between_old_and_new_data(server_company_security_officer,
+                                                                               company_security_officer)
+                # create_datetime = server_create_datetime
+                update_datetime = update_datetime
+                update_version = int(server_update_version) + 1 if server_update_version is not None else 2
+
+
+
+
+
+        # break
+    print(f'count:{count}, insert_conut:{insert_count}, update_count:{update_count}, '
+          f'error_insert_count:{error_insert_count}, error_update_count:{error_update_count}')
+
+
+def comparison_between_old_and_new_data(old_value, new_value):
+    """
+    新旧数据对比，优先选择有值数据
+    :param old_value: 服务器端旧数据
+    :param new_value: 新采集数据
+    :return:
+    """
+    return old_value if new_value is None or new_value == '' else new_value
+
+
+def rakuten_merge_email(old_value, new_value):
+    """
+    乐天，合并邮箱字段
+    :param old_value:
+    :param new_value:
+    :return:
+    """
+    if old_value is None:
+        old_value = ''
+    if new_value is None:
+        new_value = ''
+    return ','.join(set(f'{old_value},{new_value}'.split(',')))
 
 
 def save_rakuten_spider_finally_shop_to_db(conn, cur):
@@ -378,7 +492,7 @@ def save_spider_all_data_to_db(conn, cur):
     存储spider所有数据至数据库
     :return:
     """
-    data = merge_all_spider_dada.read_all_company_json()
+    data = merge_all_spider_data.read_all_company_json()
     print('data OK **************')
 
     error_count = 0

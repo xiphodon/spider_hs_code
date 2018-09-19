@@ -3,7 +3,7 @@
 # @Time    : 2017/11/22 9:35
 # @Author  : GuoChang
 # @Site    : https://github.com/xiphodon
-# @File    : merge_all_spider_dada.py
+# @File    : merge_all_spider_data.py
 # @Software: PyCharm
 
 import company_spider_3

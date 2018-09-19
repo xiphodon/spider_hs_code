@@ -293,6 +293,9 @@ def save_rakuten_spider_key_to_db(conn, cur):
 
             # print(f'new data, server DB has not this data: {company_website}')
 
+            if str(company_name).strip() == '':
+                continue
+
             sql_str = None
             try:
                 sql_str = "insert into ffd_cbec_company(data_origin_id,company_website,company_product_desc, " \
@@ -316,7 +319,7 @@ def save_rakuten_spider_key_to_db(conn, cur):
                 error_insert_count += 1
                 print(e, error_insert_count, company_website, '++++++ insert error ++++++')
                 print(sql_str)
-            break
+            # break
         else:
             # 这一家在数据库
             # 查询关键字列表是否出现在company_product_desc字段，若有则什么也不做
@@ -336,18 +339,21 @@ def save_rakuten_spider_key_to_db(conn, cur):
             else:
                 # 服务器重复数据中不包含现关键词，添加新关键字至该字段，并更新数据（更新联系方式、时间）
 
-                server_id = server_data[0]
-                server_company_name = server_data[1]
-                server_company_product_type = server_data[2]
-                server_company_product_desc = server_data[3]
-                server_company_address = server_data[4]
-                server_company_website = server_data[5]
-                server_company_tel = server_data[6]
-                server_company_fax = server_data[7]
-                server_company_email = server_data[8]
-                server_company_representative = server_data[9]
-                server_company_operator = server_data[10]
-                server_company_security_officer = server_data[11]
+                # print(item_dict)
+                # print(server_data)
+
+                server_id = server_data[0];print(server_id)
+                server_company_name = server_data[1].replace("'", "''")
+                server_company_product_type = server_data[2].replace("'", "''")
+                server_company_product_desc = server_data[3].replace("'", "''")
+                server_company_address = server_data[4].replace("'", "''")
+                # server_company_website = server_data[5].replace("'", "''")
+                server_company_tel = server_data[6].replace("'", "''")
+                server_company_fax = server_data[7].replace("'", "''")
+                server_company_email = server_data[8].replace("'", "''")
+                server_company_representative = server_data[9].replace("'", "''")
+                server_company_operator = server_data[10].replace("'", "''")
+                server_company_security_officer = server_data[11].replace("'", "''")
                 # server_create_datetime = server_data[12]
                 # server_update_datetime = server_data[13]
                 server_update_version = server_data[14]
@@ -358,7 +364,7 @@ def save_rakuten_spider_key_to_db(conn, cur):
                                                                            company_product_type)
                 company_product_desc = f'{server_company_product_desc},{company_product_desc}'.strip(',')
                 company_address = comparison_between_old_and_new_data(server_company_address, company_address)
-                company_website = comparison_between_old_and_new_data(server_company_website, company_website)
+                # company_website = comparison_between_old_and_new_data(server_company_website, company_website)
                 company_tel = comparison_between_old_and_new_data(server_company_tel, company_tel)
                 company_fax = comparison_between_old_and_new_data(server_company_fax, company_fax)
                 company_email = rakuten_merge_email(server_company_email, company_email)
@@ -371,10 +377,34 @@ def save_rakuten_spider_key_to_db(conn, cur):
                 update_datetime = update_datetime
                 update_version = int(server_update_version) + 1 if server_update_version is not None else 2
 
-
-
-
-
+                sql_str = None
+                try:
+                    sql_str = f"update ffd_cbec_company set " \
+                              f"company_name=N'{company_name}', " \
+                              f"company_product_type=N'{company_product_type}', " \
+                              f"company_product_desc=N'{company_product_desc}', " \
+                              f"company_address=N'{company_address}', " \
+                              f"company_tel=N'{company_tel}', " \
+                              f"company_fax=N'{company_fax}', " \
+                              f"company_email=N'{company_email}', " \
+                              f"company_representative=N'{company_representative}', " \
+                              f"company_operator=N'{company_operator}', " \
+                              f"company_security_officer=N'{company_security_officer}', " \
+                              f"update_datetime=N'{update_datetime}', " \
+                              f"update_version=N'{update_version}' " \
+                              f"where id={server_id}"
+                    # print(sql_str)
+                    cur.execute(sql_str.encode('utf8'))
+                    conn.commit()
+                    update_count += 1
+                    count += 1
+                    print(f'update {company_website} OK, now update_count:{update_count}, '
+                          f'error_update_count:{error_update_count}')
+                except Exception as e:
+                    error_update_count += 1
+                    print(e, error_update_count, company_website, '++++++ update error ++++++')
+                    print(sql_str)
+                # break
         # break
     print(f'count:{count}, insert_conut:{insert_count}, update_count:{update_count}, '
           f'error_insert_count:{error_insert_count}, error_update_count:{error_update_count}')

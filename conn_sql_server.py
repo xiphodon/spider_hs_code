@@ -342,7 +342,7 @@ def save_rakuten_spider_key_to_db(conn, cur):
                 # print(item_dict)
                 # print(server_data)
 
-                server_id = server_data[0];print(server_id)
+                server_id = server_data[0]
                 server_company_name = server_data[1].replace("'", "''")
                 server_company_product_type = server_data[2].replace("'", "''")
                 server_company_product_desc = server_data[3].replace("'", "''")
@@ -404,6 +404,8 @@ def save_rakuten_spider_key_to_db(conn, cur):
                     error_update_count += 1
                     print(e, error_update_count, company_website, '++++++ update error ++++++')
                     print(sql_str)
+
+                print(server_id)
                 # break
         # break
     print(f'count:{count}, insert_conut:{insert_count}, update_count:{update_count}, '

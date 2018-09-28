@@ -25,7 +25,7 @@ search_text_list = ['pump', 'fabric', 'glass', 'clothing', 'embroidery', 'E-Liqu
                     , 'furniture', 'textile+-clothing', 'Communications+satellite+operators'
                     , 'satellite+communications+ship', 'Aerials+satellite+communications', 'VSAT+satellite'
                     , '"Fishing+boats"', 'machine+tool+Manufacture', 'rotary switch', 'supermarket'
-                    , 'motor']
+                    , 'motor', 'Semiconductor']
 
 search_text_origin = search_text_list[-1]
 
@@ -1028,7 +1028,7 @@ def get_item_data_from_big_json_file(start_index, end_index):
         return item_dict
 
 
-def test_read_item_to_json_obj(start_index, end_index):
+def try_test_read_item_to_json_obj(start_index, end_index):
     """
     测试读取一个item数据并转换为json对象
     [(1, 2325), (2328, 11496), (11499, 14130), (14133, 15982), (15985, 17666)]
@@ -1077,8 +1077,7 @@ def start():
     # 4.读取该产品的公司列表json（查看）
     get_company_list_json()
 
-    # test_read_big_json()
-    # test_read_item_to_json_obj(2328, 11496)
+    # try_test_read_item_to_json_obj(2328, 11496)
 
 
 if __name__ == '__main__':

@@ -54,9 +54,10 @@ def save_to_sql_server():
     # save_rakuten_spider_products_info_to_db(conn, cur)
 
     # save_rakuten_spider_finally_shop_to_db(conn, cur)
-    save_rakuten_spider_key_to_db(conn, cur)
 
-    # save_kompass_company_spider_to_db(conn, cur)
+    # save_rakuten_spider_key_to_db(conn, cur)
+    #
+    save_kompass_company_spider_to_db(conn, cur)
 
     conn.close()
 

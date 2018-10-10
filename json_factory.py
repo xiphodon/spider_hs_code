@@ -15,7 +15,7 @@ def split_json():
     拆分（有网址、无网址）并去重（网址一致）
     :return:
     """
-    with open(r'C:\Users\topeasecpb\Desktop\germany_spider.json', 'r', encoding='utf8') as fp:
+    with open(r'E:\workspace_all\workspace_py\yellowpages_spider\yellowpages_spider\data\germany_spider.json', 'r', encoding='utf8') as fp:
         data = json.load(fp)
 
     web_set = set()

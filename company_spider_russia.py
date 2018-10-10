@@ -21,6 +21,7 @@ import urllib
 import pymongo
 import xlwt
 
+# 城市地区及地区对应的region值
 area_and_region_list = [('www', 'spb'), ('msk', 'msk')]
 
 choice_area_url_and_region = area_and_region_list[-1]

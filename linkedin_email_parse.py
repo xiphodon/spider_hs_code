@@ -13,6 +13,9 @@ import pymssql
 
 linkedin_email_dir = settings.linkedin_email_dir
 linkedin_email_json_path = os.path.join(linkedin_email_dir, 'linkedin_email.json')
+linkedin_email_json_path_pre = os.path.join(linkedin_email_dir, 'linkedin_email')
+
+part_item_size=4000 * 10000
 
 
 def parse_email_file(file_path):
@@ -82,6 +85,45 @@ def read_email_json(json_path):
     return email_list
 
 
+def read_email_json_part(parts_index):
+    """
+    读取part_index对应的数据部分
+    :param parts_index:
+    :return:
+    """
+    with open(f'{linkedin_email_json_path_pre}_{str(parts_index)}.json', 'r', encoding='utf8') as fp:
+        email_list = json.load(fp)
+    return email_list
+
+
+def split_email_json():
+    """
+    切分email_json大文件为多个json小文件
+    :param part_item_size:
+    :return:
+    """
+    data = read_email_json(linkedin_email_json_path)
+    len_data = len(data)
+    start_index = 0
+    end_index = part_item_size
+    parts_index = 0
+    while True:
+        if end_index < len_data:
+            item_data = data[start_index:end_index]
+        else:
+            item_data = data[start_index:]
+
+        with open(f'{linkedin_email_json_path_pre}_{str(parts_index)}.json', 'w', encoding='utf8') as fp:
+            fp.write(json.dumps(item_data))
+
+        parts_index += 1
+        start_index = parts_index * part_item_size
+        end_index = start_index + part_item_size
+
+        if start_index >= len_data:
+            break
+
+
 def save_email_to_sqlserver():
     """
     保存email到数据库
@@ -108,9 +150,10 @@ def save_email(conn, cur):
     :param cur:
     :return:
     """
-    continue_index = 3284872  # 断点续传index
-    data = read_email_json(linkedin_email_json_path)
+    data = read_email_json_part(1)
     print('len(data)=', len(data))
+
+    continue_index = 0  # 断点续传index
 
     count = 0
     error_count = 0
@@ -146,4 +189,5 @@ def save_email(conn, cur):
 if __name__ == '__main__':
     # traversal_email_files()
     # print(read_email_json(linkedin_email_json_path)[:20])
+    # split_email_json()
     save_email_to_sqlserver()

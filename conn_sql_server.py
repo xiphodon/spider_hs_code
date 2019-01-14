@@ -55,9 +55,9 @@ def save_to_sql_server():
 
     # save_rakuten_spider_finally_shop_to_db(conn, cur)
 
-    # save_rakuten_spider_key_to_db(conn, cur)
-    #
-    save_kompass_company_spider_to_db(conn, cur)
+    save_rakuten_spider_key_to_db(conn, cur)
+
+    # save_kompass_company_spider_to_db(conn, cur)
 
     conn.close()
 
@@ -245,7 +245,11 @@ def save_rakuten_spider_key_to_db(conn, cur):
         # 未存储：直接插库
         print('=' * 30)
 
-        company_website = item_dict.get('company_href', '').replace("'", "''")
+        company_website = item_dict.get('company_website', '').replace("'", "''")
+        company_website = str(company_website).strip()
+
+        if company_website == '':
+            continue
 
         # [id], \
         # [company_name], \
@@ -329,9 +333,12 @@ def save_rakuten_spider_key_to_db(conn, cur):
             server_company_product_desc = server_data[3]
             is_server_company_product_desc_has_key_word = False
             for item_key in key_word_list:
-                if str(server_company_product_desc).find(item_key) > 0:
+                if item_key in str(server_company_product_desc).split(','):
                     is_server_company_product_desc_has_key_word = True
                     break
+                # if str(server_company_product_desc).find(item_key) >= 0:
+                #     is_server_company_product_desc_has_key_word = True
+                #     break
             if is_server_company_product_desc_has_key_word:
                 # 服务器重复数据中已包含现关键词
                 print('pass')

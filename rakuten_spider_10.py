@@ -111,7 +111,7 @@ class RekutenSpiderKey:
 
     def __init__(self):
         # key_word_list = ['リキッド', '電子タバコ', 'vape']
-        key_word_list = ['モップ']
+        key_word_list = ['浄水器']
         self.settings = RekutenSpiderSettings(key_word_list)
         self.request = WhileRequests()
         self.html_page_number = -1
@@ -122,9 +122,9 @@ class RekutenSpiderKey:
         启动爬虫
         :return:
         """
-        # self.check_and_download_page_htmls()
-        # self.gevent_parse_page_htmls()
-        # self.check_and_download_shop_info_htmls()
+        self.check_and_download_page_htmls()
+        self.gevent_parse_page_htmls()
+        self.check_and_download_shop_info_htmls()
         self.parse_shop_info_htmls_to_json()
 
     def parse_shop_info_htmls_to_json(self):

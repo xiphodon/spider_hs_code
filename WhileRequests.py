@@ -15,9 +15,14 @@ class WhileRequests:
     循环请求
     """
     def __init__(self):
+        # self.headers = {
+        #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+        #                   'Chrome/68.0.3440.106 Safari/537.36',
+        #     'Connection': 'keep-alive'
+        # }
+
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/68.0.3440.106 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
             'Connection': 'keep-alive'
         }
 

@@ -12,6 +12,7 @@ from lxml import etree
 import json
 import os
 import time
+from decimal import Decimal
 
 home_url = r'https://www.made-in-china.com/'
 suppliers_discovery_url = home_url + r'suppliers-discovery/'
@@ -21,7 +22,7 @@ suppliers_discovery_path = os.path.join(home_path_dir, 'suppliers_discovery.html
 suppliers_discovery_json_path = os.path.join(home_path_dir, 'suppliers_discovery.json')
 
 suppliers_discovery_all_group_list_dir = os.path.join(home_path_dir, 'all_group_list_dir')
-suppliers_category_company_list_dir = os.path.join(home_path_dir, 'suppliers_list_dir')
+suppliers_category_company_list_dir = os.path.join(home_path_dir, 'com_list_dir')
 
 suppliers_class_list_json_path = os.path.join(home_path_dir, 'suppliers_class_list.json')
 
@@ -293,7 +294,7 @@ def download_suppliers_list():
                     content = fp.read()
             else:
                 print(file_path_1)
-                result = request.get(url, sleep_time=2.0)
+                result = request.get(url, sleep_time=get_sleep_time_from_file())
                 content = result.text
 
                 with open(file_path_1, 'w', encoding='utf8') as fp:
@@ -310,6 +311,32 @@ def download_suppliers_list():
                 break
 
 
+def get_sleep_time_from_file():
+    """
+    获取睡眠时间
+    :return:
+    """
+    with open(r'./settings.txt', 'r', encoding='utf8') as fp:
+        lines = fp.readlines()
+
+    sleep_time_float = 2.0
+
+    for line in lines:
+        line_split = line.split('=')
+
+        if len(line_split) == 2:
+            if line_split[0].strip() == 'sleep_time':
+                sleep_time_str = line_split[1].strip()
+                try:
+                    sleep_time_float = Decimal(sleep_time_str)
+                except Exception as e:
+                    pass
+                # print(sleep_time_float)
+                return sleep_time_float
+    # print(sleep_time_float)
+    return sleep_time_float
+
+
 def start():
     """
     入口
@@ -318,6 +345,7 @@ def start():
     # download_suppliers_category_group_list_html()
     # download_suppliers_category_url_html()
     download_suppliers_list()
+    # get_sleep_time_from_file()
 
 
 if __name__ == '__main__':

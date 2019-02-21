@@ -17,12 +17,12 @@ from decimal import Decimal
 home_url = r'https://www.made-in-china.com/'
 suppliers_discovery_url = home_url + r'suppliers-discovery/'
 
-home_path_dir = r'E:\madeinchina'
+home_path_dir = r'E:\mic'
 suppliers_discovery_path = os.path.join(home_path_dir, 'suppliers_discovery.html')
 suppliers_discovery_json_path = os.path.join(home_path_dir, 'suppliers_discovery.json')
 
 suppliers_discovery_all_group_list_dir = os.path.join(home_path_dir, 'all_group_list_dir')
-suppliers_category_company_list_dir = os.path.join(home_path_dir, 'com_list_dir')
+suppliers_category_company_list_dir = os.path.join(home_path_dir, 'com_list')
 
 suppliers_class_list_json_path = os.path.join(home_path_dir, 'suppliers_class_list.json')
 
@@ -267,10 +267,11 @@ def download_suppliers_list():
         if suppliers_class_4_name != '':
             url = suppliers_class_4_url
             dir_name = \
-                f'{suppliers_class_1_name}_{suppliers_class_2_name}_{suppliers_class_3_name}_{suppliers_class_4_name}'
+                f'{suppliers_class_1_name}_{suppliers_class_2_name}_{suppliers_class_3_name}_{suppliers_class_4_name}'\
+                .replace('/', 'or')
         else:
             url = suppliers_class_3_url
-            dir_name = f'{suppliers_class_1_name}_{suppliers_class_2_name}_{suppliers_class_3_name}'
+            dir_name = f'{suppliers_class_1_name}_{suppliers_class_2_name}_{suppliers_class_3_name}'.replace('/', 'or')
 
         dir_path = os.path.join(suppliers_category_company_list_dir, dir_name)
 
@@ -278,26 +279,23 @@ def download_suppliers_list():
             os.mkdir(dir_path)
 
         while True:
+            file_name_short = url.split('-')[-1]
+            # file_name_1 = url.replace('https://www.made-in-china.com/', '').replace('/', '_')
+            # file_name_2 = url.replace('https://', '').replace('/', '_')
+            file_path_short = os.path.join(dir_path, file_name_short)
+            # file_path_1 = os.path.join(dir_path, file_name_1)
+            # file_path_2 = os.path.join(dir_path, file_name_2)
 
-            file_name_1 = url.replace('https://www.made-in-china.com/', '').replace('/', '_')
-            file_name_2 = url.replace('https://', '').replace('/', '_')
-            file_path_1 = os.path.join(dir_path, file_name_1)
-            file_path_2 = os.path.join(dir_path, file_name_2)
-
-            if os.path.exists(file_path_1) and os.path.getsize(file_path_1) > 10 * 2 << 10:
-                print(file_path_1)
-                with open(file_path_1, 'r', encoding='utf8') as fp:
-                    content = fp.read()
-            elif os.path.exists(file_path_2) and os.path.getsize(file_path_2) > 10 * 2 << 10:
-                print(file_path_2)
-                with open(file_path_2, 'r', encoding='utf8') as fp:
+            if os.path.exists(file_path_short) and os.path.getsize(file_path_short) > 10 * 2 << 10:
+                print(file_path_short)
+                with open(file_path_short, 'r', encoding='utf8') as fp:
                     content = fp.read()
             else:
-                print(file_path_1)
+                print(file_path_short)
                 result = request.get(url, sleep_time=get_sleep_time_from_file())
                 content = result.text
 
-                with open(file_path_1, 'w', encoding='utf8') as fp:
+                with open(file_path_short, 'w', encoding='utf8') as fp:
                     fp.write(content)
 
             selector = etree.HTML(content)
@@ -337,6 +335,33 @@ def get_sleep_time_from_file():
     return sleep_time_float
 
 
+def parse_company_list_pages():
+    """
+    解析公司列表页
+    :return:
+    """
+    pass
+
+
+def rename_company_list_file():
+    """
+    重命名文件名
+    :return:
+    """
+    for item_dir in os.listdir(suppliers_category_company_list_dir):
+        item_dir_path = os.path.join(suppliers_category_company_list_dir, item_dir)
+        for item_file in os.listdir(item_dir_path):
+            if len(item_file) > 10:
+                new_file_name = item_file.split('-')[-1]
+                item_file_path = os.path.join(item_dir_path, item_file)
+                new_file_path = os.path.join(item_dir_path, new_file_name)
+                if os.path.isfile(item_file_path):
+                    os.renames(item_file_path, new_file_path)
+                    print(f'rename {item_file_path}')
+            # break
+        # break
+
+
 def start():
     """
     入口
@@ -345,7 +370,8 @@ def start():
     # download_suppliers_category_group_list_html()
     # download_suppliers_category_url_html()
     download_suppliers_list()
-    # get_sleep_time_from_file()
+
+    # rename_company_list_file()
 
 
 if __name__ == '__main__':

@@ -7,12 +7,15 @@
 # @Software: PyCharm
 
 
+from gevent import pool, monkey; monkey.patch_all()
 import WhileRequests
 from lxml import etree
 import json
 import os
 import time
 from decimal import Decimal
+import re
+
 
 home_url = r'https://www.made-in-china.com/'
 suppliers_discovery_url = home_url + r'suppliers-discovery/'
@@ -26,13 +29,22 @@ suppliers_category_company_list_dir = os.path.join(home_path_dir, 'com_list')
 
 suppliers_class_list_json_path = os.path.join(home_path_dir, 'suppliers_class_list.json')
 
-if not os.path.exists(suppliers_category_company_list_dir):
-    os.mkdir(suppliers_category_company_list_dir)
+company_list_json_dir = os.path.join(home_path_dir, 'company_list_json_dir')
+company_list_json_path = os.path.join(company_list_json_dir, 'company_list.json')
 
-if not os.path.exists(suppliers_discovery_all_group_list_dir):
-    os.mkdir(suppliers_discovery_all_group_list_dir)
+company_page_list_dir = os.path.join(home_path_dir, 'company_page_list')
 
 request = WhileRequests.WhileRequests()
+
+
+def mkdir(dir_path):
+    """
+    创建文件夹
+    :param dir_path:
+    :return:
+    """
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
 
 
 def download_suppliers_discovery():
@@ -340,7 +352,86 @@ def parse_company_list_pages():
     解析公司列表页
     :return:
     """
-    pass
+    company_id = 1
+    for dir_index, item_dir in enumerate(os.listdir(suppliers_category_company_list_dir)):
+        company_list = list()
+        # company_list_count = 0
+        item_dir_path = os.path.join(suppliers_category_company_list_dir, item_dir)
+        for item_file in os.listdir(item_dir_path):
+            file_path = os.path.join(item_dir_path, item_file)
+            print(file_path)
+
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            node_view_list = selector.xpath(r'.//div[@class="search-list"]/div')
+
+            for node_view in node_view_list:
+                print('==================================================')
+                temp_dict = dict()
+
+                company_name = node_view.xpath(r'./h2[@class="company-name"]/a/text()')[0]
+                company_url = 'https:' + node_view.xpath(r'./h2[@class="company-name"]/a/@href')[0]
+                temp_dict['company_name'] = company_name
+                temp_dict['company_url'] = company_url.replace('/360-Virtual-Tour.html', '')
+                # print(f'company_name {company_name}')
+                # print(f'company_url {company_url}')
+
+                company_auth_view_list = node_view.xpath(r'.//div[@class="compnay-auth"]')
+                if len(company_auth_view_list) > 0:
+                    company_auth_view = company_auth_view_list[0]
+
+                    company_member_list = company_auth_view.xpath(r'./span/img/@alt')
+                    company_member = ''
+                    if len(company_member_list) > 0:
+                        company_member = company_member_list[0]
+                    company_audited_list = company_auth_view.xpath(r'./span//a/img/@alt')
+                    company_audited = ''
+                    if len(company_audited_list) > 0:
+                        company_audited = company_audited_list[0]
+                    temp_dict['company_member'] = company_member
+                    temp_dict['company_audited'] = company_audited
+                    # print(f'company_member {company_member}')
+                    # print(f'company_audited {company_audited}')
+
+                company_info_view_list = node_view.xpath(r'.//div[@class="company-info"]')
+                if len(company_info_view_list) > 0:
+                    company_info_view = company_info_view_list[0]
+
+                    company_tr_list = company_info_view.xpath(r'.//tr')
+                    company_info_key_value_list = list()
+                    for item_tr in company_tr_list:
+                        company_td = item_tr.xpath(r'./td')
+                        company_info_key = str(company_td[0].xpath(r'string()')).strip(':')
+                        company_info_value = str(company_td[1].xpath(r'string()')).strip()
+                        company_info_value_str = re.sub(re.compile(r'\s{2,}'), '', company_info_value)
+                        company_info_key_value_list.append({
+                            'company_info_key': company_info_key,
+                            'company_info_value_str': company_info_value_str,
+                        })
+                        # print(f'company_info_key {company_info_key}')
+                        # print(f'company_info_value {company_info_value_str}')
+                    temp_dict['company_info'] = company_info_key_value_list
+
+                company_class_list = item_dir.split('_')
+
+                for class_index, class_item in enumerate(company_class_list):
+                    temp_dict[f'class_{class_index + 1}'] = class_item
+
+                # print(company_class_list)
+                temp_dict['company_id'] = company_id
+                company_id += 1
+                print(company_id)
+                print(temp_dict)
+                company_list.append(temp_dict)
+                # company_list_count += 1
+                # print(company_list_count)
+            # break
+        # break
+
+        with open(company_list_json_path.replace('.json', f'_{dir_index + 1}.json'), 'w', encoding='utf8') as fp:
+            fp.write(json.dumps(company_list))
 
 
 def rename_company_list_file():
@@ -362,6 +453,103 @@ def rename_company_list_file():
         # break
 
 
+def download_all_company_page():
+    """
+    下载所有公司页面
+    :return:
+    """
+    for item_file in os.listdir(company_list_json_dir):
+        # print(item_file)
+        item_file_path = os.path.join(company_list_json_dir, item_file)
+
+        with open(item_file_path, 'r', encoding='utf8') as fp:
+            company_list = json.load(fp)
+
+        # print(company_list)
+
+        this_page_url_and_path_list = list()
+
+        for item_company in company_list:
+            # print(item_company)
+            company_url = dict(item_company).get('company_url')
+            company_id = dict(item_company).get('company_id')
+
+            company_file_name = str(company_id) + '.html'
+            company_file_path = os.path.join(company_page_list_dir, company_file_name)
+
+            if 'showroom' not in company_url:
+                # independent
+                company_url += '/contact-info.html'
+
+            # company_url = 'https://cnquenson.en.made-in-china.com/contact-info.html'
+            # # company_url = 'https://www.made-in-china.com/showroom/mumu1314/'
+
+            this_page_url_and_path_list.append((company_url, company_file_path))
+
+            # content = etree.HTML(result.text)
+            #
+            # nav_ul_list = content.xpath(r'.//ul[@class="sr-nav-main"]')
+            #
+            # if len(nav_ul_list) > 0:
+            #     # independent
+            #     pass
+            # else:
+            #     # showroom
+            #     pass
+
+            # print(company_url)
+            # break
+
+        gevent_pool_requests(download_company_info_page, this_page_url_and_path_list, gevent_pool_size=5)
+        # break
+
+
+def download_company_info_page(company_url_and_path):
+    """
+    下载公司详情页
+    :param company_url_and_path:
+    :return:
+    """
+    company_url, company_file_path = company_url_and_path
+
+    if os.path.exists(company_file_path) and os.path.getsize(company_file_path) > 10 * 2 << 10:
+        print(company_file_path)
+    else:
+        print(company_url)
+        result = request.get(company_url, sleep_time=get_sleep_time_from_file())
+
+        if len(result.content) > 10 * 2 << 10:
+            with open(company_file_path, 'w', encoding='utf8') as fp:
+                fp.write(result.text)
+            print(f'page size: {len(result.content)}')
+        else:
+            print('!!!!!!!!!! page size < 10kb')
+
+
+def gevent_pool_requests(func, task_list, gevent_pool_size=10):
+    """
+    多协程请求
+    :param func:
+    :param task_list:
+    :param gevent_pool_size:
+    :return:
+    """
+    gevent_pool = pool.Pool(gevent_pool_size)
+    result_list = gevent_pool.map(func, task_list)
+    return result_list
+
+
+def init():
+    """
+    初始化
+    :return:
+    """
+    mkdir(suppliers_category_company_list_dir)
+    mkdir(suppliers_discovery_all_group_list_dir)
+    mkdir(company_list_json_dir)
+    mkdir(company_page_list_dir)
+
+
 def start():
     """
     入口
@@ -369,10 +557,13 @@ def start():
     """
     # download_suppliers_category_group_list_html()
     # download_suppliers_category_url_html()
-    download_suppliers_list()
+    # download_suppliers_list()
+    # parse_company_list_pages()
+    download_all_company_page()
 
     # rename_company_list_file()
 
 
 if __name__ == '__main__':
+    init()
     start()

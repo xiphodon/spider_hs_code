@@ -36,6 +36,8 @@ company_page_list_dir = os.path.join(home_path_dir, 'company_page_list')
 
 request = WhileRequests.WhileRequests()
 
+id_interval = 100000
+
 
 def mkdir(dir_path):
     """
@@ -453,6 +455,36 @@ def rename_company_list_file():
         # break
 
 
+def get_company_id_dir_name(company_id: int):
+    """
+    获取company id 所属的文件夹名称
+    :param company_id:
+    :return:
+    """
+    file_dir_name_start = company_id // id_interval * id_interval + 1
+    file_dir_name_end = file_dir_name_start + id_interval - 1
+    file_dir_name = f'{file_dir_name_start}_{file_dir_name_end}'
+    return file_dir_name
+
+
+def move_company_page_file():
+    """
+    移动公司详情页
+    :return:
+    """
+
+    for item_name in os.listdir(company_page_list_dir):
+        item_path = os.path.join(company_page_list_dir, item_name)
+        if os.path.isfile(item_path):
+            name_id = item_name.replace('.html', '')
+            file_dir_name = get_company_id_dir_name(int(name_id))
+            file_dir_path = os.path.join(company_page_list_dir, file_dir_name)
+            mkdir(file_dir_path)
+            new_file_path = os.path.join(file_dir_path, item_name)
+            # print(item_path, new_file_path)
+            os.renames(item_path, new_file_path)
+
+
 def download_all_company_page():
     """
     下载所有公司页面
@@ -475,7 +507,10 @@ def download_all_company_page():
             company_id = dict(item_company).get('company_id')
 
             company_file_name = str(company_id) + '.html'
-            company_file_path = os.path.join(company_page_list_dir, company_file_name)
+            company_file_dir = get_company_id_dir_name(int(company_id))
+            company_file_dir_path = os.path.join(company_page_list_dir, company_file_dir)
+            mkdir(company_file_dir_path)
+            company_file_path = os.path.join(company_file_dir_path, company_file_name)
 
             if 'showroom' not in company_url:
                 # independent
@@ -500,7 +535,7 @@ def download_all_company_page():
             # print(company_url)
             # break
 
-        gevent_pool_requests(download_company_info_page, this_page_url_and_path_list, gevent_pool_size=5)
+        gevent_pool_requests(download_company_info_page, this_page_url_and_path_list, gevent_pool_size=2)
         # break
 
 
@@ -515,14 +550,15 @@ def download_company_info_page(company_url_and_path):
     if os.path.exists(company_file_path) and os.path.getsize(company_file_path) > 10 * 2 << 10:
         print(company_file_path)
     else:
-        print(company_url)
         result = request.get(company_url, sleep_time=get_sleep_time_from_file())
 
         if len(result.content) > 10 * 2 << 10:
             with open(company_file_path, 'w', encoding='utf8') as fp:
                 fp.write(result.text)
+            print(company_url, company_file_path)
             print(f'page size: {len(result.content)}')
         else:
+            print(company_url, company_file_path)
             print('!!!!!!!!!! page size < 10kb')
 
 
@@ -562,6 +598,7 @@ def start():
     download_all_company_page()
 
     # rename_company_list_file()
+    # move_company_page_file()
 
 
 if __name__ == '__main__':

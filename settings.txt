@@ -1,1 +1,1 @@
-sleep_time = 6.0
+sleep_time = 3.5

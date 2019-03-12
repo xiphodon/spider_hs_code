@@ -461,7 +461,7 @@ def get_company_id_dir_name(company_id: int):
     :param company_id:
     :return:
     """
-    file_dir_name_start = company_id // id_interval * id_interval + 1
+    file_dir_name_start = company_id // id_interval * id_interval
     file_dir_name_end = file_dir_name_start + id_interval - 1
     file_dir_name = f'{file_dir_name_start}_{file_dir_name_end}'
     return file_dir_name

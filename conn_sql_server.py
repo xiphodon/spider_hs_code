@@ -19,6 +19,8 @@ import rakuten_spider_7
 import company_spider_9
 import rakuten_spider_10
 import os
+import datetime
+import requests
 
 
 # # settings.py 文件
@@ -55,11 +57,100 @@ def save_to_sql_server():
 
     # save_rakuten_spider_finally_shop_to_db(conn, cur)
 
-    save_rakuten_spider_key_to_db(conn, cur)
+    # google_key insert
+    # save_google_key_to_db(conn, cur)
+    check_del_google_key_to_db(conn, cur)
+
+    # save_rakuten_spider_key_to_db(conn, cur)
 
     # save_kompass_company_spider_to_db(conn, cur)
 
     conn.close()
+
+
+def check_del_google_key_to_db(conn, cur):
+    """
+    检查
+    :param conn:
+    :param cur:
+    :return:
+    """
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
+        'Connection': 'keep-alive'
+    }
+
+    def check_google_key(google_key, sleep_time=0):
+        """
+        检查googlekey是否可用
+        :return:
+        """
+        time.sleep(sleep_time)
+
+        # google_key = 'AIzaSyAUsnERWvgUrNKQy4YvHAaeg99HdhJLpTM'
+        result = requests.get(f'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
+                              f'location=-33.8670522,151.1957362&radius=5000&types=food'
+                              f'&key={google_key}', headers=headers)
+        status = json.loads(result.text).get('status').strip()
+        print(status)
+
+        if status == 'OK':
+            return True
+        else:
+            return False
+
+    # check google key流程
+    sql_str = 'select ID, Name, CreateTime from GoogleKey'
+    cur.execute(sql_str.encode('utf8'))
+    server_google_key_tuple = cur.fetchall()
+
+    delete_count = 0
+
+    for item_data in server_google_key_tuple:
+        print(f'=========={item_data}===============')
+        item_data_id = item_data[0]
+        item_data_google_key = item_data[1]
+
+        try:
+            if check_google_key(item_data_google_key, sleep_time=0.2) \
+                    and check_google_key(item_data_google_key, sleep_time=0.2):
+                print(f'{item_data} --- OK')
+            else:
+                if check_google_key(item_data_google_key, sleep_time=0.2):
+                    continue
+                # delete this data
+                sql_del_str = f'DELETE FROM GoogleKey WHERE ID = {item_data_id}'
+                cur.execute(sql_del_str)
+                conn.commit()
+                delete_count += 1
+                print(f'delete ---- {sql_del_str}')
+        except Exception as e:
+            print(f'--- error --- {e}')
+    print(f'delete number: {delete_count}')
+
+
+def save_google_key_to_db(conn, cur):
+    """
+    保存google key 到数据库
+    :param conn:
+    :param cur:
+    :return:
+    """
+    json_path = r'E:\workspace_all\workspace_py\hs_code_spider\all_valid_google_key_list.json'
+    with open(json_path, 'r', encoding='utf8') as fp:
+        data = json.load(fp)
+
+    for item_key in data:
+        try:
+            create_time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+            sql_str = "insert into GoogleKey(Name, CreateTime) values(N'%s',N'%s')" % (item_key, create_time)
+            cur.execute(sql_str.encode('utf8'))
+            conn.commit()
+            print(sql_str)
+        except Exception as e:
+            print(f'--------- error --------- {e}')
+            break
 
 
 def save_rakuten_spider_shop_info_to_db(conn, cur):

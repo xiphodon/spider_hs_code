@@ -560,6 +560,7 @@ def download_company_info_page(company_url_and_path):
         else:
             print(company_url, company_file_path)
             print('!!!!!!!!!! page size < 10kb')
+            # time.sleep(30)
 
 
 def gevent_pool_requests(func, task_list, gevent_pool_size=10):

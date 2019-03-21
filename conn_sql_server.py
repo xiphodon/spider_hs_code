@@ -137,11 +137,28 @@ def save_google_key_to_db(conn, cur):
     :param cur:
     :return:
     """
-    json_path = r'E:\workspace_all\workspace_py\hs_code_spider\all_valid_google_key_list.json'
+    # 获取本地key集
+    json_path = r'E:\googlekey\all_valid_google_key_list_2.json'
     with open(json_path, 'r', encoding='utf8') as fp:
         data = json.load(fp)
 
-    for item_key in data:
+    # 获取服务器key集
+    sql_str = 'select Name from GoogleKey'
+    cur.execute(sql_str.encode('utf8'))
+    server_google_key_tuple = cur.fetchall()
+    server_google_key_list = [i[0] for i in server_google_key_tuple]
+
+    print(f'data_len: {len(data)}')
+    print(f'server_data_len: {len(server_google_key_list)}')
+
+    # 去重
+    new_google_key_set = set(data) - set(server_google_key_list)
+    print(f'new_key_len: {len(new_google_key_set)}')
+
+    # 可用新集
+    new_data = list(new_google_key_set)
+
+    for item_key in new_data:
         try:
             create_time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
             sql_str = "insert into GoogleKey(Name, CreateTime) values(N'%s',N'%s')" % (item_key, create_time)

@@ -20,10 +20,11 @@ def count_download_files():
     count = 0
 
     for item_dir in os.listdir(dir_path):
-        # print(item_dir)
+        print(item_dir)
         item_dir_path = os.path.join(dir_path, item_dir)
-        for _ in os.listdir(item_dir_path):
-            count += 1
+        count += len(os.listdir(item_dir_path))
+        # for _ in os.listdir(item_dir_path):
+        #     count += 1
 
     data_progress = round(count / 2300000 * 100, 4)
     data_progress = min(data_progress, 100)

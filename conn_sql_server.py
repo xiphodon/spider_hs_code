@@ -127,7 +127,13 @@ def check_del_google_key_to_db(conn, cur):
                 print(f'delete ---- {sql_del_str}')
         except Exception as e:
             print(f'--- error --- {e}')
-    print(f'delete number: {delete_count}')
+    print(f'delete count: {delete_count}')
+
+    # 更新后再次统计数量
+    sql_str = 'select ID, Name, CreateTime from GoogleKey'
+    cur.execute(sql_str.encode('utf8'))
+    server_google_key_tuple = cur.fetchall()
+    print(f'valid key count: {len(server_google_key_tuple)}')
 
 
 def save_google_key_to_db(conn, cur):

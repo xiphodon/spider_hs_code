@@ -144,7 +144,7 @@ def save_google_key_to_db(conn, cur):
     :return:
     """
     # 获取本地key集
-    json_path = r'E:\googlekey\all_valid_google_key_list_2.json'
+    json_path = r'C:\Users\topeasecpb\Desktop\googlekey\all_valid_google_key_list_3.json'
     with open(json_path, 'r', encoding='utf8') as fp:
         data = json.load(fp)
 

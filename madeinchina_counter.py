@@ -20,7 +20,7 @@ def count_download_files():
     count = 0
 
     for item_dir in os.listdir(dir_path):
-        print(item_dir)
+        # print(item_dir)
         item_dir_path = os.path.join(dir_path, item_dir)
         count += len(os.listdir(item_dir_path))
         # for _ in os.listdir(item_dir_path):
@@ -78,7 +78,7 @@ def while_count_download_files():
     :return:
     """
     print_download_stat()
-    timer = threading.Timer(10, while_count_download_files)
+    timer = threading.Timer(60, while_count_download_files)
     timer.start()
 
 
@@ -87,8 +87,8 @@ def start():
     入口
     :return:
     """
-    # while_count_download_files()
-    print_download_stat()
+    while_count_download_files()
+    # print_download_stat()
 
 
 if __name__ == '__main__':

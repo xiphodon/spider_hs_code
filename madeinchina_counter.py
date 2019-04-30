@@ -8,6 +8,7 @@
 
 import os
 import threading
+import datetime
 
 
 def count_download_files():
@@ -45,21 +46,19 @@ def count_download_files():
     return data_progress, progress_bar_str, count_str
 
 
-def draw_data_progress(data_progress):
+def draw_data_progress(data_progress, data_progress_display_len=50):
     """
     绘制数据进度条
+    :param data_progress: 进度[0,100]
+    :param data_progress_display_len: 进度条显示长度
     :return:
     """
-    data_progress_len = 50
-    draw_progress_ratio = round(data_progress / 100 * data_progress_len)
-    progress_1 = ['='] * draw_progress_ratio
-    if len(progress_1) > 1:
-        progress_1 = progress_1[:-1]
-        progress_1.append('>')
-    progress_2 = ['·'] * (50 - draw_progress_ratio)
+    draw_progress_size = max(round(data_progress / 100 * data_progress_display_len), 1)
+    progress_1 = ['='] * (draw_progress_size - 1)
+    progress_1.append('>')
+    progress_2 = ['·'] * (data_progress_display_len - draw_progress_size)
     progress_bar = progress_1 + progress_2
     progress_bar_str = ''.join(progress_bar)
-    # print(f'\n{data_progress} %  |{progress_bar_str}|')
     return progress_bar_str
 
 
@@ -69,7 +68,8 @@ def print_download_stat():
     :return:
     """
     data_progress, progress_bar_str, count_str = count_download_files()
-    print(f'\r|{progress_bar_str}|  {data_progress} %  ({count_str})', end='')
+    datetime_temp = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    print(f'\r|{progress_bar_str}|  {data_progress} %  [{count_str}]  [{datetime_temp}]', end='')
 
 
 def while_count_download_files():
@@ -78,7 +78,7 @@ def while_count_download_files():
     :return:
     """
     print_download_stat()
-    timer = threading.Timer(60, while_count_download_files)
+    timer = threading.Timer(600, while_count_download_files)
     timer.start()
 
 

@@ -114,10 +114,10 @@ def check_del_google_key_to_db(conn, cur):
 
         try:
             if check_google_key(item_data_google_key, sleep_time=0.2) \
-                    and check_google_key(item_data_google_key, sleep_time=0.2):
+                    and check_google_key(item_data_google_key, sleep_time=0.25):
                 print(f'{item_data} --- OK')
             else:
-                if check_google_key(item_data_google_key, sleep_time=0.2):
+                if check_google_key(item_data_google_key, sleep_time=0.25):
                     continue
                 # delete this data
                 sql_del_str = f'DELETE FROM GoogleKey WHERE ID = {item_data_id}'

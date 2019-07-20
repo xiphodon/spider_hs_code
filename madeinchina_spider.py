@@ -5,7 +5,7 @@
 # @Site    : https://github.com/xiphodon
 # @File    : madeinchina_spider.py
 # @Software: PyCharm
-
+import pprint
 
 from gevent import pool, monkey; monkey.patch_all()
 import WhileRequests
@@ -33,6 +33,7 @@ company_list_json_dir = os.path.join(home_path_dir, 'company_list_json_dir')
 company_list_json_path = os.path.join(company_list_json_dir, 'company_list.json')
 
 company_page_list_dir = os.path.join(home_path_dir, 'company_page_list')
+company_page_key_dir = os.path.join(home_path_dir, 'company_page_key')
 
 request = WhileRequests.WhileRequests()
 
@@ -587,6 +588,101 @@ def init():
     mkdir(company_page_list_dir)
 
 
+def parse_all_company_pages():
+    """
+    解析所有公司详情页面
+    :return:
+    """
+    for dir_name in os.listdir(company_page_list_dir):
+        dir_path = os.path.join(company_page_list_dir, dir_name)
+        key_dir_path = os.path.join(company_page_key_dir, dir_name)
+        mkdir(key_dir_path)
+        for file_name in os.listdir(dir_path):
+            file_path = os.path.join(dir_path, file_name)
+
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            company_name = selector.xpath(r'string(.//div[@class="title-txt"]//h1)')
+            company_name = str(company_name).strip()
+            print(company_name)
+
+            contact_div = selector.xpath(r'.//div[@class="details-cnt"]/div[@class="cf"]')[0]
+            company_site = contact_div.xpath(r'string(.//div[@class="detail-address"])')
+            company_site = str(company_site).strip()
+            print(company_site)
+
+            company_detail_info_list = contact_div.xpath(
+                r'.//div[@class="detail-col col-2"]/div[@class="detail-infos"]/div[@class="info-item"]'
+            )
+
+            company_detail_info_dict_list = list()
+            for company_detail_info in company_detail_info_list:
+                company_detail_label = company_detail_info.xpath(
+                    r'string(.//div[@class="info-label"])'
+                )
+                company_detail_field = company_detail_info.xpath(
+                    r'string(.//div[@class="info-fields"])'
+                )
+
+                company_detail_label = str(company_detail_label).strip().rstrip(':')
+                company_detail_field = str(company_detail_field).strip()
+                company_detail_field = re.sub(r'\s{2,}', ' ', company_detail_field)
+
+                company_detail_info_dict_list.append({
+                    'label': company_detail_label,
+                    'field': company_detail_field
+                })
+
+            pprint.pprint(company_detail_info_dict_list)
+
+            company_tag_view_list = contact_div.xpath(
+                r'.//div[@class="detail-col col-1"]/div[@class="detail-infos"]/div[@class="info-item"]'
+            )
+            company_tag_list = list()
+            for company_tag_view in company_tag_view_list:
+                if len(company_tag_view.xpath('.//a')) > 0:
+                    continue
+                company_tag_list.append(company_tag_view.xpath('string(.)').strip())
+            print(company_tag_list)
+
+            company_introduce = selector.xpath(r'.//div[@class="details-cnt"]/p[@class="detail-intro"]/text()')[0]
+            company_introduce = str(company_introduce).strip()
+            print(company_introduce)
+
+            company_verified = selector.xpath(
+                r'string(.//div[@class="sr-comInfo-sign"]/div[contains(@title, "verified")])'
+            )
+            company_inspection = selector.xpath(
+                r'string(.//div[@class="sr-comInfo-sign"]/div[contains(@title, "inspection")])'
+            )
+
+            company_verified = re.sub(r'\s{2,}', ' ', company_verified.strip())
+            company_inspection = re.sub(r'\s{2,}', ' ', company_inspection.strip())
+
+            print(company_verified)
+            print(company_inspection)
+
+            contact_info_item_list = selector.xpath(r'.//div[@class="contact-info"]/div[@class="info-item"]')
+            for contact_info_item in contact_info_item_list:
+                contact_info_key = contact_info_item.xpath(r'.//div[@class="info-label"]/text()')[0]
+                contact_info_key = str(contact_info_key).strip().rstrip(':').lower()
+                if contact_info_key == 'address':
+                    contact_info_value = contact_info_item.xpath(
+                        r'.//div[@class="info-fields"]//span[@class="contact-address"]/text()'
+                    )[0]
+                elif contact_info_key == 'showroom':
+                    contact_info_value = contact_info_item.xpath(
+                        r'.//div[@class="info-fields"]//a/text()'
+                    )[0]
+                pass
+
+            break
+        break
+
+
+
 def start():
     """
     入口
@@ -596,10 +692,13 @@ def start():
     # download_suppliers_category_url_html()
     # download_suppliers_list()
     # parse_company_list_pages()
-    download_all_company_page()
+    # download_all_company_page()
+    # parse_all_company_pages()
 
     # rename_company_list_file()
     # move_company_page_file()
+
+    parse_all_company_pages()
 
 
 if __name__ == '__main__':

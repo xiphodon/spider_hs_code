@@ -5,17 +5,17 @@
 # @Site    : https://github.com/xiphodon
 # @File    : madeinchina_spider.py
 # @Software: PyCharm
+
 import pprint
 
+import datetime
 from gevent import pool, monkey; monkey.patch_all()
 import WhileRequests
 from lxml import etree
 import json
 import os
-import time
 from decimal import Decimal
 import re
-
 
 home_url = r'https://www.made-in-china.com/'
 suppliers_discovery_url = home_url + r'suppliers-discovery/'
@@ -55,8 +55,6 @@ def download_suppliers_discovery():
     下载供应商频道列表
     :return:
     """
-    file_content = None
-
     if os.path.exists(suppliers_discovery_path):
 
         with open(suppliers_discovery_path, 'r', encoding='utf8') as fp:
@@ -598,89 +596,229 @@ def parse_all_company_pages():
         key_dir_path = os.path.join(company_page_key_dir, dir_name)
         mkdir(key_dir_path)
         for file_name in os.listdir(dir_path):
+
+            file_name_pre = file_name.split('.')[0]
+            json_name = f'{file_name_pre}.json'
+            json_path = os.path.join(key_dir_path, json_name)
+            if os.path.exists(json_path):
+                continue
+
+            # 测试 start
+            # dir_path = os.path.join(company_page_list_dir, '100000_199999')
+            # file_name = '100010.html'
+            # 测试 end
+
             file_path = os.path.join(dir_path, file_name)
+            print(file_path)
 
             with open(file_path, 'r', encoding='utf8') as fp:
                 content = fp.read()
 
-            selector = etree.HTML(content)
-            company_name = selector.xpath(r'string(.//div[@class="title-txt"]//h1)')
-            company_name = str(company_name).strip()
-            print(company_name)
+            try:
+                selector = etree.HTML(content)
+                company_name = selector.xpath(r'string(.//div[@class="title-txt"]//h1)')
+                company_name = str(company_name).strip()
 
-            contact_div = selector.xpath(r'.//div[@class="details-cnt"]/div[@class="cf"]')[0]
-            company_site = contact_div.xpath(r'string(.//div[@class="detail-address"])')
-            company_site = str(company_site).strip()
-            print(company_site)
+                if company_name != '':
+                    contact_div = selector.xpath(r'.//div[@class="details-cnt"]/div[@class="cf"]')[0]
+                    company_site = contact_div.xpath(r'string(.//div[@class="detail-address"])')
+                    company_site = str(company_site).strip()
 
-            company_detail_info_list = contact_div.xpath(
-                r'.//div[@class="detail-col col-2"]/div[@class="detail-infos"]/div[@class="info-item"]'
-            )
+                    company_data_quality = 'good'
 
-            company_detail_info_dict_list = list()
-            for company_detail_info in company_detail_info_list:
-                company_detail_label = company_detail_info.xpath(
-                    r'string(.//div[@class="info-label"])'
-                )
-                company_detail_field = company_detail_info.xpath(
-                    r'string(.//div[@class="info-fields"])'
-                )
+                    company_detail_info_list = contact_div.xpath(
+                        r'.//div[@class="detail-col col-2"]/div[@class="detail-infos"]/div[@class="info-item"]'
+                    )
 
-                company_detail_label = str(company_detail_label).strip().rstrip(':')
-                company_detail_field = str(company_detail_field).strip()
-                company_detail_field = re.sub(r'\s{2,}', ' ', company_detail_field)
+                    company_detail_info_dict_list = list()
+                    for company_detail_info in company_detail_info_list:
+                        company_detail_label = company_detail_info.xpath(
+                            r'string(.//div[@class="info-label"])'
+                        )
+                        company_detail_field = company_detail_info.xpath(
+                            r'string(.//div[@class="info-fields"])'
+                        )
 
-                company_detail_info_dict_list.append({
-                    'label': company_detail_label,
-                    'field': company_detail_field
-                })
+                        company_detail_label = str(company_detail_label).strip().rstrip(':')
+                        company_detail_field = str(company_detail_field).strip()
+                        company_detail_field = re.sub(r'\s{2,}', ' ', company_detail_field)
 
-            pprint.pprint(company_detail_info_dict_list)
+                        company_detail_info_dict_list.append({
+                            'label': company_detail_label,
+                            'field': company_detail_field
+                        })
 
-            company_tag_view_list = contact_div.xpath(
-                r'.//div[@class="detail-col col-1"]/div[@class="detail-infos"]/div[@class="info-item"]'
-            )
-            company_tag_list = list()
-            for company_tag_view in company_tag_view_list:
-                if len(company_tag_view.xpath('.//a')) > 0:
-                    continue
-                company_tag_list.append(company_tag_view.xpath('string(.)').strip())
-            print(company_tag_list)
+                    company_tag_view_list = contact_div.xpath(
+                        r'.//div[@class="detail-col col-1"]/div[@class="detail-infos"]/div[@class="info-item"]'
+                    )
+                    company_tag_list = list()
+                    for company_tag_view in company_tag_view_list:
+                        if len(company_tag_view.xpath('.//a')) > 0:
+                            continue
+                        company_tag_list.append(company_tag_view.xpath('string(.)').strip())
 
-            company_introduce = selector.xpath(r'.//div[@class="details-cnt"]/p[@class="detail-intro"]/text()')[0]
-            company_introduce = str(company_introduce).strip()
-            print(company_introduce)
+                    company_introduce = selector.xpath(r'.//div[@class="details-cnt"]/p[@class="detail-intro"]/text()')[0]
+                    company_introduce = str(company_introduce).strip()
 
-            company_verified = selector.xpath(
-                r'string(.//div[@class="sr-comInfo-sign"]/div[contains(@title, "verified")])'
-            )
-            company_inspection = selector.xpath(
-                r'string(.//div[@class="sr-comInfo-sign"]/div[contains(@title, "inspection")])'
-            )
+                    company_verified = selector.xpath(
+                        r'string(.//div[@class="sr-comInfo-sign"]/div[contains(@title, "verified")])'
+                    )
+                    company_inspection = selector.xpath(
+                        r'string(.//div[@class="sr-comInfo-sign"]/div[contains(@title, "inspection")])'
+                    )
 
-            company_verified = re.sub(r'\s{2,}', ' ', company_verified.strip())
-            company_inspection = re.sub(r'\s{2,}', ' ', company_inspection.strip())
+                    company_verified = re.sub(r'\s{2,}', ' ', company_verified.strip())
+                    company_inspection = re.sub(r'\s{2,}', ' ', company_inspection.strip())
 
-            print(company_verified)
-            print(company_inspection)
+                    contact_info_item_list = selector.xpath(
+                        r'.//div[@class="sr-layout-block contact-block"]/'
+                        r'div[@class="contact-info"]/div[@class="info-item"]'
+                    )
+                    company_contact_info = list()
+                    for contact_info_item in contact_info_item_list:
+                        contact_info_key_list = contact_info_item.xpath(r'.//div[@class="info-label"]/text()')
+                        if len(contact_info_key_list) == 0:
+                            continue
+                        contact_info_key = str(contact_info_key_list[0]).strip().rstrip(':').lower()
+                        if contact_info_key == 'address':
+                            contact_info_value = contact_info_item.xpath(
+                                r'.//div[@class="info-fields"]//span[@class="contact-address"]/text()'
+                            )
+                        elif contact_info_key == 'showroom':
+                            contact_info_value = contact_info_item.xpath(
+                                r'.//div[@class="info-fields"]//a/text()'
+                            )
+                        elif contact_info_key == 'website':
+                            contact_info_value = contact_info_item.xpath(
+                                r'.//div[@class="info-fields"]//a/@href'
+                            )
+                        else:
+                            contact_info_value = contact_info_item.xpath(
+                                r'.//div[@class="info-fields"]/text()'
+                            )
 
-            contact_info_item_list = selector.xpath(r'.//div[@class="contact-info"]/div[@class="info-item"]')
-            for contact_info_item in contact_info_item_list:
-                contact_info_key = contact_info_item.xpath(r'.//div[@class="info-label"]/text()')[0]
-                contact_info_key = str(contact_info_key).strip().rstrip(':').lower()
-                if contact_info_key == 'address':
-                    contact_info_value = contact_info_item.xpath(
-                        r'.//div[@class="info-fields"]//span[@class="contact-address"]/text()'
+                        if len(contact_info_value) == 0:
+                            continue
+
+                        contact_info_value = contact_info_value[0].strip()
+                        contact_info_value = re.sub(r'\s{2,}', ' ', contact_info_value)
+
+                        company_contact_info.append({
+                            'contact_info_key': contact_info_key,
+                            'contact_info_value': contact_info_value
+                        })
+
+                    company_contacter_div = selector.xpath(
+                        r'.//div[@class="contact-customer"]/div/div[@class="info-detail"]'
                     )[0]
-                elif contact_info_key == 'showroom':
-                    contact_info_value = contact_info_item.xpath(
-                        r'.//div[@class="info-fields"]//a/text()'
-                    )[0]
-                pass
 
-            break
-        break
+                    company_contacter = company_contacter_div.xpath(
+                        r'.//div[@class="info-name"]/text()'
+                    )[0].strip()
 
+                    company_contacter_post = ','.join(company_contacter_div.xpath(
+                        r'.//div[@class="info-item"]/text()'
+                    )).strip()
+
+                else:
+                    company_name = selector.xpath(r'.//div[@class="com-name-txt"]//h1/text()')
+
+                    if len(company_name) > 0:
+                        company_name = company_name[0]
+                        company_site = ''
+                        company_verified = ''
+                        company_inspection = ''
+                        company_tag_list = []
+                        company_data_quality = 'bad'
+
+                        company_desc_div = selector.xpath(r'.//div[@class="info-detal"]/div[@class="desc"]')[0]
+                        company_desc_title = company_desc_div.xpath(r'.//div[@class="tit"]/h2/text()')[0].strip().lower()
+
+                        if company_desc_title == 'company introduction':
+                            company_introduce = company_desc_div.xpath(
+                                r'string(.//div[@class="detail"]/div[@class="txt J-more-cnt"])'
+                            )
+
+                            company_introduce = re.sub(r'\s{2,}', '', company_introduce).strip()
+                        else:
+                            company_introduce = ''
+
+                        company_contact_div = selector.xpath(
+                            r'.//div[@class="com-info-wp"]/div[@class="info-content"]/'
+                            r'div[@class="info-cont-wp"]/div[@class="item"]'
+                        )
+
+                        company_contact_info = list()
+                        for item_contact_div in company_contact_div:
+                            contact_info_key = item_contact_div.xpath(
+                                r'.//div[@class="label"]/text()'
+                            )[0].strip().rstrip(':').lower()
+                            if contact_info_key == 'address':
+                                contact_info_value = item_contact_div.xpath(
+                                    r'.//div[@class="info"]/text()'
+                                )[0].strip().rstrip(':').lower()
+
+                                company_contact_info.append({
+                                    'contact_info_key': contact_info_key,
+                                    'contact_info_value': contact_info_value
+                                })
+
+                        company_detail_info_div = selector.xpath(
+                            r'.//div[@class="info-detal"]/div[@class="cnt"]/div[@class="item"]'
+                        )
+
+                        company_detail_info_dict_list = list()
+                        for item_div in company_detail_info_div:
+                            contact_info_key = item_div.xpath(r'.//div[@class="label"]/text()')[0].strip().rstrip(':')
+                            contact_info_value = item_div.xpath(r'string(.//div[@class="info"])').strip()
+                            contact_info_value = re.sub(r'\s{2,}', ' ', contact_info_value)
+                            company_detail_info_dict_list.append({
+                                'label': contact_info_key,
+                                'field': contact_info_value
+                            })
+
+                        company_contacter_div = selector.xpath(
+                            r'.//div[@class="person"]/div[@class="txt"]'
+                        )[0]
+
+                        company_contacter = company_contacter_div.xpath(
+                            r'.//div[@class="name"]/text()'
+                        )[0].strip()
+
+                        company_contacter_post = ','.join(company_contacter_div.xpath(
+                            r'.//div[@class="manager"]/text()'
+                        )).strip()
+
+                    else:
+                        continue
+
+                company_info_dict = {
+                    'company_name': company_name,
+                    'company_site': company_site,
+                    'company_introduce': company_introduce[:2000],
+                    'company_verified': company_verified,
+                    'company_inspection': company_inspection,
+                    'company_tag': company_tag_list,
+                    'company_contact_info': company_contact_info,
+                    'company_detail_info': company_detail_info_dict_list,
+                    'company_data_quality': company_data_quality,
+                    'company_contacter': company_contacter,
+                    'company_contacter_post': company_contacter_post
+                }
+
+                pprint.pprint(company_info_dict)
+
+                with open(json_path, 'w', encoding='utf8') as fp:
+                    fp.write(json.dumps(company_info_dict))
+
+                print('=======================')
+            except Exception as e:
+                with open(r'E:\mic\error.txt', 'a', encoding='utf8') as fp:
+                    fp.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f') + ' ' +
+                             file_path + '\n')
+                    fp.write(str(e) + '\n')
+            # break
+        # break
 
 
 def start():

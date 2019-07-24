@@ -81,7 +81,7 @@ def check_del_google_key_to_db(conn, cur):
         'Connection': 'keep-alive'
     }
 
-    def check_google_key(google_key, sleep_time=0):
+    def check_google_key(google_key, sleep_time=0.0):
         """
         检查googlekey是否可用
         :return:

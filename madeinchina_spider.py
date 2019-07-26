@@ -9,6 +9,8 @@
 import pprint
 
 import datetime
+
+import mysql.connector
 from gevent import pool, monkey; monkey.patch_all()
 import WhileRequests
 from lxml import etree
@@ -34,6 +36,10 @@ company_list_json_path = os.path.join(company_list_json_dir, 'company_list.json'
 
 company_page_list_dir = os.path.join(home_path_dir, 'company_page_list')
 company_page_key_dir = os.path.join(home_path_dir, 'company_page_key')
+
+unique_company_json_path = os.path.join(home_path_dir, 'unique_company.json')
+company_info_list_json_path = os.path.join(home_path_dir, 'company_info_list.json')
+company_contact_data_list_json_path = os.path.join(home_path_dir, 'company_contact_data_list.json')
 
 request = WhileRequests.WhileRequests()
 
@@ -821,6 +827,239 @@ def parse_all_company_pages():
         # break
 
 
+def unique_all_company_data():
+    """
+    去重所有的公司数据
+    :return:
+    """
+    unique_company_dict = dict()
+    for item_file in os.listdir(company_list_json_dir):
+        print(item_file)
+        item_file_path = os.path.join(company_list_json_dir, item_file)
+
+        with open(item_file_path, 'r', encoding='utf8') as fp:
+            company_list = json.load(fp)
+
+        for company_dict in company_list:
+            # pprint.pprint(company_dict)
+
+            company_id = company_dict['company_id']
+            company_url = company_dict['company_url']
+
+            unique_company_dict[company_url] = company_id
+
+            # break
+        # break
+
+    with open(unique_company_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(unique_company_dict))
+
+
+def collect_company_info_data():
+    """
+    收集公司详情数据
+    :return:
+    """
+    company_info_list = list()
+    with open(unique_company_json_path, 'r', encoding='utf8') as fp:
+        unique_company_dict = json.load(fp)
+
+    unique_company_id_set = set(unique_company_dict.values())
+
+    for item_file in os.listdir(company_list_json_dir):
+        print(item_file)
+        item_file_path = os.path.join(company_list_json_dir, item_file)
+
+        with open(item_file_path, 'r', encoding='utf8') as fp:
+            company_list = json.load(fp)
+
+        for company_dict in company_list:
+            company_id = company_dict['company_id']
+
+            if company_id in unique_company_id_set:
+                company_info_list.append(company_dict)
+
+    print(len(company_info_list))
+    with open(company_info_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_info_list))
+
+
+def collect_company_contact_data():
+    """
+    收集公司联系方式数据
+    :return:
+    """
+    company_contact_data_list = list()
+    with open(unique_company_json_path, 'r', encoding='utf8') as fp:
+        unique_company_dict = json.load(fp)
+
+    for company_id in unique_company_dict.values():
+        print(company_id)
+        company_contact_data_dir_name = get_company_id_dir_name(int(company_id))
+        company_contact_data_path = os.path.join(
+            company_page_key_dir, company_contact_data_dir_name, f'{str(company_id)}.json'
+        )
+        if not os.path.exists(company_contact_data_path):
+            continue
+        # print(company_contact_data_path)
+
+        with open(company_contact_data_path, 'r', encoding='utf8') as fp:
+            company_contact_data = json.load(fp)
+
+        company_name = company_contact_data.get('company_name', '')
+        company_site = company_contact_data.get('company_site', '')
+        company_verified = company_contact_data.get('company_verified', '')
+        company_inspection = company_contact_data.get('company_inspection', '')
+        company_tag = ','.join(company_contact_data.get('company_tag', []))
+        company_introduce = company_contact_data.get('company_introduce', '')
+        company_contacter = company_contact_data.get('company_contacter', '')
+        company_contacter_post = company_contact_data.get('company_contacter_post', '')
+        company_data_quality = company_contact_data.get('company_data_quality', '')
+
+        company_detail_info = json.dumps(company_contact_data.get('company_detail_info', []))
+
+        _company_contact_info = company_contact_data.get('company_contact_info', [])
+        company_address = ''
+        company_telephone = ''
+        company_mobile_phone = ''
+        company_fax = ''
+        company_showroom = ''
+        company_website = ''
+
+        for k_v_dict in _company_contact_info:
+            _key = k_v_dict.get('contact_info_key', '').strip()
+            _value = k_v_dict.get('contact_info_value', '').strip()
+
+            if _key == 'address':
+                company_address = _value
+            elif _key == 'telephone':
+                company_telephone = _value
+            elif _key == 'mobile phone':
+                company_mobile_phone = _value
+            elif _key == 'fax':
+                company_fax = _value
+            elif _key == 'showroom':
+                company_showroom = _value
+            elif _key == 'website':
+                company_website = _value
+
+        temp_dict = {
+            'company_no': company_id,
+            'company_name': company_name,
+            'company_site': company_site,
+            'company_verified': company_verified,
+            'company_inspection': company_inspection,
+            'company_tag': company_tag,
+            'company_introduce': company_introduce,
+            'company_contacter': company_contacter,
+            'company_contacter_post': company_contacter_post,
+            'company_data_quality': company_data_quality,
+            'company_detail_info': company_detail_info,
+            'company_address': company_address,
+            'company_telephone': company_telephone,
+            'company_mobile_phone': company_mobile_phone,
+            'company_fax': company_fax,
+            'company_showroom': company_showroom,
+            'company_website': company_website
+        }
+
+        # pprint.pprint(company_contact_data)
+        # pprint.pprint(temp_dict)
+
+        # if company_data_quality == 'bad':
+        #     pprint.pprint(company_contact_data)
+        #     pprint.pprint(temp_dict)
+        #     break
+
+        company_contact_data_list.append(temp_dict)
+
+    with open(company_contact_data_list_json_path, 'w', encoding='utf8') as fp:
+        fp.write(json.dumps(company_contact_data_list))
+
+
+def insert_company_contact_data_to_mysql():
+    """
+    公司联系方式入库
+    :return:
+    """
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        passwd="123456",
+        database="madeinchina"
+    )
+
+    cur = conn.cursor()
+
+    if not cur:
+        raise (NameError, "数据库连接失败")
+    else:
+        print('数据库连接成功')
+
+    with open(company_contact_data_list_json_path, 'r', encoding='utf8') as fp:
+        data = json.load(fp)
+
+    print(len(data))
+
+    commit_package_size = 100
+    commit_package_count = 0
+
+    for item_company_dict in data:
+        company_no = item_company_dict['company_no']
+
+        sql_str = "select company_no from company_contact_data where company_no = '{}'".format(company_no, )
+        cur.execute(sql_str)
+        res = cur.fetchone()
+        if res:
+            continue
+
+        company_name = item_company_dict['company_name'].replace("'", "''").strip('\\')
+        company_site = item_company_dict['company_site'].replace("'", "''").strip('\\')
+        company_verified = item_company_dict['company_verified'].replace("'", "''").strip('\\')
+        company_inspection = item_company_dict['company_inspection'].replace("'", "''").strip('\\')
+        company_tag = item_company_dict['company_tag'].replace("'", "''").strip('\\')
+        company_introduce = item_company_dict['company_introduce'].replace("'", "''").strip('\\')
+        company_contacter = item_company_dict['company_contacter'].replace("'", "''").strip('\\')
+        company_contacter_post = item_company_dict['company_contacter_post'].replace("'", "''").strip('\\')
+        company_data_quality = item_company_dict['company_data_quality'].replace("'", "''").strip('\\')
+        company_detail_info = item_company_dict['company_detail_info'].replace("'", "''").strip('\\')
+        company_address = item_company_dict['company_address'].replace("'", "''").strip('\\')
+        company_telephone = item_company_dict['company_telephone'].replace("'", "''").strip('\\')
+        company_mobile_phone = item_company_dict['company_mobile_phone'].replace("'", "''").strip('\\')
+        company_fax = item_company_dict['company_fax'].replace("'", "''").strip('\\')
+        company_showroom = item_company_dict['company_showroom'].replace("'", "''").strip('\\')
+        company_website = item_company_dict['company_website'].replace("'", "''").strip('\\')
+
+        sql_str = (
+                    "insert into company_contact_data("
+                    "company_name, company_site, company_verified, company_inspection, "
+                    "company_tag, company_introduce, company_contacter, "
+                    "company_contacter_post, company_data_quality, company_detail_info, "
+                    "company_address, company_telephone, company_mobile_phone, "
+                    "company_fax, company_showroom, company_website, company_no) values("
+                    "'{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', "
+                    "'{}', '{}', '{}', '{}', '{}', '{}')"
+                  ).format(
+                    company_name, company_site, company_verified, company_inspection,
+                    company_tag, company_introduce, company_contacter,
+                    company_contacter_post, company_data_quality, company_detail_info,
+                    company_address, company_telephone, company_mobile_phone,
+                    company_fax, company_showroom, company_website, company_no
+                  )
+
+        print(company_no, sql_str)
+        cur.execute(sql_str.encode('utf8'))
+
+        commit_package_count += 1
+
+        if commit_package_count >= commit_package_size:
+            conn.commit()
+            commit_package_count = 0
+        # break
+    if commit_package_count > 0:
+        conn.commit()
+
+
 def start():
     """
     入口
@@ -836,7 +1075,15 @@ def start():
     # rename_company_list_file()
     # move_company_page_file()
 
-    parse_all_company_pages()
+    # parse_all_company_pages()
+
+    # unique_all_company_data()
+
+    # collect_company_info_data()
+
+    # collect_company_contact_data()
+
+    insert_company_contact_data_to_mysql()
 
 
 if __name__ == '__main__':

@@ -29,9 +29,11 @@ def export_google_search_log():
     :return:
     """
     result_dict = dict()
-    with open(r'E:\work_all\topease\特易数据中心\ali_google_search\log.txt',
+    with open(r'E:\work_all\topease\特易数据中心\ali_google_search\log2.txt',
               'r', encoding='utf8') as fp:
-        for line in fp:
+        for i, line in enumerate(fp):
+            # if i > 1500:
+            #     break
             line = str(line).strip()
             line_json = json.loads(line)
 
@@ -60,7 +62,7 @@ def export_google_search_log():
     df['index'] = df['index'].apply(lambda x: int(x) + 1)
     print(df.head())
     df = df.set_index(['关键字', 'index'])
-    df.to_excel(r'E:\work_all\topease\特易数据中心\ali_google_search\ali_google_products_ads.xlsx')
+    df.to_excel(r'E:\work_all\topease\特易数据中心\ali_google_search\ali_google_products_ads2.xlsx')
 
 
 def start():

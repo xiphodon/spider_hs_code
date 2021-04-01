@@ -1065,24 +1065,18 @@ def start():
     入口
     :return:
     """
-    # download_suppliers_category_group_list_html()
-    # download_suppliers_category_url_html()
-    # download_suppliers_list()
-    # parse_company_list_pages()
-    # download_all_company_page()
-    # parse_all_company_pages()
-
-    # rename_company_list_file()
-    # move_company_page_file()
-
-    # parse_all_company_pages()
-
-    # unique_all_company_data()
-
-    # collect_company_info_data()
-
-    # collect_company_contact_data()
-
+    download_suppliers_category_group_list_html()
+    download_suppliers_category_url_html()
+    download_suppliers_list()
+    parse_company_list_pages()
+    download_all_company_page()
+    parse_all_company_pages()
+    rename_company_list_file()
+    move_company_page_file()
+    parse_all_company_pages()
+    unique_all_company_data()
+    collect_company_info_data()
+    collect_company_contact_data()
     insert_company_contact_data_to_mysql()
 
 

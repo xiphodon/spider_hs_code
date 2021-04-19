@@ -26,13 +26,14 @@ class WhileRequests:
             'Connection': 'keep-alive'
         }
 
-    def get(self, url, request_times=100, sleep_time=0, timeout=15):
+    def get(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5):
         """
         get请求
         :param url:
         :param request_times:
         :param sleep_time:
         :param timeout:
+        :param error_retry_sleep:
         :return:
         """
         while_times = 0
@@ -45,6 +46,7 @@ class WhileRequests:
                 if while_times < request_times:
                     while_times += 1
                     print('**********', '尝试重新链接[', while_times, ']次:', url)
+                    time.sleep(error_retry_sleep)
                     continue
                 else:
                     raise e

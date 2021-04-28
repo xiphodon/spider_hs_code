@@ -41,13 +41,15 @@ class EuroPagesSpider(BaseSpider):
     unique_company_list_json_path = os.path.join(home_dir, 'unique_company_list.json')
 
     unique_company_pages_dir = os.path.join(home_dir, 'unique_company_pages_dir')
+    unique_company_json_dir = os.path.join(home_dir, 'unique_company_json_dir')
 
-    def __init__(self):
+    def __init__(self, check_home_url=False):
         """
         初始化
         """
         self.requests = WhileRequests()
-        self.requests.get(self.home_url)
+        if check_home_url is True:
+            self.requests.get(self.home_url)
 
     def down_load_business_directory_page(self):
         """
@@ -354,6 +356,20 @@ class EuroPagesSpider(BaseSpider):
         result = self.requests.get(c_href, sleep_time=self.random_float(0, 0.01), request_times=100)
         self.create_file(page_file_path, result.text)
 
+    def parse_company_info_pages(self):
+        """
+        解析公司详情文件
+        :return:
+        """
+        assert os.path.exists(self.unique_company_pages_dir), 'unique_company_pages_dir is not exists'
+        self.mkdir(self.unique_company_json_dir)
+
+        for file_name in os.listdir(self.unique_company_pages_dir):
+            file_path = os.path.join(self.unique_company_pages_dir, file_name)
+            print(file_path)
+
+
+
 
 if __name__ == '__main__':
     eps = EuroPagesSpider()
@@ -366,4 +382,5 @@ if __name__ == '__main__':
     # eps.parse_activity_company_list_to_json()
     # eps.merge_activity_company_to_unique_company_json()
     # 26,133,3321,6204755,1650470
-    eps.gevent_pool_download_company_info_page(gevent_pool_size=8)
+    # eps.gevent_pool_download_company_info_page(gevent_pool_size=8)
+    eps.parse_company_info_pages()

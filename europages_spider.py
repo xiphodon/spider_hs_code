@@ -5,6 +5,8 @@
 # @Site    : https://github.com/xiphodon
 # @File    : europages_spider.py
 # @Software: PyCharm
+import re
+
 from gevent import pool, monkey;
 
 monkey.patch_all()
@@ -41,13 +43,20 @@ class EuroPagesSpider(BaseSpider):
     unique_company_list_json_path = os.path.join(home_dir, 'unique_company_list.json')
 
     unique_company_pages_dir = os.path.join(home_dir, 'unique_company_pages_dir')
+    unique_company_phone_number_json_dir = os.path.join(home_dir, 'unique_company_phone_number_json_dir')
+    unique_company_phone_args_json_dir = os.path.join(home_dir, 'unique_company_phone_args_json_dir')
+    unique_company_phone_args_json_path = os.path.join(home_dir, 'unique_company_phone_args.json')
     unique_company_json_dir = os.path.join(home_dir, 'unique_company_json_dir')
 
     def __init__(self, check_home_url=False):
         """
         初始化
         """
-        self.requests = WhileRequests()
+        self.requests = WhileRequests(headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)',
+            'Connection': 'keep-alive',
+            'Accept-Language': 'en-us'
+        })
         if check_home_url is True:
             self.requests.get(self.home_url)
 
@@ -356,6 +365,99 @@ class EuroPagesSpider(BaseSpider):
         result = self.requests.get(c_href, sleep_time=self.random_float(0, 0.01), request_times=100)
         self.create_file(page_file_path, result.text)
 
+    def extract_company_phone_request_args(self):
+        """
+        抽取公司电话号码请求参数
+        :return:
+        """
+        assert os.path.exists(self.unique_company_pages_dir), 'unique_company_pages_dir is not exists'
+        self.mkdir(self.unique_company_phone_args_json_dir)
+        phone_request_args_list = list()
+        part_size = 10_000
+        for i, file_name in enumerate(os.listdir(self.unique_company_pages_dir), start=1):
+            file_path = os.path.join(self.unique_company_pages_dir, file_name)
+
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            phone_onclick = self.data_list_get_first(selector.xpath('.//div[@itemprop="telephone"]/a/@onclick'))
+            # print(phone_onclick)
+
+            match_obj = re.match(r"EpGetInfoTel\(event,'(.*)','(.*)','(.*)'\);", phone_onclick, re.M | re.I)
+
+            if match_obj:
+                no = match_obj.group(1)
+                company_id = match_obj.group(2)
+                customer_id = match_obj.group(3)
+                # https://www.europages.co.uk/InfosTelecomJson.json?uidsid=00000005393168-714803001&id=1444
+                url = f'https://www.europages.co.uk/InfosTelecomJson.json?uidsid={company_id}-{customer_id}&id={no}'
+                print(i, url)
+                phone_request_args_list.append({
+                    # 'no': no,
+                    # 'company_id': company_id,
+                    # 'customer_id': customer_id,
+                    'url': url,
+                    'page_name': file_name
+                })
+
+                if i % part_size == 0:
+                    part_json_file_name = f'{i - part_size + 1}_{i}.json'
+                    part_json_file_path = os.path.join(self.unique_company_phone_args_json_dir, part_json_file_name)
+                    with open(part_json_file_path, 'w', encoding='utf8') as fp:
+                        json.dump(phone_request_args_list, fp)
+                    phone_request_args_list.clear()
+            else:
+                print(i, 'no match')
+
+            # break
+        with open(os.path.join(self.unique_company_phone_args_json_dir, 'end.json'), 'w', encoding='utf8') as fp:
+            json.dump(phone_request_args_list, fp)
+
+
+    def download_all_company_phone_number(self):
+        """
+        下载所有公司手机号码
+        :return:
+        """
+        assert os.path.exists(self.unique_company_pages_dir), 'unique_company_pages_dir is not exists'
+        self.mkdir(self.unique_company_phone_number_json_dir)
+
+        for file_name in os.listdir(self.unique_company_pages_dir):
+            json_name = f'{file_name[:-5]}.json'
+            json_path = os.path.join(self.unique_company_phone_number_json_dir, json_name)
+            if os.path.exists(json_path):
+                continue
+
+            file_path = os.path.join(self.unique_company_pages_dir, file_name)
+            print(file_path)
+
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            phone_onclick = self.data_list_get_first(selector.xpath('.//div[@itemprop="telephone"]/a/@onclick'))
+            # print(phone_onclick)
+
+            match_obj = re.match(r"EpGetInfoTel\(event,'(.*)','(.*)','(.*)'\);", phone_onclick, re.M | re.I)
+
+            if match_obj:
+                no = match_obj.group(1)
+                company_id = match_obj.group(2)
+                customer_id = match_obj.group(3)
+
+                # https://www.europages.co.uk/InfosTelecomJson.json?uidsid=00000005393168-714803001&id=1444
+
+                url = f'https://www.europages.co.uk/InfosTelecomJson.json?uidsid={company_id}-{customer_id}&id={no}'
+                result = self.requests.get(url, timeout=30)
+                phone_json = result.json()
+                phone_number = phone_json.get('digits', '').replace(' ', '')
+                print(result.json())
+            else:
+                print('no match')
+
+            break
+
     def parse_company_info_pages(self):
         """
         解析公司详情文件
@@ -368,11 +470,21 @@ class EuroPagesSpider(BaseSpider):
             file_path = os.path.join(self.unique_company_pages_dir, file_name)
             print(file_path)
 
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+
+
+
+
+            break
+
 
 
 
 if __name__ == '__main__':
-    eps = EuroPagesSpider()
+    eps = EuroPagesSpider(check_home_url=False)
     # eps.down_load_business_directory_page()
     # eps.parse_business_directory_page()
     # eps.download_item_class_pages()
@@ -383,4 +495,6 @@ if __name__ == '__main__':
     # eps.merge_activity_company_to_unique_company_json()
     # 26,133,3321,6204755,1650470
     # eps.gevent_pool_download_company_info_page(gevent_pool_size=8)
-    eps.parse_company_info_pages()
+    eps.extract_company_phone_request_args()
+    # eps.download_all_company_phone_number()
+    # eps.parse_company_info_pages()

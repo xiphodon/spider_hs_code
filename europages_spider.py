@@ -6,6 +6,7 @@
 # @File    : europages_spider.py
 # @Software: PyCharm
 import re
+from pprint import pprint
 
 from gevent import pool, monkey;
 
@@ -17,7 +18,7 @@ import os
 from lxml import etree
 
 from WhileRequests import WhileRequests
-from base_spider import BaseSpider
+from base_spider import BaseSpider, DataProgress
 
 
 class EuroPagesSpider(BaseSpider):
@@ -52,6 +53,7 @@ class EuroPagesSpider(BaseSpider):
         """
         初始化
         """
+        super(self.__class__, self).__init__()
         self.requests = WhileRequests(headers={
             'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)',
             'Connection': 'keep-alive',
@@ -116,7 +118,8 @@ class EuroPagesSpider(BaseSpider):
         i = 0
         for item_class in class_data:
             i += 1
-            print(f'\r{self.draw_data_progress(i, len(class_data))}', end='')
+            # print(f'\r{self.draw_data_progress(i, len(class_data))}', end='')
+            self.data_progress.print_data_progress(i, len(class_data))
 
             class_id = item_class['class_id']
             href = item_class['href']
@@ -142,7 +145,8 @@ class EuroPagesSpider(BaseSpider):
         list_dir = os.listdir(self.company_item_class_page_dir)
         for file_name in list_dir:
             i += 1
-            print(f'\r{self.draw_data_progress(i, len(list_dir))}', end='')
+            self.data_progress.print_data_progress(i, len(list_dir))
+            # print(f'\r{self.draw_data_progress(i, len(list_dir))}', end='')
 
             file_path = os.path.join(self.company_item_class_page_dir, file_name)
             class_id = file_name[:-5]
@@ -356,7 +360,8 @@ class EuroPagesSpider(BaseSpider):
         :return:
         """
         i, size, c_key, content = data
-        print(f'\r{self.draw_data_progress(i, size)}', end='')
+        # print(f'\r{self.draw_data_progress(i, size)}', end='')
+        self.data_progress.print_data_progress(i, size)
         c_href = content['info']['c_href']
         page_file_name = f'{c_key}.html'
         page_file_path = os.path.join(self.unique_company_pages_dir, page_file_name)
@@ -374,8 +379,10 @@ class EuroPagesSpider(BaseSpider):
         self.mkdir(self.unique_company_phone_args_json_dir)
         phone_request_args_list = list()
         part_size = 10_000
+        print('start...')
         for i, file_name in enumerate(os.listdir(self.unique_company_pages_dir), start=1):
             file_path = os.path.join(self.unique_company_pages_dir, file_name)
+            print(i, file_path)
 
             with open(file_path, 'r', encoding='utf8') as fp:
                 content = fp.read()
@@ -414,49 +421,63 @@ class EuroPagesSpider(BaseSpider):
         with open(os.path.join(self.unique_company_phone_args_json_dir, 'end.json'), 'w', encoding='utf8') as fp:
             json.dump(phone_request_args_list, fp)
 
+    def merge_extract_company_phone_request_args(self):
+        """
+        合并抽取的公司联系方式参数
+        :return:
+        """
+        all_company_phone_list = list()
+        for json_name in os.listdir(self.unique_company_phone_args_json_dir):
+            print(json_name)
+            json_path = os.path.join(self.unique_company_phone_args_json_dir, json_name)
+            if not os.path.exists(json_path):
+                continue
+            with open(json_path, 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+            all_company_phone_list.extend(data)
+        with open(self.unique_company_phone_args_json_path, 'w', encoding='utf8') as fp:
+            json.dump(all_company_phone_list, fp)
 
-    def download_all_company_phone_number(self):
+    def download_all_company_phone_number(self, gevent_pool_size=50):
         """
         下载所有公司手机号码
         :return:
         """
-        assert os.path.exists(self.unique_company_pages_dir), 'unique_company_pages_dir is not exists'
-        self.mkdir(self.unique_company_phone_number_json_dir)
+        if not os.path.exists(self.unique_company_phone_args_json_path):
+            return
+        with open(self.unique_company_phone_args_json_path, 'r', encoding='utf8') as fp:
+            data = json.load(fp)
 
-        for file_name in os.listdir(self.unique_company_pages_dir):
-            json_name = f'{file_name[:-5]}.json'
-            json_path = os.path.join(self.unique_company_phone_number_json_dir, json_name)
-            if os.path.exists(json_path):
-                continue
+        data_len = len(data)
+        gevent_pool = pool.Pool(gevent_pool_size)
+        result_list = gevent_pool.map(self.download_company_phone_number,
+                                      [(i, data_len, item) for i, item in enumerate(data, start=1)])
+        return result_list
 
-            file_path = os.path.join(self.unique_company_pages_dir, file_name)
-            print(file_path)
+    def download_company_phone_number(self, data):
+        """
+        下载公司电话号码
+        :param data: i, data_len, item
+        :return:
+        """
+        i, size, item = data
+        # print(f'\r{self.draw_data_progress(i, size)}', end='')
+        self.data_progress.print_data_progress(i, size)
+        url = item['url']
+        page_name = item['page_name']
+        phone_file_name = f'{page_name[:-5]}.json'
+        phone_file_path = os.path.join(self.unique_company_phone_number_json_dir, phone_file_name)
+        if os.path.exists(phone_file_path):
+            return
 
-            with open(file_path, 'r', encoding='utf8') as fp:
-                content = fp.read()
-
-            selector = etree.HTML(content)
-            phone_onclick = self.data_list_get_first(selector.xpath('.//div[@itemprop="telephone"]/a/@onclick'))
-            # print(phone_onclick)
-
-            match_obj = re.match(r"EpGetInfoTel\(event,'(.*)','(.*)','(.*)'\);", phone_onclick, re.M | re.I)
-
-            if match_obj:
-                no = match_obj.group(1)
-                company_id = match_obj.group(2)
-                customer_id = match_obj.group(3)
-
-                # https://www.europages.co.uk/InfosTelecomJson.json?uidsid=00000005393168-714803001&id=1444
-
-                url = f'https://www.europages.co.uk/InfosTelecomJson.json?uidsid={company_id}-{customer_id}&id={no}'
-                result = self.requests.get(url, timeout=30)
-                phone_json = result.json()
-                phone_number = phone_json.get('digits', '').replace(' ', '')
-                print(result.json())
-            else:
-                print('no match')
-
-            break
+        result = self.requests.get(url, timeout=30)
+        try:
+            phone_json = result.json()
+            phone_number = phone_json.get('digits', '').replace(' ', '')
+            with open(phone_file_path, 'w', encoding='utf8') as fp:
+                json.dump({'phone': phone_number}, fp)
+        except:
+            pass
 
     def parse_company_info_pages(self):
         """
@@ -465,26 +486,205 @@ class EuroPagesSpider(BaseSpider):
         """
         assert os.path.exists(self.unique_company_pages_dir), 'unique_company_pages_dir is not exists'
         self.mkdir(self.unique_company_json_dir)
+        file_list = os.listdir(self.unique_company_pages_dir)
+        for i, file_name in enumerate(file_list, start=1):
+            self.data_progress.print_data_progress(i, len(file_list))
+            # if i > 200:
+            #     break
+            file_md5 = file_name[:-5]
 
-        for file_name in os.listdir(self.unique_company_pages_dir):
             file_path = os.path.join(self.unique_company_pages_dir, file_name)
-            print(file_path)
+            # print(i, file_path)
+            json_path = os.path.join(self.unique_company_json_dir, f'{file_md5}.json')
+            if os.path.exists(json_path):
+                continue
 
             with open(file_path, 'r', encoding='utf8') as fp:
                 content = fp.read()
 
+            company_dict = dict()
             selector = etree.HTML(content)
 
+            web_href = self.data_list_get_first(selector.xpath('//li[@class="drop-down__menu-item"]/a[@label="English" and @title="English"]/@href'))
+            if web_href == '':
+                continue
 
+            company_ids = web_href.rsplit(sep='/', maxsplit=1)[-1].replace('.html', '').split(sep='-', maxsplit=1)
+            if len(company_ids) != 2:
+                continue
 
+            company_id, user_id = company_ids
+            company_dict['company_id'] = company_id
+            company_dict['user_id'] = user_id
+            company_dict['md5'] = file_md5
+            # print(web_href)
+            # print(company_ids)
 
-            break
+            container_div = self.data_list_get_first(selector.xpath('//div[@class="container"]'), default=None)
+            if container_div is None:
+                continue
 
+            company_logo_src = self.data_list_get_first(
+                container_div.xpath('.//div[@class="company-logo--container"]/div[@class="company-logo"]/img/@src'))
+            company_dict['company_logo_src'] = company_logo_src
 
+            company_name = self.data_list_get_first(
+                container_div.xpath('.//div[@class="company-baseline"]/h1[@itemprop="name"]/span/text()')
+            )
+            company_dict['company_name'] = self.clean_text(company_name)
+
+            company_verified = 1 if self.data_list_get_first(
+                container_div.xpath(
+                    './/div[@class="company-baseline"]/h1[@itemprop="name"]/img[@class="badge-verified"]'),
+                default=None
+            ) is not None else 0
+            company_dict['company_verified'] = company_verified
+
+            company_country = self.data_list_get_first(
+                container_div.xpath('.//div[@class="company-baseline"]/h2/span[@class="u-normal"]/text()')
+            )
+            company_dict['company_country'] = self.clean_text(company_country)
+
+            company_description = self.data_list_get_first(
+                container_div.xpath('.//p[@class="company-description"]/text()')
+            )
+            company_dict['company_description'] = self.clean_text(company_description)
+
+            # company_web = self.data_list_get_first(container_div.xpath(
+            #     './/ul[@class="epage-info-image__list"]/li/span[@class="epage-info-image--website"]/a/@href')
+            # )
+            # company_dict['company_web'] = company_web
+            # print(company_web)
+
+            company_social_list = container_div.xpath('.//ul[@class="company-social"]/li/a/@href')
+            company_dict['company_social'] = company_social_list
+
+            product_view_list = container_div.xpath(
+                './/ul[@class="epage-info-image__list epage-info-image__list--in-lang"]/li[@class="js-clickable-in"]/a/span[@class="epage-info-image"]/img')
+            product_catalog_list = list()
+            for product_view in product_view_list:
+                product_catalogue_name = self.data_list_get_first(product_view.xpath('./@alt'))
+                product_catalogue_img_src = self.data_list_get_first(product_view.xpath('./@src'))
+                product_catalog_list.append({
+                    'name': self.clean_text(product_catalogue_name),
+                    'img_src': product_catalogue_img_src
+                })
+            company_dict['product_catalog_list'] = product_catalog_list
+            # print(product_catalog_list)
+
+            key_figure_list = list()
+            key_figures = container_div.xpath(
+                './/div[@class="page__layout-content--container"]//ul[@class="data-list"]/li')
+            for key_figure in key_figures:
+                value = self.data_list_get_first(key_figure.xpath('.//div[contains(@class, "data")]/text()'))
+                label = self.data_list_get_first(key_figure.xpath('.//div[contains(@class, "label")]/text()'))
+                key_figure_list.append({
+                    'label': self.clean_text(label),
+                    'value': self.clean_text(value)
+                })
+            company_dict['key_figure_list'] = key_figure_list
+            # print(key_figure_list)
+
+            organisation_list = list()
+            organisation_li_list = container_div.xpath('.//ul[@class="organisation-list"]/li')
+            for organisation_li in organisation_li_list:
+                value = self.data_list_get_first(organisation_li.xpath('./span[contains(@class, "data")]/text()'))
+                label = self.data_list_get_first(organisation_li.xpath('./span[contains(@class, "label")]/text()'))
+                organisation_list.append({
+                    'label': self.clean_text(label),
+                    'value': self.clean_text(value)
+                })
+            company_dict['organisation_list'] = organisation_list
+            # print(organisation_list)
+
+            incoterms_list = list()
+            incoterms_li_list = container_div.xpath('.//ul[@class="incoterms-list"]/li[@class="incoterms-list--item"]')
+            for incoterms_li in incoterms_li_list:
+                key = self.data_list_get_first(incoterms_li.xpath('./div/span[@class="u-biggest u-bold"]/text()'))
+                # key_desc = self.data_list_get_first(incoterms_li.xpath('./div/span[@class="u-small"]/text()'))
+                # incoterms_list.append({
+                #     'key': key,
+                #     'key_desc': key_desc
+                # })
+                incoterms_list.append(key)
+            incoterms = ','.join(incoterms_list)
+            company_dict['incoterms'] = incoterms
+            # print(incoterms)
+
+            h4_list = container_div.xpath('.//h4[@class="mtl h5-like"]')
+            company_dict['payment_methods'] = []
+            company_dict['banks'] = []
+            for h4 in h4_list:
+                h4_text = self.data_list_get_first(h4.xpath('./text()'))
+                if h4_text.lower() == 'payment methods':
+                    payment_methods = h4.xpath('./following-sibling::ul[1]/li/span/text()')
+                    company_dict['payment_methods'] = payment_methods
+                if h4_text.lower() == 'banks':
+                    banks = h4.xpath('./following-sibling::ul[1]/li/span/text()')
+                    company_dict['banks'] = banks
+
+            activity_list = list()
+            activity_li_list = container_div.xpath(
+                './/div[@class="page__layout-content--container"]//ul[@class="epage-info-image__list" and @itemtype="https://schema.org/ImageObject"]/li[@class="js-clickable-in"]')
+            for activity_li in activity_li_list:
+                # print(etree.tostring(activity_li))
+                img_src = self.data_list_get_first(activity_li.xpath('./span[@class="epage-info-image"]/a/img/@src'))
+                name = self.data_list_get_first(activity_li.xpath('./span[@itemprop="name"]/text()'))
+                activity_list.append({
+                    'img_src': img_src,
+                    'name': name
+                })
+            company_dict['activity_list'] = activity_list
+            # print(activity_list)
+
+            keyword_list = container_div.xpath('.//ul[@class="keyword-tag"]/li[@itemprop="itemListElement"]/text()')
+            company_dict['keywords'] = ','.join(keyword_list)
+
+            company_address = self.clean_text(self.data_list_get_first(selector.xpath('//dd[@itemprop="addressLocality"]/pre/text()')))
+            company_dict['company_address'] = company_address
+            # print(company_address)
+
+            company_vat_id = self.clean_text(self.data_list_get_first(selector.xpath('//span[@itemprop="vatID"]/text()')))
+            company_dict['vat_id'] = company_vat_id
+            # print(company_vat_id)
+
+            company_web = self.clean_text(self.data_list_get_first(selector.xpath('//div[@class="page__layout-sidebar--container-desktop"]//a[@itemprop="url"]/@href')))
+            company_dict['company_web'] = company_web
+            # print(company_web)
+
+            company_tel = self.clean_text(self.data_list_get_first(selector.xpath('//span[@class="js-num-tel js-hidden"]/text()')))
+            company_dict['company_tel'] = company_tel
+            # print(company_tel)
+
+            # pprint(company_dict)
+            # pprint(company_dict['activity_list'])
+            # pprint(company_dict['company_address'])
+            # pprint(company_dict['company_country'])
+            # pprint(company_dict['company_description'])
+            # pprint(company_dict['company_id'])
+            # pprint(company_dict['company_logo_src'])
+            # pprint(company_dict['company_name'])
+            # pprint(company_dict['company_social'])
+            # pprint(company_dict['company_tel'])
+            # pprint(company_dict['company_verified'])
+            # pprint(company_dict['company_web'])
+            # pprint(company_dict['incoterms'])
+            # pprint(company_dict['key_figure_list'])
+            # pprint(company_dict['keywords'])
+            # pprint(company_dict['md5'])
+            # pprint(company_dict['organisation_list'])
+            # pprint(company_dict['product_catalog_list'])
+            # pprint(company_dict['user_id'])
+            # pprint(company_dict['vat_id'])
+            # pprint(company_dict['payment_methods'])
+            # pprint(company_dict['banks'])
+
+            with open(json_path, 'w', encoding='utf8') as fp:
+                json.dump(company_dict, fp)
 
 
 if __name__ == '__main__':
-    eps = EuroPagesSpider(check_home_url=False)
+    eps = EuroPagesSpider(check_home_url=True)
     # eps.down_load_business_directory_page()
     # eps.parse_business_directory_page()
     # eps.download_item_class_pages()
@@ -495,6 +695,7 @@ if __name__ == '__main__':
     # eps.merge_activity_company_to_unique_company_json()
     # 26,133,3321,6204755,1650470
     # eps.gevent_pool_download_company_info_page(gevent_pool_size=8)
-    eps.extract_company_phone_request_args()
+    # eps.extract_company_phone_request_args()
+    # eps.merge_extract_company_phone_request_args()
     # eps.download_all_company_phone_number()
-    # eps.parse_company_info_pages()
+    eps.parse_company_info_pages()

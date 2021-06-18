@@ -6,6 +6,7 @@
 # @File    : europages_spider.py
 # @Software: PyCharm
 import re
+import time
 from pprint import pprint
 
 from gevent import pool, monkey;
@@ -48,6 +49,12 @@ class EuroPagesSpider(BaseSpider):
     unique_company_phone_args_json_dir = os.path.join(home_dir, 'unique_company_phone_args_json_dir')
     unique_company_phone_args_json_path = os.path.join(home_dir, 'unique_company_phone_args.json')
     unique_company_json_dir = os.path.join(home_dir, 'unique_company_json_dir')
+    image_dir = os.path.join(home_dir, 'image_dir')
+    image_json_dir = os.path.join(image_dir, 'image_json_dir')
+    image_path_json_dir = os.path.join(image_dir, 'image_path_json_dir')
+    logo_img_dir = os.path.join(image_dir, 'logo_img_dir')
+    activity_img_dir = os.path.join(image_dir, 'activity_img_dir')
+    product_img_dir = os.path.join(image_dir, 'product_img_dir')
 
     def __init__(self, check_home_url=False):
         """
@@ -682,6 +689,201 @@ class EuroPagesSpider(BaseSpider):
             with open(json_path, 'w', encoding='utf8') as fp:
                 json.dump(company_dict, fp)
 
+    def view_company_info_json(self):
+        """
+        查看公司详情json
+        :return:
+        """
+        json_list = os.listdir(self.unique_company_json_dir)
+        for i, file_name in enumerate(json_list[:1000], start=1):
+            file_path = os.path.join(self.unique_company_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+            data: dict
+            # 'company_logo_src': 'https://www.europages.com/filestore/opt/logo/e3/c8/16273134_21586427.png'
+            company_logo_src = data['company_logo_src']
+            # 'activity_list': [{'img_src': 'https://www.europages.com/filestore/opt/gallery/7e/a3/18831144_b7d8cd3e.jpg',
+            #                     'name': 'bac de rétention'},
+            #                    {'img_src': 'https://www.europages.com/filestore/opt/gallery/b0/f9/19180942_da747d2c.jpg',
+            #                     'name': 'chariot de rangement'},
+            #                    {'img_src': 'https://www.europages.com/filestore/opt/gallery/9e/8a/19180946_205a5076.jpg',
+            #                     'name': 'chariot spécifique'}]
+            activity_list = data['activity_list']
+            # 'product_catalog_list': [{'img_src': 'https://www.europages.com/filestore/vig500/opt/product/a2/77/product_f1b0a1d0.jpg',
+            #                            'name': 'Steel Enclosures & Panels & Cabins'},
+            #                           {'img_src': 'https://www.europages.com/filestore/vig500/opt/product/cf/9/product_1bc6a5a9.jpg',
+            #                            'name': 'HIGH SECURITY STEEL SLIDING GATES'}]
+            product_catalog_list = data['product_catalog_list']
+            if activity_list or product_catalog_list:
+                pprint(data)
+
+    def extract_include_image_data(self):
+        """
+        抽取包含图片的数据
+        :return:
+        """
+        self.mkdir(self.image_dir)
+        self.mkdir(self.image_json_dir)
+        json_list = os.listdir(self.unique_company_json_dir)
+        for i, file_name in enumerate(json_list, start=1):
+            self.data_progress.print_data_progress(i, len(json_list))
+            md5 = file_name[:-5]
+            image_json_path = os.path.join(self.image_json_dir, f'{md5}.json')
+            if os.path.exists(image_json_path):
+                continue
+
+            file_path = os.path.join(self.unique_company_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+            data: dict
+            company_logo_src = data['company_logo_src']
+            activity_list = data['activity_list']
+            product_catalog_list = data['product_catalog_list']
+            if company_logo_src or activity_list or product_catalog_list:
+                image_dict = {
+                    'md5': md5,
+                    'company_logo_src': company_logo_src,
+                    'activity_list': activity_list,
+                    'product_catalog_list': product_catalog_list
+                }
+                with open(image_json_path, 'w', encoding='utf8') as fp:
+                    json.dump(image_dict, fp)
+                # break
+
+    def gevent_pool_download_company_image(self, gevent_pool_size=20):
+        """
+        多协程下载公司图片
+        :param gevent_pool_size:
+        :return:
+        """
+        self.mkdir(self.image_path_json_dir)
+        self.mkdir(self.logo_img_dir)
+        self.mkdir(self.activity_img_dir)
+        self.mkdir(self.product_img_dir)
+        file_list = os.listdir(self.image_json_dir)
+
+        gevent_pool = pool.Pool(gevent_pool_size)
+        result_list = gevent_pool.map(self.download_company_image,
+                                      [(i, file_name) for i, file_name in enumerate(file_list, start=1)])
+        return result_list
+
+    def download_company_image(self, args):
+        """
+        下载公司图片
+        :param args
+        :return:
+        """
+        i, file_name = args
+        print('---------------------------------------------------------')
+        print(i, file_name)
+        md5 = file_name[:-5]
+
+        image_path_json_path = os.path.join(self.image_path_json_dir, file_name)
+        if os.path.exists(image_path_json_path):
+            return
+        file_path = os.path.join(self.image_json_dir, file_name)
+        with open(file_path, 'r', encoding='utf8') as fp:
+            data = json.load(fp)
+        # pprint(data)
+        # {'activity_list': [
+        #     {'img_src': 'https://www.europages.com/filestore/opt/gallery/b2/d1/20964432_21810f7e.jpg',
+        #      'name': 'Hochleistungskeramik von Haldenwanger!'},
+        #     {'img_src': 'https://www.europages.com/filestore/opt/gallery/4d/6d/20964438_5d2b5fbc.jpg',
+        #      'name': 'Keramikrollen - Bei uns eine Vielfalt'},
+        #     {'img_src': 'https://www.europages.com/filestore/opt/gallery/1f/6/20964439_32724e0b.jpg',
+        #      'name': 'Unsere Vielfalt an Rohren'}],
+        #  'company_logo_src': 'https://www.europages.com/filestore/opt/logo/94/93/abc675098c4cfcb9d8925aa038c9495a4dbb6ef8.jpg',
+        #  'md5': '0084f9702f97364ff6fa28e9addda802',
+        #  'product_catalog_list': [
+        #      {'img_src': 'https://www.europages.com/filestore/vig500/opt/product/c1/9c/coatings_27555a7e.jpg',
+        #       'name': 'Diamond Like Carbon Coatings'},
+        #      {
+        #          'img_src': 'https://www.europages.com/filestore/vig500/opt/product/fc/3/diamondshield-coating_e3e0c64e.jpg',
+        #          'name': 'DiamondShield Coatings'},
+        #      {'img_src': 'https://www.europages.com/filestore/vig500/opt/product/f1/aa/cvd-sic_a5ef5fc6.jpg',
+        #       'name': 'CVD Diamond'},
+        #      {
+        #          'img_src': 'https://www.europages.com/filestore/vig500/opt/product/3/e9/scratch-resistant-glass_a087b0a2.jpg',
+        #          'name': 'Scratch Resistant Glass Coatings'}]}
+
+        company_logo_src = data['company_logo_src']
+        activity_list = data['activity_list']
+        product_catalog_list = data['product_catalog_list']
+
+        company_logo_path = ''
+        if company_logo_src:
+            try:
+                file_suf = self.get_url_suffix(company_logo_src)
+                company_logo_name = f'{md5}{file_suf}'
+                abs_company_logo_path = os.path.join(self.logo_img_dir, company_logo_name)
+                if not os.path.exists(abs_company_logo_path):
+                    logo_res = self.requests.get(company_logo_src)
+                    with open(abs_company_logo_path, 'wb') as fp:
+                        fp.write(logo_res.content)
+                company_logo_path = abs_company_logo_path.lstrip(self.home_dir)
+            except:
+                company_logo_path = ''
+        data['company_logo_path'] = company_logo_path
+
+        new_activity_list = list()
+        if len(activity_list) > 0:
+            for a_i, activity in enumerate(activity_list):
+                try:
+                    img_src = activity['img_src']
+                    file_suf = self.get_url_suffix(img_src)
+                    activity_name = f'{md5}_{a_i}{file_suf}'
+                    abs_activity_path = os.path.join(self.activity_img_dir, activity_name)
+                    if not os.path.exists(abs_activity_path):
+                        activity_res = self.requests.get(img_src)
+                        with open(abs_activity_path, 'wb') as fp:
+                            fp.write(activity_res.content)
+                    activity_path = abs_activity_path.lstrip(self.home_dir)
+                except:
+                    activity_path = ''
+                activity['activity_path'] = activity_path
+                new_activity_list.append(activity)
+        data['activity_list'] = activity_list
+
+        new_product_catalog_list = list()
+        if len(product_catalog_list) > 0:
+            for p_i, product in enumerate(product_catalog_list):
+                try:
+                    img_src = product['img_src']
+                    file_suf = self.get_url_suffix(img_src)
+                    product_name = f'{md5}_{p_i}{file_suf}'
+                    abs_product_path = os.path.join(self.product_img_dir, product_name)
+                    if not os.path.exists(abs_product_path):
+                        product_res = self.requests.get(img_src)
+                        with open(abs_product_path, 'wb') as fp:
+                            fp.write(product_res.content)
+                    product_path = abs_product_path.lstrip(self.home_dir)
+                except:
+                    product_path = ''
+                product['product_path'] = product_path
+                new_product_catalog_list.append(product)
+        data['product_catalog_list'] = product_catalog_list
+
+        pprint(data)
+        with open(image_path_json_path, 'w', encoding='utf8') as fp:
+            json.dump(data, fp)
+
+    def get_url_suffix(self, url):
+        """
+        获取url后缀格式
+        'https://www.europages.com/filestore/opt/logo/76/a6/16851744_96424b18.png', '.png'
+        :param url
+        :return:
+        """
+        file_suf = '.png'
+        company_logo_src_split_list = url.rsplit('/', 1)
+        if len(company_logo_src_split_list) == 2:
+            suf_part = company_logo_src_split_list[1]
+            dot_index = suf_part.find('.')
+            if dot_index >= 0:
+                file_suf = suf_part[dot_index:]
+        return file_suf
+
+
 
 if __name__ == '__main__':
     eps = EuroPagesSpider(check_home_url=True)
@@ -698,4 +900,7 @@ if __name__ == '__main__':
     # eps.extract_company_phone_request_args()
     # eps.merge_extract_company_phone_request_args()
     # eps.download_all_company_phone_number()
-    eps.parse_company_info_pages()
+    # eps.parse_company_info_pages()
+    # eps.view_company_info_json()
+    # eps.extract_include_image_data()
+    eps.gevent_pool_download_company_image(gevent_pool_size=20)

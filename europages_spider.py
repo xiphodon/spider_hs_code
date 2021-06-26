@@ -8,8 +8,12 @@
 import re
 import time
 from pprint import pprint
+from typing import Union, List, Dict
 
 from gevent import pool, monkey;
+import mysql.connector
+
+import settings
 
 monkey.patch_all()
 
@@ -55,6 +59,8 @@ class EuroPagesSpider(BaseSpider):
     logo_img_dir = os.path.join(image_dir, 'logo_img_dir')
     activity_img_dir = os.path.join(image_dir, 'activity_img_dir')
     product_img_dir = os.path.join(image_dir, 'product_img_dir')
+    unique_company_intact_json_dir = os.path.join(home_dir, 'unique_company_intact_json_dir')
+    unique_company_intact_json_part_dir = os.path.join(home_dir, 'unique_company_intact_json_part_dir')
 
     def __init__(self, check_home_url=False):
         """
@@ -883,10 +889,200 @@ class EuroPagesSpider(BaseSpider):
                 file_suf = suf_part[dot_index:]
         return file_suf
 
+    def merge_company_info_and_img_path_info(self):
+        """
+        合并公司数据和对应的图片数据
+        :return:
+        """
+        self.mkdir(self.unique_company_intact_json_dir)
+        main_json_list = os.listdir(self.unique_company_json_dir)
+        # img_json_list = os.listdir(self.image_path_json_dir)
+        dp = DataProgress()
+
+        for i, main_json_name in enumerate(main_json_list, start=1):
+            # dp.print_data_progress(i, len(main_json_list))
+            print(f'{i}/{len(main_json_list)} {main_json_name}')
+            intact_json_path = os.path.join(self.unique_company_intact_json_dir, main_json_name)
+            if os.path.exists(intact_json_path):
+                continue
+
+            main_json_path = os.path.join(self.unique_company_json_dir, main_json_name)
+            with open(main_json_path, 'r', encoding='utf8') as fp:
+                main_json_data = json.load(fp)
+            # print(main_json_data)
+
+            img_json_path = os.path.join(self.image_path_json_dir, main_json_name)
+            if os.path.exists(img_json_path):
+                with open(img_json_path, 'r', encoding='utf8') as fp:
+                    img_json_data = json.load(fp)
+                main_json_data['activity_list'] = img_json_data['activity_list']
+                main_json_data['product_catalog_list'] = img_json_data['product_catalog_list']
+                main_json_data['company_logo_path'] = img_json_data['company_logo_path']
+            else:
+                main_json_data['company_logo_path'] = ''
+
+            with open(intact_json_path, 'w', encoding='utf8') as fp:
+                json.dump(main_json_data, fp)
+
+            # if i > 200:
+            #     break
+
+    def merge_all_intact_json_to_one(self):
+        """
+        合并完整json
+        :return:
+        """
+        self.mkdir(self.unique_company_intact_json_part_dir)
+
+        data_list = list()
+        max_size = 10000
+        file_list = os.listdir(self.unique_company_json_dir)
+        file_list_size = len(file_list)
+        dp = DataProgress()
+        for i, file_name in enumerate(file_list, start=1):
+            dp.print_data_progress(i, file_list_size)
+            # if i <= 1630000:
+            #     continue
+
+            file_path = os.path.join(self.unique_company_intact_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+            data_list.append(data)
+
+            if i % max_size == 0:
+                part_file_name = f'{i - max_size + 1}_{i}.json'
+                part_file_path = os.path.join(self.unique_company_intact_json_part_dir, part_file_name)
+                with open(part_file_path, 'w', encoding='utf8') as fp:
+                    json.dump(data_list, fp)
+                data_list.clear()
+        if len(data_list) != 0:
+            part_file_name = f'{file_list_size - file_list_size % max_size + 1}_{file_list_size}.json'
+            part_file_path = os.path.join(self.unique_company_intact_json_part_dir, part_file_name)
+            with open(part_file_path, 'w', encoding='utf8') as fp:
+                json.dump(data_list, fp)
+
+    def insert_data_to_local_db(self):
+        """
+        插入数据到本地数据库
+        :return:
+        """
+        # conn = mysql.connector.connect(
+        #     host='127.0.0.1',
+        #     user='root',
+        #     passwd='123456',
+        #     database='company_db',
+        #     auth_plugin='mysql_native_password'
+        # )
+
+        conn = mysql.connector.connect(
+            host=settings.sp_host,
+            user=settings.sp_user,
+            passwd=settings.sp_password,
+            database=settings.sp_database,
+            auth_plugin='mysql_native_password'
+        )
+
+        cur = conn.cursor()
+
+        if not cur:
+            raise (NameError, "数据库连接失败")
+        else:
+            print('数据库连接成功')
+
+        # dp = DataProgress()
+        file_list = os.listdir(self.unique_company_intact_json_part_dir)
+        for i, file_name in enumerate(file_list, start=1):
+            # print(f'{i}/{len(file_list)} {file_name}')
+            # dp.print_data_progress(i, len(file_list))
+            file_path = os.path.join(self.unique_company_intact_json_part_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                data_list = json.load(fp)
+
+            for j, data in enumerate(data_list, start=1):
+                print(f'{i}/{len(file_list)} {j}')
+                company_id = self.db_str_replace_strip(data['company_id'])
+                user_id = self.db_str_replace_strip(data['user_id'])
+                md5 = self.db_str_replace_strip(data['md5'])
+                company_logo_src = self.db_str_replace_strip(data['company_logo_src'])
+                company_name = self.db_str_replace_strip(data['company_name'])
+                company_verified = self.db_str_replace_strip(data['company_verified'])
+                company_country = self.db_str_replace_strip(data['company_country'])
+                company_description = self.db_str_replace_strip(data['company_description'])
+                company_social = self.db_str_replace_strip(json.dumps(data['company_social']))
+                product_catalog_list = self.db_str_replace_strip(json.dumps(self.replace_list_k_v(data['product_catalog_list'], 'product_path', '\\', '/')))
+                key_figure_list = self.db_str_replace_strip(json.dumps(data['key_figure_list']))
+                organisation_list = self.db_str_replace_strip(json.dumps(data['organisation_list']))
+                incoterms = self.db_str_replace_strip(data['incoterms'])
+                payment_methods = self.db_str_replace_strip(json.dumps(data['payment_methods']))
+                banks = self.db_str_replace_strip(json.dumps(data['banks']))
+                activity_list = self.db_str_replace_strip(json.dumps(self.replace_list_k_v(data['activity_list'], 'activity_path', '\\', '/')))
+                keywords = self.db_str_replace_strip(data['keywords'])
+                company_address = self.db_str_replace_strip(data['company_address'])
+                vat_id = self.db_str_replace_strip(data['vat_id'])
+                company_web = self.db_str_replace_strip(data['company_web'])
+                company_tel = self.db_str_replace_strip(data['company_tel'])
+                company_logo_path = self.db_str_replace_strip(data['company_logo_path']).replace('\\', '/')
+
+                query_sql = f"select * from euro_page where md5='{md5}'"
+                cur.execute(query_sql.encode('utf8'))
+                one = cur.fetchone()
+                conn.commit()
+
+                if one:
+                    continue
+
+                sql_str = ''
+                try:
+                    sql_str = (
+                        "insert into euro_page("
+                        "company_id, user_id, md5, company_logo_src, company_name, company_verified,"
+                        "company_country, company_description, company_social, product_catalog_list,"
+                        "key_figure_list, organisation_list, incoterms, payment_methods, banks, activity_list,"
+                        "keywords, company_address, vat_id, company_web, company_tel, company_logo_path) values("
+                        "'{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',"
+                        " '{}', '{}', '{}', '{}', '{}', '{}', '{}')"
+                    ).format(
+                        company_id, user_id, md5, company_logo_src, company_name, company_verified,
+                        company_country, company_description, company_social, product_catalog_list,
+                        key_figure_list, organisation_list, incoterms, payment_methods, banks, activity_list,
+                        keywords, company_address, vat_id, company_web, company_tel, company_logo_path
+                    )
+                    # print(sql_str.encode('utf8'))
+                    cur.execute(sql_str.encode('utf8'))
+                    conn.commit()
+                except Exception as e:
+                    print(sql_str)
+                    print(e)
+
+
+            # break
+        conn.close()
+
+    def replace_list_k_v(self, lst: List[Dict[str, str]], k, old_str, new_str):
+        """
+        替换列表中字典对应key的value
+        :param lst: 列表
+        :param k: 键
+        :param old_str: 原字符串
+        :param new_str: 需替换字符串
+        :return:
+        """
+        new_list = list()
+        for i in lst:
+            temp_dict = dict()
+            for _k, _v in i.items():
+                if _k == k:
+                    _v = _v.replace(old_str, new_str)
+                temp_dict[_k] = _v
+            new_list.append(temp_dict)
+        return new_list
+
+
+
 
 
 if __name__ == '__main__':
-    eps = EuroPagesSpider(check_home_url=True)
+    eps = EuroPagesSpider(check_home_url=False)
     # eps.down_load_business_directory_page()
     # eps.parse_business_directory_page()
     # eps.download_item_class_pages()
@@ -903,4 +1099,7 @@ if __name__ == '__main__':
     # eps.parse_company_info_pages()
     # eps.view_company_info_json()
     # eps.extract_include_image_data()
-    eps.gevent_pool_download_company_image(gevent_pool_size=20)
+    # eps.gevent_pool_download_company_image(gevent_pool_size=20)
+    # eps.merge_company_info_and_img_path_info()
+    # eps.merge_all_intact_json_to_one()
+    eps.insert_data_to_local_db()

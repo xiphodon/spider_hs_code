@@ -76,11 +76,20 @@ class BaseSpider:
         """
         return re.sub(r'\s{2,}|(\r\n)+|(\r)+|(\n)+|(<br>)+|(<br/>)+|(\u200b)+', ' ', text).strip()
 
+    @staticmethod
+    def db_str_replace_strip(db_str):
+        """
+        数据库字符串替换去除边界
+        :return:
+        """
+        return str(db_str).replace("'", "''").strip('\\')
+
 
 class DataProgress:
     """
     数据进度
     """
+
     def __init__(self, last_data_used_time_size=50):
         """
         初始化
@@ -116,8 +125,8 @@ class DataProgress:
         else:
             self.last_data_used_time_list.pop(0)
             self.last_data_used_time_list.append(current_time)
-            speed = len(self.last_data_used_time_list) / (
-                        self.last_data_used_time_list[-1] - self.last_data_used_time_list[0])
+            speed = len(self.last_data_used_time_list) / max(
+                self.last_data_used_time_list[-1] - self.last_data_used_time_list[0], 0.0001)
             if speed < 1:
                 speed *= 60
                 time_unit = 'min'

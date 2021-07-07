@@ -84,6 +84,22 @@ class BaseSpider:
         """
         return str(db_str).replace("'", "''").strip('\\')
 
+    def get_url_suffix(self, url):
+        """
+        获取url后缀格式
+        'https://www.europages.com/filestore/opt/logo/76/a6/16851744_96424b18.png', '.png'
+        :param url
+        :return:
+        """
+        file_suf = '.png'
+        company_logo_src_split_list = url.rsplit('/', 1)
+        if len(company_logo_src_split_list) == 2:
+            suf_part = company_logo_src_split_list[1]
+            dot_index = suf_part.find('.')
+            if dot_index >= 0:
+                file_suf = suf_part[dot_index:]
+        return file_suf.lower()
+
 
 class DataProgress:
     """

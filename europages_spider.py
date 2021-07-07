@@ -873,22 +873,6 @@ class EuroPagesSpider(BaseSpider):
         with open(image_path_json_path, 'w', encoding='utf8') as fp:
             json.dump(data, fp)
 
-    def get_url_suffix(self, url):
-        """
-        获取url后缀格式
-        'https://www.europages.com/filestore/opt/logo/76/a6/16851744_96424b18.png', '.png'
-        :param url
-        :return:
-        """
-        file_suf = '.png'
-        company_logo_src_split_list = url.rsplit('/', 1)
-        if len(company_logo_src_split_list) == 2:
-            suf_part = company_logo_src_split_list[1]
-            dot_index = suf_part.find('.')
-            if dot_index >= 0:
-                file_suf = suf_part[dot_index:]
-        return file_suf
-
     def merge_company_info_and_img_path_info(self):
         """
         合并公司数据和对应的图片数据

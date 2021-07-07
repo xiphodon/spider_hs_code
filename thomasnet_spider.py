@@ -7,13 +7,18 @@
 # @Software: PyCharm
 import json
 import os
+import random
 import re
+import time
 
 import requests
+from gevent import pool, monkey;
 from lxml import etree
 
 from WhileRequests import WhileRequests
-from base_spider import BaseSpider
+from base_spider import BaseSpider, DataProgress
+
+monkey.patch_all()
 
 
 class ThomasnetSpider(BaseSpider):
@@ -30,10 +35,21 @@ class ThomasnetSpider(BaseSpider):
     company_href_json_path = os.path.join(home_path, 'company_href.json')
     unique_company_list_json_path = os.path.join(home_path, 'unique_company_list.json')
 
+    company_info_page_dir = os.path.join(home_path, 'company_info_page_dir')
+    company_info_page_json_dir = os.path.join(home_path, 'company_info_page_json_dir')
+
+    image_dir_path = os.path.join(home_path, 'image_dir')
+    logo_dir_path = os.path.join(image_dir_path, 'logo_dir')
+    product_dir_path = os.path.join(image_dir_path, 'product_dir')
+    services_dir_path = os.path.join(image_dir_path, 'services_dir')
+
+    img_href_path_json_path = os.path.join(home_path, 'img_href_path.json')
+
     def __init__(self, check_home_url=False):
         """
         初始化
         """
+        super(self.__class__, self).__init__()
         self.requests = WhileRequests(headers={
             'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)',
             'Connection': 'keep-alive',
@@ -220,15 +236,318 @@ class ThomasnetSpider(BaseSpider):
         with open(self.unique_company_list_json_path, 'r', encoding='utf8') as fp:
             data_dict = json.load(fp)
         for k, v in data_dict.items():
-            print(v['class_list'])
+            print(v)
         print(len(data_dict))
+
+    def download_all_company_info_page(self):
+        """
+        下载所有公司详情页面
+        :return:
+        """
+        self.mkdir(self.company_info_page_dir)
+        with open(self.unique_company_list_json_path, 'r', encoding='utf8') as fp:
+            data_dict = json.load(fp)
+
+        dp = DataProgress()
+        for i, (k, v) in enumerate(data_dict.items(), start=1):
+            # print(i, k, v)
+            dp.print_data_progress(i, len(data_dict))
+
+            company_id = k
+            file_name = f'{company_id}.html'
+            file_path = os.path.join(self.company_info_page_dir, file_name)
+            if os.path.exists(file_path):
+                continue
+
+            url = v['company_href']
+            response = self.requests.get(url)
+            self.create_file(file_path, response.text)
+
+    def parse_company_info_pages(self):
+        """
+        解析公司详情页
+        :return:
+        """
+        self.mkdir(self.company_info_page_json_dir)
+        dp = DataProgress()
+        page_file_list = os.listdir(self.company_info_page_dir)
+        for i, file_name in enumerate(page_file_list, start=1):
+            # file_name = '10025252.html'
+            dp.print_data_progress(i, len(page_file_list))
+            # print(i, file_name, '-' * 20)
+            company_id = file_name[:-5]
+
+            json_path = os.path.join(self.company_info_page_json_dir, f'{company_id}.json')
+            if os.path.exists(json_path):
+                continue
+
+            file_path = os.path.join(self.company_info_page_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+
+            nav_div = self.data_list_get_first(selector.xpath('//div[@id="copro_naft" and @class="copro_naft"]'), default=None)
+            if nav_div is None:
+                continue
+
+            company_name_view = self.data_list_get_first(nav_div.xpath('./div[@class="codetail"]/h1'))
+            company_name = self.clean_text(company_name_view.xpath('string(.)')) if company_name_view is not None else ''
+            # print(company_name)
+
+            company_web = self.data_list_get_first(nav_div.xpath('.//a[@data-click_origin="Visit Website"]/@href'))
+            # print(company_web)
+
+            company_verified = '1' if self.data_list_get_first(nav_div.xpath('.//span[@class="supplier-badge__label"]/text()')) == 'Thomas Verified' else '0'
+            # print(company_verified)
+
+            # company_type_view = self.data_list_get_first(nav_div.xpath('.//svg[@xmlns="http://www.w3.org/2000/svg" and @class="icon"]/parent::*'))
+            # company_type = self.clean_text(company_type_view.xpath('string(.)')) if company_type_view else ''
+            # print(company_type)
+
+            phone = self.data_list_get_first(nav_div.xpath('.//p[@class="phoneline"]/span/text()'))
+            # print(phone)
+
+            company_pdm = self.clean_text('\n'.join(selector.xpath('.//div[@id="copro_pdm"]/p/text()')))
+            # print(company_pdm)
+
+            company_about = self.clean_text('\n'.join(selector.xpath('.//div[@id="copro_about"]/p/text()')))
+            # print(company_about)
+
+            company_detail_views = selector.xpath('.//div[@id="copro_bizdetails"]//div[@class="bizdetail"]')
+
+            company_type = ''
+            additional_activities = ''
+            key_personnel = ''
+            social = ''
+            annual_sales = ''
+            employees = ''
+            year_founded = ''
+            for item_view in company_detail_views:
+                label = self.data_list_get_first(item_view.xpath('./div[@class="label"]/text()'))
+                value = item_view.xpath('./ul/li/text()')
+
+                if label:
+                    # print(label, value)
+
+                    if label.startswith('Primary Company Type'):
+                        company_type = ';'.join(value)
+                    elif label.startswith('Additional Activities'):
+                        additional_activities = ';'.join(value)
+                    elif label.startswith('Key Personnel'):
+                        key_personnel = ';'.join(value)
+                    elif label.startswith('Social'):
+                        social = ';'.join(item_view.xpath('./ul/li/a/@href'))
+                    elif label.startswith('Annual Sales'):
+                        annual_sales = ';'.join(value)
+                    elif label.startswith('No of Employees'):
+                        employees = ';'.join(value)
+                    elif label.startswith('Year Founded'):
+                        year_founded = ';'.join(value)
+
+            # print(company_type)
+            # print(additional_activities)
+            # print(key_personnel)
+            # print(social)
+            # print(annual_sales)
+            # print(employees)
+            # print(year_founded)
+
+            product_views = selector.xpath('.//div[@class="copro_addl ccp clear prod"]/div[@class="tile match-height2"]')
+            product_list = list()
+            for product_i, product_view in enumerate(product_views, start=1):
+                product_name = self.data_list_get_first(product_view.xpath('./div[@class="headline ccpheadline"]/a/text()'))
+                product_img_href = 'https:' + self.data_list_get_first(product_view.xpath('./div[@class="thumb"]//img/@src'))
+                product_desc = self.data_list_get_first(product_view.xpath('./div[@class="summary"]/text()'))
+                product_img_path = os.path.join(self.product_dir_path, f'{company_id}_{product_i}{self.get_url_suffix(product_img_href)}')
+                product_list.append({
+                    'product_name': product_name,
+                    'product_img_href': product_img_href,
+                    'product_desc': product_desc,
+                    'product_img_path': product_img_path.replace('\\', '/').lstrip('E:/thomasnet')
+                })
+            # print(product_list)
+
+            services_views = selector.xpath(
+                './/div[@class="copro_addl ccp clear cap"]/div[@class="tile match-height2"]')
+            services_list = list()
+            for services_i, services_view in enumerate(services_views, start=1):
+                services_name = self.data_list_get_first(
+                    services_view.xpath('./div[@class="headline ccpheadline"]/a/text()'))
+                services_img_href = 'https:' + self.data_list_get_first(
+                    services_view.xpath('./div[@class="thumb"]//img/@src'))
+                services_desc = self.data_list_get_first(services_view.xpath('./div[@class="summary"]/text()'))
+                services_img_path = os.path.join(self.services_dir_path,
+                                                f'{company_id}_{services_i}{self.get_url_suffix(services_img_href)}')
+                services_list.append({
+                    'services_name': services_name,
+                    'services_img_href': services_img_href,
+                    'services_desc': services_desc,
+                    'services_img_path': services_img_path.replace('\\', '/').lstrip('E:/thomasnet')
+                })
+            # print(services_list)
+
+            certifications_page_href = ''
+            menu_views = selector.xpath('.//ul[@id="copro_menu"]/li/a')
+            for menu_view in menu_views:
+                menu_title = self.data_list_get_first(menu_view.xpath('./text()'))
+                menu_href = self.data_list_get_first(menu_view.xpath('./@href'))
+                if menu_title.startswith('Certifications'):
+                    certifications_page_href = self.home_url + menu_href
+            # print(certifications_page_href)
+
+            temp_dict = {
+                'company_id': company_id,
+                'company_name': company_name,
+                'company_web': company_web,
+                'company_verified': company_verified,
+                'phone': phone,
+                'company_pdm': company_pdm,
+                'company_about': company_about,
+                'company_type': company_type,
+                'additional_activities': additional_activities,
+                'key_personnel': key_personnel,
+                'social': social,
+                'annual_sales': annual_sales,
+                'employees': employees,
+                'year_founded': year_founded,
+                'product_list': product_list,
+                'services_list': services_list,
+                'certifications_page_href': certifications_page_href
+            }
+
+            with open(json_path, 'w', encoding='utf8') as fp:
+                json.dump(temp_dict, fp)
+
+            # if i > 300:
+            #     break
+
+    def download_logo(self):
+        """
+        下载logo
+        :return:
+        """
+        self.mkdir(self.logo_dir_path)
+        with open(self.unique_company_list_json_path, 'r', encoding='utf8') as fp:
+            data_dict = json.load(fp)
+
+        count = 0
+        for i, (company_id, item) in enumerate(data_dict.items(), start=1):
+            # print(i, item)
+            logo_href = item['logo_href']
+            # print(logo_href)
+
+            if not logo_href:
+                continue
+
+            count += 1
+
+            img_suffix = self.get_url_suffix(logo_href)
+            logo_name = f'{company_id}_logo{img_suffix}'
+            logo_path = os.path.join(self.logo_dir_path, logo_name)
+
+            if os.path.exists(logo_path):
+                continue
+
+            logo_res = self.requests.get(logo_href)
+            with open(logo_path, 'wb') as fp:
+                fp.write(logo_res.content)
+
+            print(logo_path)
+            # break
+
+        print(count)
+
+    def parse_product_img(self):
+        """
+        解析产品图片
+        :return:
+        """
+        self.mkdir(self.product_dir_path)
+        self.mkdir(self.services_dir_path)
+
+        json_file_list = os.listdir(self.company_info_page_json_dir)
+        img_list = list()
+        for i, file_name in enumerate(json_file_list, start=1):
+            print(i, file_name)
+            file_path = os.path.join(self.company_info_page_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                company_dict = json.load(fp)
+            # print(json.dumps(company_dict))
+            product_list = company_dict['product_list']
+            services_list = company_dict['services_list']
+
+            for product_item in product_list:
+                product_href = product_item['product_img_href']
+                product_path = product_item['product_img_path']
+                # print(product_href)
+                # print(product_path)
+                img_list.append({
+                    'href': product_href,
+                    'path': product_path
+                })
+
+            for services_item in services_list:
+                services_href = services_item['services_img_href']
+                services_path = services_item['services_img_path']
+                # print(services_href)
+                # print(services_path)
+                img_list.append({
+                    'href': services_href,
+                    'path': services_path
+                })
+
+            # print(img_list)
+
+        with open(self.img_href_path_json_path, 'w', encoding='utf8') as fp:
+            json.dump(img_list, fp)
+
+    def gevent_pool_download_img(self, gevent_pool_size=20):
+        """
+        多协程下载商品、服务相关图片
+        :return:
+        """
+        dp = DataProgress()
+        with open(self.img_href_path_json_path, 'r', encoding='utf8') as fp:
+            data_list = json.load(fp)
+
+        gevent_pool = pool.Pool(gevent_pool_size)
+        result_list = gevent_pool.map(self.download_img,
+                                      [(i, item, len(data_list), dp) for i, item in enumerate(data_list, start=1)])
+        return result_list
+
+    def download_img(self, data):
+        """
+        下载商品、服务相关图片
+        :param data:
+        :return:
+        """
+        i, item, total_len, dp = data
+
+        dp.print_data_progress(i, total_len)
+        # print(i, item, total_len)
+        href = item['href']
+        file_path = item['path']
+
+        img_path = self.home_path + '\\' + file_path.replace('/', '\\')
+        if os.path.exists(img_path):
+            return
+
+        img_res = self.requests.get(href)
+        with open(img_path, 'wb') as fp:
+            fp.write(img_res.content)
 
 
 if __name__ == '__main__':
-    ts = ThomasnetSpider(check_home_url=True)
+    ts = ThomasnetSpider(check_home_url=False)
     # ts.download_home_page()
     # ts.parse_home_page()
     # ts.download_company_list_pages()
     # ts.parse_company_list_page()
     # ts.unique_all_company()
-    ts.unique_all_company_view()
+    # ts.unique_all_company_view()
+    # ts.download_all_company_info_page()
+    # ts.parse_company_info_pages()
+    # ts.download_logo()
+    # ts.parse_product_img()
+    ts.gevent_pool_download_img(gevent_pool_size=20)

@@ -15,8 +15,10 @@ import requests
 from gevent import pool, monkey;
 from lxml import etree
 
+import settings
 from WhileRequests import WhileRequests
 from base_spider import BaseSpider, DataProgress
+import mysql.connector
 
 monkey.patch_all()
 
@@ -43,7 +45,10 @@ class ThomasnetSpider(BaseSpider):
     product_dir_path = os.path.join(image_dir_path, 'product_dir')
     services_dir_path = os.path.join(image_dir_path, 'services_dir')
 
+    company_info_offered_dir_path = os.path.join(home_path, 'offered_dir')
     img_href_path_json_path = os.path.join(home_path, 'img_href_path.json')
+
+    merge_company_json_dir = os.path.join(home_path, 'merge_company_json_dir')
 
     def __init__(self, check_home_url=False):
         """
@@ -537,6 +542,248 @@ class ThomasnetSpider(BaseSpider):
         with open(img_path, 'wb') as fp:
             fp.write(img_res.content)
 
+    def parse_company_info_offered(self):
+        """
+        解析公司详情中提供的产品和服务
+        (废弃)
+        :return:
+        """
+        dp = DataProgress()
+        self.mkdir(self.company_info_offered_dir_path)
+        page_file_list = os.listdir(self.company_info_page_dir)
+        for i, file_name in enumerate(page_file_list, start=1):
+            file_name = '10025252.html'
+            company_id = file_name[:-5]
+            print(i, company_id, file_name)
+            offered_json_path = os.path.join(self.company_info_offered_dir_path, f'{company_id}.json')
+
+            if os.path.exists(offered_json_path):
+                continue
+
+            company_offered_dict = dict()
+            company_offered_dict['company_id'] = company_id
+            file_path = os.path.join(self.company_info_page_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            # print(selector)
+            products_services_div_list = selector.xpath('.//div[@id="copro_prodserv_cats"]/div[@class="prodserv_group"]')
+            print(products_services_div_list)
+
+            all_product_href_list = selector.xpath('.//div[@id="copro_prodserv_cats"]/div[@class="prodserv_group"]/div[@class="all"]/a/@href')
+            print(all_product_href_list)
+            all_product_href = ''
+            for _href in all_product_href_list:
+                _href: str
+                if 'product_family' in _href:
+                    all_product_href = self.home_url + _href
+                    break
+            print(all_product_href)
+
+            if all_product_href == '':
+                # 读取当前产品服务内容
+                for products_services_div in products_services_div_list:
+                    title = self.clean_text(self.data_list_get_first(products_services_div.xpath('./h3/text()')))
+                    product_service_list = products_services_div.xpath('./ul/li/a/text()')
+                    print(title, product_service_list)
+                    if title != 'All Products / Services':
+                        # 当前offered
+                        company_offered_dict['company_offered'] = {
+                            'title': title,
+                            'product_service_list': product_service_list
+                        }
+                    else:
+                        # 所有offered
+                        _product_service_list = list()
+                        for item in product_service_list:
+                            _product_service_list.append({
+                                'name': item,
+                                'sub_list': []
+                            })
+                        company_offered_dict['all_products_services'] = _product_service_list
+            else:
+                # 下载所有产品页
+                all_product_page = self.requests.get(all_product_href)
+                all_product_page_text = all_product_page.text
+                print(all_product_page_text)
+
+                selector_2 = etree.HTML(all_product_page_text)
+                company_offered_div_list = selector_2.xpath('.//div[@id="famprodserv"]')
+                all_products_services_div_list = selector_2.xpath('.//div[@id="allprodserv"]')
+
+                print(company_offered_div_list)
+                print(all_products_services_div_list)
+
+                if len(company_offered_div_list) > 0:
+                    company_offered_div = company_offered_div_list[0]
+                    title = self.data_list_get_first(company_offered_div.xpath('./h3/text()'))
+                    product_service_list = company_offered_div.xpath('.//li/a/text()')
+                    # 当前offered
+                    company_offered_dict['company_offered'] = {
+                        'title': title,
+                        'product_service_list': product_service_list
+                    }
+
+                if len(all_products_services_div_list) > 0:
+                    all_products_services_div = all_products_services_div_list[0]
+
+            print(company_offered_dict)
+
+            break
+
+    def merge_unique_company_info(self):
+        """
+        合并公司信息
+        :return:
+        """
+        self.mkdir(self.merge_company_json_dir)
+        with open(self.unique_company_list_json_path, 'r', encoding='utf8') as fp:
+            company_list_dict = json.load(fp)
+
+        json_file_list = os.listdir(self.company_info_page_json_dir)
+        dp = DataProgress()
+        for i, file_name in enumerate(json_file_list, start=1):
+            # print(i, file_name)
+            dp.print_data_progress(i, len(json_file_list))
+            merge_company_json_path = os.path.join(self.merge_company_json_dir, file_name)
+            if os.path.exists(merge_company_json_path):
+                continue
+
+            file_path = os.path.join(self.company_info_page_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                company_info = json.load(fp)
+
+            company_info: dict
+            del company_info['company_pdm']
+            del company_info['certifications_page_href']
+
+            # print(company_info)
+            company_id = company_info['company_id']
+
+            item_company = company_list_dict.get(company_id, None)
+            if item_company is None:
+                continue
+
+            del item_company['id']
+
+            if item_company['logo_href']:
+                logo_name = f"{company_id}_logo{self.get_url_suffix(item_company['logo_href'])}"
+                item_company['logo_path'] = os.path.join(self.logo_dir_path, logo_name).lstrip(self.home_path).replace('\\', '/')
+            else:
+                item_company['logo_path'] = ''
+
+            # print(item_company)
+
+            company_info.update(item_company)
+
+            # print(company_info)
+
+            with open(merge_company_json_path, 'w', encoding='utf8') as fp:
+                json.dump(company_info, fp)
+
+            # if i > 10:
+            #     break
+
+    def insert_data_to_local_db(self):
+        """
+        插入数据到本地数据库
+        :return:
+        """
+        # conn = mysql.connector.connect(
+        #     host='127.0.0.1',
+        #     user='root',
+        #     passwd='123456',
+        #     database='company_db',
+        #     auth_plugin='mysql_native_password'
+        # )
+
+        conn = mysql.connector.connect(
+            host=settings.sp_host,
+            user=settings.sp_user,
+            passwd=settings.sp_password,
+            database=settings.sp_database,
+            auth_plugin='mysql_native_password'
+        )
+
+        cur = conn.cursor()
+
+        if not cur:
+            raise (NameError, "数据库连接失败")
+        else:
+            print('数据库连接成功')
+
+        error_count = 0
+        error_list = list()
+
+        dp = DataProgress()
+        file_list = os.listdir(self.merge_company_json_dir)
+        for i, file_name in enumerate(file_list, start=1):
+            # print(f'{i}/{len(file_list)} {file_name}')
+            dp.print_data_progress(i, len(file_list))
+            file_path = os.path.join(self.merge_company_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+
+            # print(f'{i}/{len(file_list)}')
+            company_id = self.db_str_replace_strip(data['company_id'])
+            company_name = self.db_str_replace_strip(data['company_name'])
+            company_web = self.db_str_replace_strip(data['company_web'])
+            company_verified = self.db_str_replace_strip(data['company_verified'])
+            phone = self.db_str_replace_strip(data['phone'])
+            company_about = self.db_str_replace_strip(data['company_about'])
+            company_type = self.db_str_replace_strip(data['company_type'])
+            additional_activities = self.db_str_replace_strip(data['additional_activities'])
+            key_personnel = self.db_str_replace_strip(data['key_personnel'])
+            social = self.db_str_replace_strip(data['social'])
+            annual_sales = self.db_str_replace_strip(data['annual_sales'])
+            employees = self.db_str_replace_strip(data['employees'])
+            year_founded = self.db_str_replace_strip(data['year_founded'])
+            product_list = self.db_str_replace_strip(json.dumps(data['product_list']))
+            services_list = self.db_str_replace_strip(json.dumps(data['services_list']))
+            company_href = self.db_str_replace_strip(data['company_href'])
+            logo_href = self.db_str_replace_strip(data['logo_href'])
+            class_list = self.db_str_replace_strip(json.dumps(data['class_list']))
+            logo_path = self.db_str_replace_strip(data['logo_path'])
+
+            query_sql = f"select * from thomasnet where company_id='{company_id}'"
+            cur.execute(query_sql.encode('utf8'))
+            one = cur.fetchone()
+            conn.commit()
+
+            if one:
+                continue
+
+            sql_str = ''
+            try:
+                sql_str = (
+                    "insert into thomasnet("
+                    "company_id, company_name, company_web, company_verified, phone, company_about,"
+                    "company_type, additional_activities, key_personnel, social, annual_sales,"
+                    "employees, year_founded, product_list, services_list, company_href, logo_href,"
+                    "class_list, logo_path) values("
+                    "'{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',"
+                    " '{}', '{}', '{}', '{}')"
+                ).format(
+                    company_id, company_name, company_web, company_verified, phone, company_about,
+                    company_type, additional_activities, key_personnel, social, annual_sales,
+                    employees, year_founded, product_list, services_list, company_href, logo_href,
+                    class_list, logo_path
+                )
+                # print(sql_str.encode('utf8'))
+                cur.execute(sql_str.encode('utf8'))
+                conn.commit()
+            except Exception as e:
+                print(sql_str)
+                print(e)
+                error_count += 1
+                error_list.append(e)
+
+            # break
+        conn.close()
+        print(error_count)
+        print(error_list)
+
 
 if __name__ == '__main__':
     ts = ThomasnetSpider(check_home_url=False)
@@ -550,4 +797,7 @@ if __name__ == '__main__':
     # ts.parse_company_info_pages()
     # ts.download_logo()
     # ts.parse_product_img()
-    ts.gevent_pool_download_img(gevent_pool_size=20)
+    # ts.gevent_pool_download_img(gevent_pool_size=20)
+    # ts.parse_company_info_offered()
+    # ts.merge_unique_company_info()
+    ts.insert_data_to_local_db()

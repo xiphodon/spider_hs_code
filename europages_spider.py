@@ -5,17 +5,19 @@
 # @Site    : https://github.com/xiphodon
 # @File    : europages_spider.py
 # @Software: PyCharm
+import multiprocessing
 import re
 import time
 from pprint import pprint
 from typing import Union, List, Dict
 
-from gevent import pool, monkey;
+from gevent import pool, monkey
+monkey.patch_all()
+
 import mysql.connector
 
 import settings
 
-monkey.patch_all()
 
 import hashlib
 import json
@@ -24,6 +26,7 @@ from lxml import etree
 
 from WhileRequests import WhileRequests
 from base_spider import BaseSpider, DataProgress
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class EuroPagesSpider(BaseSpider):
@@ -61,6 +64,10 @@ class EuroPagesSpider(BaseSpider):
     product_img_dir = os.path.join(image_dir, 'product_img_dir')
     unique_company_intact_json_dir = os.path.join(home_dir, 'unique_company_intact_json_dir')
     unique_company_intact_json_part_dir = os.path.join(home_dir, 'unique_company_intact_json_part_dir')
+    company_documents_pages_dir = os.path.join(home_dir, 'company_documents_pages_dir')
+    company_documents_url_json_dir = os.path.join(home_dir, 'company_documents_url_json_dir')
+    company_pdf_url_json_dir = os.path.join(home_dir, 'company_pdf_url_json_dir')
+    company_pdf_dir = os.path.join(home_dir, 'company_pdf_dir')
 
     def __init__(self, check_home_url=False):
         """
@@ -1061,8 +1068,152 @@ class EuroPagesSpider(BaseSpider):
             new_list.append(temp_dict)
         return new_list
 
+    def download_company_pdf_demo(self):
+        """
+        下载公司pdf文件
+        :return:
+        """
+        response = self.requests.get('https://www.europages.com/filestore/gallery/b1/f3/19722218_a82a2c28.pdf')
+        with open(r'C:\Users\topeasecpb\Desktop\demo.pdf', 'wb') as fp:
+            fp.write(response.content)
 
+    def gevent_pool_mark_company_documents_pages(self, gevent_pool_size=10):
+        """
+        多协程/进程标记
+        :return:
+        """
+        gevent_pool = pool.Pool(gevent_pool_size)
+        # gevent_pool = multiprocessing.Pool(processes=gevent_pool_size)
+        file_list = os.listdir(self.unique_company_pages_dir)
+        dp = DataProgress()
+        result_list = gevent_pool.map(self.do_mark_company_documents_pages,
+                                      [(i, file_name, len(file_list), dp) for i, file_name in enumerate(file_list, start=1)])
+        return result_list
 
+    def do_mark_company_documents_pages(self, data):
+        """
+        gevent标记公司文档页面
+        :param data:
+        :return:
+        """
+        i, file_name, file_list_len, dp = data
+        dp.print_data_progress(i, file_list_len)
+
+        documents_url_json_path = os.path.join(self.company_documents_url_json_dir, file_name.replace('.html', '.json'))
+        if os.path.exists(documents_url_json_path):
+            return
+        file_path = os.path.join(self.unique_company_pages_dir, file_name)
+        with open(file_path, 'r', encoding='utf8') as fp:
+            content = fp.read()
+
+        selector = etree.HTML(content)
+        documents_url = self.data_list_get_first(selector.xpath('.//li/a[@title="Documents"]/@href'))
+        # print('documents_url: ', documents_url)
+        self.create_file(documents_url_json_path, json.dumps({
+            'md5': file_name[:-5],
+            'documents_url': documents_url
+        }))
+
+    def mark_company_documents_pages(self):
+        """
+        标记下载公司文档页面
+        :return:
+        """
+        self.mkdir(self.company_documents_url_json_dir)
+        # self.mkdir(self.company_documents_pages_dir)
+        file_list = os.listdir(self.unique_company_pages_dir)
+        dp = DataProgress()
+        for i, file_name in enumerate(file_list, start=1):
+            # print(i, file_name)
+            dp.print_data_progress(i, len(file_list))
+            documents_url_json_path = os.path.join(self.company_documents_url_json_dir, file_name.replace('.html', '.json'))
+            if os.path.exists(documents_url_json_path):
+                continue
+            file_path = os.path.join(self.unique_company_pages_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            documents_url = self.data_list_get_first(selector.xpath('.//li/a[@title="Documents"]/@href'))
+            # print('documents_url: ', documents_url)
+            self.create_file(documents_url_json_path, json.dumps({
+                'md5': file_name[:-5],
+                'documents_url': documents_url
+            }))
+
+            # if i > 500:
+            #     break
+
+    def download_documents_page(self):
+        """
+        下载文档页
+        :return:
+        """
+        self.mkdir(self.company_documents_url_json_dir)
+        file_list = os.listdir(self.company_documents_url_json_dir)
+        dp = DataProgress()
+        for i, file_name in enumerate(file_list, start=1):
+            # print(i, file_name)
+            dp.print_data_progress(i, len(file_list))
+            file_path = os.path.join(self.company_documents_url_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                try:
+                    url_json = json.load(fp)
+                except:
+                    continue
+            md5 = url_json['md5']
+            documents_url = url_json['documents_url']
+            if documents_url:
+                documents_page_path = os.path.join(self.company_documents_pages_dir, f'{md5}.html')
+                if os.path.exists(documents_page_path):
+                    continue
+                response = self.requests.get(documents_url, sleep_time=0.1)
+                self.create_file(documents_page_path, response.text)
+
+    def download_documents_pdf(self):
+        """
+        解析documents文档中的pdf
+        :return:
+        """
+        self.mkdir(self.company_pdf_url_json_dir)
+        self.mkdir(self.company_pdf_dir)
+        page_list = os.listdir(self.company_documents_pages_dir)
+        for i, file_name in enumerate(page_list, start=1):
+            print(i, file_name)
+            md5 = file_name[:-5]
+
+            json_path = os.path.join(self.company_pdf_url_json_dir, f'{md5}.json')
+            if os.path.exists(json_path):
+                continue
+
+            file_path = os.path.join(self.company_documents_pages_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                content = fp.read()
+
+            selector = etree.HTML(content)
+            pdf_url_list = selector.xpath('.//li[@class="js-click-out"]/span/a/@href')
+            if len(pdf_url_list) == 0:
+                continue
+
+            temp_dict = {
+                'md5': md5,
+                'pdf_url_path': []
+            }
+            for pdf_url_i, pdf_url in enumerate(pdf_url_list):
+                suffix = self.get_url_suffix(pdf_url, default='.pdf')
+                all_pdf_path = os.path.join(self.company_pdf_dir, f'{md5}_{pdf_url_i}{suffix}')
+                pdf_path = all_pdf_path.lstrip(self.home_dir).replace('\\', '/')
+
+                if not os.path.exists(all_pdf_path):
+                    response = self.requests.get(pdf_url)
+                    with open(all_pdf_path, 'wb') as fp:
+                        fp.write(response.content)
+
+                temp_dict['pdf_url_path'].append({
+                    'pdf_url': pdf_url,
+                    'pdf_path': pdf_path
+                })
+            self.create_file(json_path, json.dumps(temp_dict))
 
 
 if __name__ == '__main__':
@@ -1086,4 +1237,9 @@ if __name__ == '__main__':
     # eps.gevent_pool_download_company_image(gevent_pool_size=20)
     # eps.merge_company_info_and_img_path_info()
     # eps.merge_all_intact_json_to_one()
-    eps.insert_data_to_local_db()
+    # eps.insert_data_to_local_db()
+    # eps.download_company_pdf_demo()
+    # eps.mark_company_documents_pages()
+    # eps.gevent_pool_mark_company_documents_pages(gevent_pool_size=8)
+    # eps.download_documents_page()
+    eps.download_documents_pdf()

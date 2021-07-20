@@ -42,6 +42,7 @@ class WhileRequests:
         :return:
         """
         while_times = 0
+        result = None
         while True:
             try:
                 time.sleep(sleep_time)
@@ -72,7 +73,7 @@ class WhileRequests:
         :return:
         """
         return self._request(url, request_times=request_times, sleep_time=sleep_time, timeout=timeout,
-                             error_retry_sleep=0.5, method="GET")
+                             error_retry_sleep=error_retry_sleep, method="GET")
 
     def post(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5, data=None, json=''):
         """
@@ -82,7 +83,9 @@ class WhileRequests:
         :param sleep_time:
         :param timeout:
         :param error_retry_sleep:
+        :param data:
+        :param json:
         :return:
         """
         return self._request(url, request_times=request_times, sleep_time=sleep_time, timeout=timeout,
-                             error_retry_sleep=0.5, method="POST", data=data, json=json)
+                             error_retry_sleep=error_retry_sleep, method="POST", data=data, json=json)

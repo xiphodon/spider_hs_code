@@ -1215,6 +1215,48 @@ class EuroPagesSpider(BaseSpider):
                 })
             self.create_file(json_path, json.dumps(temp_dict))
 
+    def upload_pdf_json_to_db(self):
+        """
+        上传pdf_json到数据库
+        :return:
+        """
+        conn = mysql.connector.connect(
+            host=settings.sp_host,
+            user=settings.sp_user,
+            passwd=settings.sp_password,
+            database=settings.sp_database,
+            auth_plugin='mysql_native_password'
+        )
+
+        cur = conn.cursor()
+
+        if not cur:
+            raise (NameError, "数据库连接失败")
+        else:
+            print('数据库连接成功')
+
+        file_list = os.listdir(self.company_pdf_url_json_dir)
+        for i, file_name in enumerate(file_list, start=1):
+            print(i, file_name)
+
+            file_path = os.path.join(self.company_pdf_url_json_dir, file_name)
+            with open(file_path, 'r', encoding='utf8') as fp:
+                company_pdf_url_dict = json.load(fp)
+
+            md5 = company_pdf_url_dict['md5']
+            pdf_url_path = company_pdf_url_dict['pdf_url_path']
+
+            # print(company_pdf_url_dict)
+            sql_str = ''
+            try:
+                sql_str = "UPDATE euro_page SET pdf_url_path = '{}' WHERE md5 = '{}'".format(json.dumps(pdf_url_path), md5)
+                cur.execute(sql_str.encode('utf8'))
+                conn.commit()
+            except Exception as e:
+                print(sql_str)
+                print(e)
+        conn.close()
+
 
 if __name__ == '__main__':
     eps = EuroPagesSpider(check_home_url=False)
@@ -1242,4 +1284,5 @@ if __name__ == '__main__':
     # eps.mark_company_documents_pages()
     # eps.gevent_pool_mark_company_documents_pages(gevent_pool_size=8)
     # eps.download_documents_page()
-    eps.download_documents_pdf()
+    # eps.download_documents_pdf()
+    eps.upload_pdf_json_to_db()

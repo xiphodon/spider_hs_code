@@ -21,6 +21,7 @@ class BaseSpider:
         """
         初始化
         """
+        self.DataProgress = DataProgress
         self.data_progress = DataProgress()
 
     @staticmethod
@@ -92,6 +93,7 @@ class BaseSpider:
         :return:
         """
         file_suf = default
+        url = url.rsplit('?', 1)[0]
         company_logo_src_split_list = url.rsplit('/', 1)
         if len(company_logo_src_split_list) == 2:
             suf_part = company_logo_src_split_list[1]

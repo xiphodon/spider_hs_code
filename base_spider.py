@@ -75,7 +75,7 @@ class BaseSpider:
         :param text:
         :return:
         """
-        return re.sub(r'\s{2,}|(\r\n)+|(\r)+|(\n)+|(<br>)+|(<br/>)+|(\u200b)+', ' ', text).strip()
+        return re.sub(r'\s{2,}|(\r\n)+|(\r)+|(\n)+|(<br>)+|(<br/>)+|(\u200b)+|(\xa0)+', ' ', text).strip()
 
     @staticmethod
     def db_str_replace_strip(db_str):

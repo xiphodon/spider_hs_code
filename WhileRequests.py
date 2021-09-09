@@ -31,7 +31,7 @@ class WhileRequests:
             self.headers = headers
 
     def _request(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5, method='GET', data=None,
-                 json=''):
+                 json='', proxies=None):
         """
         _request
         :param url:
@@ -39,6 +39,7 @@ class WhileRequests:
         :param sleep_time:
         :param timeout:
         :param error_retry_sleep:
+        :param proxies:
         :return:
         """
         while_times = 0
@@ -47,9 +48,9 @@ class WhileRequests:
             try:
                 time.sleep(sleep_time)
                 if method == "GET":
-                    result = requests.get(url, headers=self.headers, timeout=timeout)
+                    result = requests.get(url, headers=self.headers, timeout=timeout, proxies=proxies)
                 elif method == "POST":
-                    result = requests.post(url, headers=self.headers, data=data, json=json, timeout=timeout)
+                    result = requests.post(url, headers=self.headers, data=data, json=json, timeout=timeout, proxies=proxies)
                 # result = requests.get(url, headers=headers, proxies=proxies, timeout=5)
             except Exception as e:
                 if while_times < request_times:
@@ -58,11 +59,12 @@ class WhileRequests:
                     time.sleep(error_retry_sleep)
                     continue
                 else:
-                    raise e
+                    # raise e
+                    return None
             else:
                 return result
 
-    def get(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5):
+    def get(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5, proxies=None):
         """
         get
         :param url:
@@ -70,12 +72,13 @@ class WhileRequests:
         :param sleep_time:
         :param timeout:
         :param error_retry_sleep:
+        :param proxies:
         :return:
         """
         return self._request(url, request_times=request_times, sleep_time=sleep_time, timeout=timeout,
-                             error_retry_sleep=error_retry_sleep, method="GET")
+                             error_retry_sleep=error_retry_sleep, proxies=proxies, method="GET")
 
-    def post(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5, data=None, json=''):
+    def post(self, url, request_times=100, sleep_time=0, timeout=15, error_retry_sleep=0.5, data=None, json='', proxies=None):
         """
         get
         :param url:
@@ -85,7 +88,8 @@ class WhileRequests:
         :param error_retry_sleep:
         :param data:
         :param json:
+        :param proxies:
         :return:
         """
         return self._request(url, request_times=request_times, sleep_time=sleep_time, timeout=timeout,
-                             error_retry_sleep=error_retry_sleep, method="POST", data=data, json=json)
+                             error_retry_sleep=error_retry_sleep, method="POST", data=data, json=json, proxies=proxies)

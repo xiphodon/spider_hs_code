@@ -17,6 +17,7 @@ import aiohttp
 import requests
 from lxml import etree
 
+import settings
 from WhileRequests import WhileRequests
 from base_spider import BaseSpider
 
@@ -319,6 +320,115 @@ class WlwSpider(BaseSpider):
         # with open(img_path.as_posix(), 'wb') as fp:
         #     fp.write(reponse.content)
 
+    def upload_company_info_to_db(self):
+        """
+        上传公司信息到数据库
+        :return:
+        """
+        import mysql.connector
+
+        conn = mysql.connector.connect(
+            host=settings.sp_host,
+            user=settings.sp_user,
+            passwd=settings.sp_password,
+            database=settings.sp_database,
+            auth_plugin='mysql_native_password'
+        )
+
+        cur = conn.cursor()
+
+        if not cur:
+            raise (NameError, "数据库连接失败")
+        else:
+            print('数据库连接成功')
+
+        error_list = list()
+        for i, file_path in enumerate(self.all_company_json_dir.iterdir()):
+            print(i, file_path.as_posix())
+            with open(file_path.as_posix(), 'r', encoding='utf8') as fp:
+                data = json.load(fp)
+            data: dict
+            # print(data)
+
+            logo_href = self.db_str_replace_strip(data.get('logo', ''))
+            company_name = self.db_str_replace_strip(data.get('legalName', ''))
+            web = self.db_str_replace_strip(data.get('url', ''))
+            telephone = self.db_str_replace_strip(data.get('telephone', ''))
+            email = self.db_str_replace_strip(data.get('email', '').replace('mailto:', ''))
+            description = self.db_str_replace_strip(data.get('description', ''))
+            fax = self.db_str_replace_strip(data.get('faxNumber', ''))
+            area_served = self.db_str_replace_strip(data.get('areaServed', ''))
+            founding_date = self.db_str_replace_strip(data.get('foundingDate', ''))
+            address_locality = self.db_str_replace_strip(data.get('address', {}).get('addressLocality', ''))
+            address_country = self.db_str_replace_strip(data.get('address', {}).get('addressCountry', ''))
+            postal_code = self.db_str_replace_strip(data.get('address', {}).get('postalCode', ''))
+            street_address = self.db_str_replace_strip(data.get('address', {}).get('streetAddress', ''))
+            employees_min = self.db_str_replace_strip(data.get('numberOfEmployees', {}).get('minValue', ''))
+            employees_max = self.db_str_replace_strip(data.get('numberOfEmployees', {}).get('maxValue', ''))
+            location_map = self.db_str_replace_strip(data.get('location', {}).get('hasMap', ''))
+            employee = self.db_str_replace_strip(json.dumps([{
+                'given_name': item.get('givenName', ''),
+                'family_name': item.get('familyName', '')
+            } for item in data.get('employee', [])]))
+            categories = self.db_str_replace_strip(json.dumps(data.get('categories', [])))
+            product_img_list = self.db_str_replace_strip(json.dumps(data.get('product_img_list', [])))
+            logo_path = self.db_str_replace_strip(data.get('logo_path', ''))
+            md5 = self.db_str_replace_strip(data.get('md5', ''))
+
+            # print(logo_href)
+            # print(company_name)
+            # print(web)
+            # print(telephone)
+            # print(email)
+            # print(description)
+            # print(fax)
+            # print(area_served)
+            # print(founding_date)
+            # print(address_locality)
+            # print(address_country)
+            # print(postal_code)
+            # print(street_address)
+            # print(employees_min)
+            # print(employees_max)
+            # print(location_map)
+            # print(employee)
+            # print(categories)
+            # print(product_img_list)
+            # print(logo_path)
+            # print(md5)
+
+            query_sql = f"select * from wlw where md5='{md5}'"
+            cur.execute(query_sql.encode('utf8'))
+            one = cur.fetchone()
+            conn.commit()
+
+            if one:
+                continue
+
+            sql_str = ''
+            try:
+                sql_str = (
+                    "insert into wlw("
+                    "logo_href, company_name, web, telephone, email, description, fax, area_served,"
+                    "founding_date, address_locality, address_country, postal_code, street_address, employees_min,"
+                    "employees_max, location_map, employee, categories, product_img_list, logo_path, md5) values("
+                    "'{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',"
+                    " '{}', '{}', '{}', '{}', '{}', '{}')"
+                ).format(
+                    logo_href, company_name, web, telephone, email, description, fax, area_served,
+                    founding_date, address_locality, address_country, postal_code, street_address, employees_min,
+                    employees_max, location_map, employee, categories, product_img_list, logo_path, md5
+                )
+                # print(sql_str.encode('utf8'))
+                cur.execute(sql_str.encode('utf8'))
+                conn.commit()
+            except Exception as e:
+                print(sql_str)
+                print(e)
+                error_list.append(e)
+
+        print(error_list)
+
 
 if __name__ == '__main__':
     ws = WlwSpider(check_home_url=False)
@@ -327,5 +437,6 @@ if __name__ == '__main__':
     # ws.download_all_company_pages()
     # ws.parse_company_pages()
     # ws.extract_all_img_url_and_path()
-    ws.gevent_pool_download_img(pool_size=100)
+    # ws.gevent_pool_download_img(pool_size=100)
     # ws.gevent_pool_download_img_pro(pool_size=20)
+    ws.upload_company_info_to_db()

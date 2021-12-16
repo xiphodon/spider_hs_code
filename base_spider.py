@@ -10,13 +10,14 @@ import random
 import re
 import time
 from typing import Union, Optional
+import mysql.connector
+from gevent import pool, monkey; monkey.patch_all()
 
 
 class BaseSpider:
     """
     爬虫基类
     """
-
     def __init__(self):
         """
         初始化
@@ -102,12 +103,24 @@ class BaseSpider:
                 file_suf = suf_part[dot_index:]
         return file_suf.lower()
 
+    @staticmethod
+    def gevent_pool_requests(func, task_list, gevent_pool_size=10):
+        """
+        多协程请求
+        :param func:
+        :param task_list:
+        :param gevent_pool_size:
+        :return:
+        """
+        gevent_pool = pool.Pool(gevent_pool_size)
+        result_list = gevent_pool.map(func, task_list)
+        return result_list
+
 
 class DataProgress:
     """
     数据进度
     """
-
     def __init__(self, last_data_used_time_size=50):
         """
         初始化

@@ -438,5 +438,5 @@ if __name__ == '__main__':
     # ws.parse_company_pages()
     # ws.extract_all_img_url_and_path()
     # ws.gevent_pool_download_img(pool_size=100)
-    # ws.gevent_pool_download_img_pro(pool_size=20)
+    ws.gevent_pool_download_img_pro(pool_size=20)
     ws.upload_company_info_to_db()

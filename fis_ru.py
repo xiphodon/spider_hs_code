@@ -13,8 +13,10 @@ from pprint import pprint
 import requests
 from lxml import etree
 
+import settings
 from WhileRequests import WhileRequests
 from base_spider import BaseSpider
+import mysql.connector
 
 
 class FisRuSpider(BaseSpider):
@@ -39,6 +41,7 @@ class FisRuSpider(BaseSpider):
     company_index_json = home_dir / 'company_index.json'
     company_index_id_json = home_dir / 'company_index_id.json'
     company_index_contacts_json = home_dir / 'company_index_contacts.json'
+    company_info_json = home_dir / 'company_info.json'
 
     company_image_dir = home_dir / 'image_dir'
     company_logo_dir = company_image_dir / 'logo_dir'
@@ -678,6 +681,30 @@ class FisRuSpider(BaseSpider):
                 with open(file_path.as_posix(), 'w', encoding='utf8') as fp:
                     fp.write(res.text)
 
+    def merge_all_company_info_json(self):
+        """
+        合并所有公司详情json
+        :return:
+        """
+        result_list = list()
+        for file_path in self.company_info_json_dir.iterdir():
+            print(file_path.as_posix())
+            if file_path.is_dir():
+                continue
+            content = file_path.read_text(encoding='utf8')
+            info_json = json.loads(content)
+            # print(info_json)
+            del info_json['price_file_path']
+            del info_json['logo_path']
+
+            product_list = info_json['product_list']
+            for i in range(len(product_list)):
+                del product_list[i]['product_img_path']
+            # pprint(info_json)
+            # break
+            result_list.append(info_json)
+        self.company_info_json.write_text(json.dumps(result_list), encoding='utf8')
+
 
 if __name__ == '__main__':
     frs = FisRuSpider(check_home_url=False)
@@ -697,4 +724,5 @@ if __name__ == '__main__':
     #     fp.write(res.text)
     # frs.build_company_info_download_files_json()
     # frs.create_company_index_contacts_json()
-    frs.download_company_contacts_pages()
+    # frs.download_company_contacts_pages()
+    frs.merge_all_company_info_json()
